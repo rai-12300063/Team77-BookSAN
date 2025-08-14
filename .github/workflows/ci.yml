@@ -16,8 +16,7 @@ jobs:
         node-version: [22] # Test on multiple Node.js versions
 
 
-    environment: MONGO_URI
-
+    environment: MONGO_DB
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
