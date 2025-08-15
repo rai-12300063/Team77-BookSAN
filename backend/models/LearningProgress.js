@@ -35,4 +35,6 @@ const learningProgressSchema = new mongoose.Schema({
 // Ensure one progress record per user per course
 learningProgressSchema.index({ userId: 1, courseId: 1 }, { unique: true });
 
+
 module.exports = mongoose.model('LearningProgress', learningProgressSchema);
+
