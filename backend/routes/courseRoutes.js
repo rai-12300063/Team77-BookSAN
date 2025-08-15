@@ -34,4 +34,6 @@ router.put('/:id', protect, updateCourse);
 // DELETE /api/courses/:id - Delete a course (admin only)
 router.delete('/:id', protect, deleteCourse);
 
+
 module.exports = router;
+
