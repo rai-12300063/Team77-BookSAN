@@ -15,8 +15,6 @@ jobs:
       matrix:
         node-version: [22] # Test on multiple Node.js versions
 
-
-    environment: MONGO_URI
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
@@ -27,18 +25,19 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: Print Env Secret
-
+    - name: Verify Environment Setup
       env:
         MONGO_URI: ${{ secrets.MONGO_URI }}
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
         PORT: ${{ secrets.PORT }}
       run: | 
-        echo "Secret 1 is: $MONGO_URI"
-        echo "Secret 2 is: $JWT_SECRET"
-        echo "Secret 3 is: $PORT"
+        echo "Environment variables are set"
+        echo "MONGO_URI length: ${#MONGO_URI}"
+        echo "JWT_SECRET length: ${#JWT_SECRET}"  
+        echo "PORT: $PORT"
       
-    - run: pm2 stop all
+    - name: Stop PM2 Services (if running)
+      run: pm2 stop all || true  # Don't fail if no processes running
 
     # Install dependencies for backend
     - name: Install Backend Dependencies
@@ -67,16 +66,21 @@ jobs:
       working-directory: ./backend
       run: npm test
 
-    # Install Dependencies Using npm ci
-    - run: npm ci
+    # Install Dependencies Using npm ci (Backend) - Remove this duplicate step
+    # - name: Install Backend Dependencies with npm ci
+    #   working-directory: ./backend
+    #   run: npm ci
 
     # Create .env File and Add Secrets for Production in AWS (A part of CD)
-    - run: | 
-        cd ./backend
+    - name: Create Production Environment File
+      working-directory: ./backend
+      run: | 
         touch .env
         echo "${{ secrets.PROD }}" > .env
 
     # Start and Restart Services in AWS (A part of CD)
-    - run: pm2 start all
+    - name: Start PM2 Services
+      run: pm2 start all
 
-    - run: pm2 restart all
+    - name: Restart PM2 Services
+      run: pm2 restart all
