@@ -1,28 +1,34 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 import { Link } from 'react-router-dom';
 
 const Courses = () => {
-  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [filter, setFilter] = useState('all');
   const [category, setCategory] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    console.log('Component mounted, fetching data...');
     fetchCourses();
     fetchEnrolledCourses();
   }, []);
 
   const fetchCourses = async () => {
     try {
+      console.log('Fetching courses...');
+      setError(null);
       const response = await axiosInstance.get('/api/courses');
+      console.log('Courses response:', response.data);
       // Handle paginated response
-      setCourses(response.data.courses || response.data);
+      const coursesData = response.data.courses || response.data;
+      setCourses(coursesData);
+      console.log('Courses set:', coursesData);
     } catch (error) {
       console.error('Error fetching courses:', error);
+      setError('Failed to load courses. Please try again.');
     }
   };
 
@@ -85,6 +91,11 @@ const Courses = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Courses</h1>
         <p className="text-gray-600">Discover and enroll in courses to advance your learning journey</p>
+        {error && (
+          <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -119,6 +130,11 @@ const Courses = () => {
       </div>
 
       {/* Course Grid */}
+      <div className="mb-4">
+        <p className="text-sm text-gray-600">
+          {courses.length} courses available {filteredCourses.length !== courses.length && `(${filteredCourses.length} shown)`}
+        </p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.map(course => {
           const enrolled = isEnrolled(course._id);

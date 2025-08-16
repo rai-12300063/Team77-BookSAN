@@ -7,7 +7,9 @@
     "test": "mocha",
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "prod": "node server.js"
+    "prod": "node server.js",
+    "seed": "node seedCourses.js",
+    "seed:courses": "node seedCourses.js"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
