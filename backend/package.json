@@ -13,6 +13,7 @@
     "seed": "node seedCourses.js",
     "seed:courses": "node seedCourses.js",
     "create-test-user": "node createTestUser.js"
+
   },
   "dependencies": {
     "bcrypt": "^5.0.1",

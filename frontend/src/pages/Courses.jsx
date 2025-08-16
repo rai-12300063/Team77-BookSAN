@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 import { Link } from 'react-router-dom';
 
 const Courses = () => {
-  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [filter, setFilter] = useState('all');
   const [category, setCategory] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    console.log('Component mounted, fetching data...');
     fetchCourses();
     fetchEnrolledCourses();
   }, []);
@@ -28,6 +28,7 @@ const Courses = () => {
       console.log('📚 Courses set:', coursesData.length, 'courses');
     } catch (error) {
       console.error('❌ Error fetching courses:', error);
+
     }
   };
 
@@ -102,8 +103,8 @@ const Courses = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Courses</h1>
-        <p className="text-gray-600">Discover and enroll in courses to advance your learning journey</p>
-        
+        <p className="text-gray-600">Discover and enroll in courses to advance your learning journey</
+      
         {/* Debug Info Panel */}
         <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm">
           <strong>Debug Info:</strong> 
@@ -112,7 +113,7 @@ const Courses = () => {
           {filteredCourses.length} shown after filters |
           Loading: {loading.toString()}
         </div>
-      </div>
+
 
       {/* Filters */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -146,6 +147,11 @@ const Courses = () => {
       </div>
 
       {/* Course Grid */}
+      <div className="mb-4">
+        <p className="text-sm text-gray-600">
+          {courses.length} courses available {filteredCourses.length !== courses.length && `(${filteredCourses.length} shown)`}
+        </p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.map(course => {
           const enrolled = isEnrolled(course._id);
