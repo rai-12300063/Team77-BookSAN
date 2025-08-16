@@ -4,12 +4,16 @@
   "description": "Backend for Task Manager App",
   "main": "server.js",
   "scripts": {
-    "test": "mocha",
+    "test": "mocha test/test.js test/courseTest.js --timeout 10000 --recursive",
+    "test:watch": "mocha test/test.js test/courseTest.js --timeout 10000 --watch",
+    "test:verbose": "mocha test/test.js test/courseTest.js --timeout 10000 --recursive --reporter spec",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "prod": "node server.js",
     "seed": "node seedCourses.js",
-    "seed:courses": "node seedCourses.js"
+    "seed:courses": "node seedCourses.js",
+    "create-test-user": "node createTestUser.js"
+
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
