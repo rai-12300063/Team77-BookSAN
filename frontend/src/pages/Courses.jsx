@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 import { Link } from 'react-router-dom';
 
 const Courses = () => {
+  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [filter, setFilter] = useState('all');
@@ -22,13 +24,20 @@ const Courses = () => {
       const response = await axiosInstance.get('/api/courses');
       console.log('✅ Courses API response:', response.data);
       
-      // Handle paginated response
-      const coursesData = response.data.courses || response.data;
-      setCourses(coursesData);
-      console.log('📚 Courses set:', coursesData.length, 'courses');
+      // Handle paginated response with null safety
+      const coursesData = response.data?.courses || response.data || [];
+      
+      // Ensure we have an array
+      if (Array.isArray(coursesData)) {
+        setCourses(coursesData);
+        console.log('📚 Courses set:', coursesData.length, 'courses');
+      } else {
+        console.warn('⚠️ Courses data is not an array:', coursesData);
+        setCourses([]);
+      }
     } catch (error) {
       console.error('❌ Error fetching courses:', error);
-
+      setCourses([]); // Set empty array on error
     }
   };
 
@@ -36,10 +45,19 @@ const Courses = () => {
     try {
       console.log('🔄 Fetching enrolled courses...');
       const response = await axiosInstance.get('/api/courses/enrolled/my');
-      setEnrolledCourses(response.data);
-      console.log('✅ Enrolled courses:', response.data);
+      
+      // Ensure we have an array
+      const enrolledData = response.data || [];
+      if (Array.isArray(enrolledData)) {
+        setEnrolledCourses(enrolledData);
+        console.log('✅ Enrolled courses:', enrolledData);
+      } else {
+        console.warn('⚠️ Enrolled courses data is not an array:', enrolledData);
+        setEnrolledCourses([]);
+      }
     } catch (error) {
       console.error('❌ Error fetching enrolled courses (this is normal if not logged in):', error.response?.status);
+      setEnrolledCourses([]); // Set empty array on error
     } finally {
       setLoading(false);
       console.log('🏁 Loading complete');
@@ -48,25 +66,43 @@ const Courses = () => {
 
   const handleEnrollment = async (courseId) => {
     try {
-      await axiosInstance.post(`/api/courses/${courseId}/enroll`);
-      fetchEnrolledCourses(); // Refresh enrolled courses
+      console.log('🔄 Attempting to enroll in course:', courseId);
+      const response = await axiosInstance.post(`/api/courses/${courseId}/enroll`);
+      console.log('✅ Enrollment successful:', response.data);
+      
+      // Refresh enrolled courses
+      await fetchEnrolledCourses();
       alert('Successfully enrolled in course!');
     } catch (error) {
-      console.error('Error enrolling in course:', error);
-      alert('Failed to enroll in course. Please try again.');
+      console.error('❌ Error enrolling in course:', error);
+      
+      if (error.response?.status === 400) {
+        alert('You are already enrolled in this course!');
+      } else if (error.response?.status === 401) {
+        alert('Please log in to enroll in courses.');
+      } else {
+        alert('Failed to enroll in course. Please try again.');
+      }
     }
   };
 
   const isEnrolled = (courseId) => {
-    return enrolledCourses.some(course => course.courseId._id === courseId);
+    return Array.isArray(enrolledCourses) && enrolledCourses.some(course => 
+      course?.courseId?._id === courseId
+    );
   };
 
   const getProgressForCourse = (courseId) => {
-    const enrolled = enrolledCourses.find(course => course.courseId._id === courseId);
+    if (!Array.isArray(enrolledCourses)) return 0;
+    const enrolled = enrolledCourses.find(course => 
+      course?.courseId?._id === courseId
+    );
     return enrolled?.completionPercentage || 0;
   };
 
-  const filteredCourses = courses.filter(course => {
+  const filteredCourses = Array.isArray(courses) ? courses.filter(course => {
+    if (!course) return false;
+    
     if (filter === 'enrolled') {
       return isEnrolled(course._id);
     }
@@ -74,22 +110,28 @@ const Courses = () => {
       return !isEnrolled(course._id);
     }
     if (category !== 'all') {
-      return course.category.toLowerCase() === category.toLowerCase();
+      return course.category?.toLowerCase() === category.toLowerCase();
     }
     return true;
-  });
+  }) : [];
 
-  const categories = [...new Set(courses.map(course => course.category))];
+  const categories = Array.isArray(courses) 
+    ? [...new Set(courses.map(course => course?.category).filter(Boolean))]
+    : [];
 
-  // Debug logging
-  console.log('🔍 Component render state:', {
-    loading,
-    coursesCount: courses.length,
-    enrolledCount: enrolledCourses.length,
-    filter,
-    category,
-    filteredCount: filteredCourses.length
-  });
+  // Debug logging with error handling
+  try {
+    console.log('🔍 Component render state:', {
+      loading,
+      coursesCount: Array.isArray(courses) ? courses.length : 0,
+      enrolledCount: Array.isArray(enrolledCourses) ? enrolledCourses.length : 0,
+      filter,
+      category,
+      filteredCount: Array.isArray(filteredCourses) ? filteredCourses.length : 0
+    });
+  } catch (debugError) {
+    console.warn('⚠️ Debug logging error:', debugError);
+  }
 
   if (loading) {
     return (
@@ -103,16 +145,17 @@ const Courses = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Courses</h1>
-        <p className="text-gray-600">Discover and enroll in courses to advance your learning journey</
+        <p className="text-gray-600">Discover and enroll in courses to advance your learning journey</p>
       
         {/* Debug Info Panel */}
         <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm">
           <strong>Debug Info:</strong> 
-          {courses.length} total courses loaded | 
-          {enrolledCourses.length} enrolled courses | 
-          {filteredCourses.length} shown after filters |
+          {Array.isArray(courses) ? courses.length : 0} total courses loaded | 
+          {Array.isArray(enrolledCourses) ? enrolledCourses.length : 0} enrolled courses | 
+          {Array.isArray(filteredCourses) ? filteredCourses.length : 0} shown after filters |
           Loading: {loading.toString()}
         </div>
+      </div>
 
 
       {/* Filters */}
