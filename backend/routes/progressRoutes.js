@@ -7,10 +7,10 @@ const {
   getLearningStreaks,
   updateLearningGoals
 } = require('../controllers/progressController');
-const auth = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
 // All routes require authentication
-router.use(auth);
+router.use(protect);
 
 // @route   GET /api/progress/analytics
 // @desc    Get user's learning analytics and statistics

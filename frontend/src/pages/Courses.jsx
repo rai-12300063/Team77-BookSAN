@@ -18,22 +18,30 @@ const Courses = () => {
 
   const fetchCourses = async () => {
     try {
+      console.log('🔄 Fetching courses...');
       const response = await axiosInstance.get('/api/courses');
+      console.log('✅ Courses API response:', response.data);
+      
       // Handle paginated response
-      setCourses(response.data.courses || response.data);
+      const coursesData = response.data.courses || response.data;
+      setCourses(coursesData);
+      console.log('📚 Courses set:', coursesData.length, 'courses');
     } catch (error) {
-      console.error('Error fetching courses:', error);
+      console.error('❌ Error fetching courses:', error);
     }
   };
 
   const fetchEnrolledCourses = async () => {
     try {
+      console.log('🔄 Fetching enrolled courses...');
       const response = await axiosInstance.get('/api/courses/enrolled/my');
       setEnrolledCourses(response.data);
+      console.log('✅ Enrolled courses:', response.data);
     } catch (error) {
-      console.error('Error fetching enrolled courses:', error);
+      console.error('❌ Error fetching enrolled courses (this is normal if not logged in):', error.response?.status);
     } finally {
       setLoading(false);
+      console.log('🏁 Loading complete');
     }
   };
 
@@ -72,6 +80,16 @@ const Courses = () => {
 
   const categories = [...new Set(courses.map(course => course.category))];
 
+  // Debug logging
+  console.log('🔍 Component render state:', {
+    loading,
+    coursesCount: courses.length,
+    enrolledCount: enrolledCourses.length,
+    filter,
+    category,
+    filteredCount: filteredCourses.length
+  });
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -85,6 +103,15 @@ const Courses = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Courses</h1>
         <p className="text-gray-600">Discover and enroll in courses to advance your learning journey</p>
+        
+        {/* Debug Info Panel */}
+        <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm">
+          <strong>Debug Info:</strong> 
+          {courses.length} total courses loaded | 
+          {enrolledCourses.length} enrolled courses | 
+          {filteredCourses.length} shown after filters |
+          Loading: {loading.toString()}
+        </div>
       </div>
 
       {/* Filters */}
