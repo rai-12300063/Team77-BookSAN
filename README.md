@@ -1,4 +1,56 @@
 
+# Online Learning Progress Tracker
+
+## 🚀 Quick Start Guide
+
+### Prerequisites
+- Node.js (v14 or higher)
+- MongoDB (local or cloud instance)
+- npm or yarn
+
+### Installation & Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Online-Learning-Progress-Tracker
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm run install-all
+   ```
+
+3. **Configure environment**
+   ```bash
+   # Copy .env.example to .env in backend folder
+   cp backend/.env.example backend/.env
+   # Edit backend/.env with your MongoDB URI and JWT secret
+   ```
+
+4. **Start the development servers**
+   ```bash
+   npm run dev
+   ```
+   This will start:
+   - Backend server on `http://localhost:5001`
+   - Frontend React app on `http://localhost:3000`
+
+### API Endpoints
+- **Authentication**: `/api/auth/*`
+- **Tasks**: `/api/tasks/*`
+- **Courses**: `/api/courses/*`
+
+### Testing
+```bash
+cd backend && npm test
+```
+
+### System Status: ✅ FULLY WORKING
+All components are connected and functional. See `SYSTEM_VERIFICATION.md` for detailed status.
+
+---
+
 **Assessment 1 (Total Marks **20**)**
 
 Assignment: **Software requirements analysis and design (**Full-Stack CRUD Application Development with DevOps Practices**)**
