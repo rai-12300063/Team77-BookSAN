@@ -7,6 +7,7 @@ import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
+import ApiTest from './pages/ApiTest';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/courses/:courseId" element={<CourseDetail />} />
+        <Route path="/api-test" element={<ApiTest />} />
       </Routes>
     </Router>
   );
