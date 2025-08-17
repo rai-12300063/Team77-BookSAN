@@ -650,7 +650,7 @@
         <mxCell id="VXfeuVRvBuz54XGuOJCV-73" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;dashed=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=12;fontColor=default;labelBackgroundColor=default;resizable=1;startFill=0;endArrow=open;endFill=0;endSize=14;" edge="1" parent="7cL7io8f4XZxOxzCLeC--1" source="VXfeuVRvBuz54XGuOJCV-43" target="VXfeuVRvBuz54XGuOJCV-37">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VXfeuVRvBuz54XGuOJCV-74" value="&amp;lt;&amp;lt;uses&amp;gt;&amp;gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];strokeColor=default;spacingLeft=10;fontFamily=Helvetica;fontSize=12;fontColor=default;labelBackgroundColor=default;fillColor=default;" vertex="1" connectable="0" parent="VXfeuVRvBuz54XGuOJCV-73">
+        <mxCell id="VXfeuVRvBuz54XGuOJCV-74" value="authenticates" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];strokeColor=default;spacingLeft=10;fontFamily=Helvetica;fontSize=10;fontColor=default;labelBackgroundColor=default;fillColor=default;" vertex="1" connectable="0" parent="VXfeuVRvBuz54XGuOJCV-73">
           <mxGeometry x="-0.101" y="-1" relative="1" as="geometry">
             <mxPoint x="1" as="offset" />
           </mxGeometry>
