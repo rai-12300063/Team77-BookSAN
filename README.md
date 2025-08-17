@@ -36,6 +36,14 @@
    - Backend server on `http://localhost:5001`
    - Frontend React app on `http://localhost:3000`
 
+5. **Project URL**
+   ```bash
+   [Online Learning Progress Tracker](http://54.66.53.65/)
+   ```
+   Access:
+   - Username: `test@example.com`
+   - Password `password123`
+
 ### API Endpoints
 - **Authentication**: `/api/auth/*`
 - **Tasks**: `/api/tasks/*`
