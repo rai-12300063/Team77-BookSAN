@@ -4,13 +4,13 @@ import axiosInstance from '../axiosConfig';
 import { Link } from 'react-router-dom';
 
 const Courses = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Not currently used
   const [courses, setCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [filter, setFilter] = useState('all');
   const [category, setCategory] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // const [error, setError] = useState(null); // Not currently used
 
   useEffect(() => {
     console.log('Component mounted, fetching data...');
