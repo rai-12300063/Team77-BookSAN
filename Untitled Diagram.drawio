@@ -405,7 +405,7 @@
     </mxGraphModel>
   </diagram>
   <diagram name="Block-Definition" id="sbbH2qzMhru-XvdNbfEI">
-    <mxGraphModel dx="1007" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="710" dy="463" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="7cL7io8f4XZxOxzCLeC--0" />
         <mxCell id="7cL7io8f4XZxOxzCLeC--1" parent="7cL7io8f4XZxOxzCLeC--0" />
@@ -466,9 +466,9 @@
         <mxCell id="VXfeuVRvBuz54XGuOJCV-72" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0;entryDx=0;entryDy=0;dashed=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=12;fontColor=default;labelBackgroundColor=default;resizable=1;startFill=0;endArrow=open;endFill=0;endSize=14;" edge="1" parent="7cL7io8f4XZxOxzCLeC--1" source="VXfeuVRvBuz54XGuOJCV-20" target="VXfeuVRvBuz54XGuOJCV-30">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VXfeuVRvBuz54XGuOJCV-83" value="depends" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];strokeColor=default;spacingLeft=10;fontFamily=Helvetica;fontSize=12;fontColor=default;labelBackgroundColor=default;fillColor=default;" vertex="1" connectable="0" parent="VXfeuVRvBuz54XGuOJCV-72">
+        <mxCell id="VXfeuVRvBuz54XGuOJCV-83" value="&lt;font&gt;Data operations&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];strokeColor=default;spacingLeft=10;fontFamily=Helvetica;fontSize=10;fontColor=default;labelBackgroundColor=default;fillColor=default;" vertex="1" connectable="0" parent="VXfeuVRvBuz54XGuOJCV-72">
           <mxGeometry x="-0.0367" y="-2" relative="1" as="geometry">
-            <mxPoint x="-9" y="-1" as="offset" />
+            <mxPoint x="-8" y="-13" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="VXfeuVRvBuz54XGuOJCV-20" value="" style="fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;marginBottom=0;strokeColor=default;spacingLeft=10;fontFamily=Helvetica;fontSize=12;fontColor=default;labelBackgroundColor=default;resizable=1;fillColor=default;" vertex="1" parent="7cL7io8f4XZxOxzCLeC--1">
@@ -642,9 +642,9 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="VXfeuVRvBuz54XGuOJCV-82" value="depends" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];strokeColor=default;spacingLeft=10;fontFamily=Helvetica;fontSize=12;fontColor=default;labelBackgroundColor=default;fillColor=default;" vertex="1" connectable="0" parent="VXfeuVRvBuz54XGuOJCV-71">
+        <mxCell id="VXfeuVRvBuz54XGuOJCV-82" value="REST API calls" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];strokeColor=default;spacingLeft=10;fontFamily=Helvetica;fontSize=10;fontColor=default;labelBackgroundColor=default;fillColor=default;" vertex="1" connectable="0" parent="VXfeuVRvBuz54XGuOJCV-71">
           <mxGeometry x="-0.0312" y="1" relative="1" as="geometry">
-            <mxPoint as="offset" />
+            <mxPoint y="-9" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="VXfeuVRvBuz54XGuOJCV-73" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;dashed=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=12;fontColor=default;labelBackgroundColor=default;resizable=1;startFill=0;endArrow=open;endFill=0;endSize=14;" edge="1" parent="7cL7io8f4XZxOxzCLeC--1" source="VXfeuVRvBuz54XGuOJCV-43" target="VXfeuVRvBuz54XGuOJCV-37">
