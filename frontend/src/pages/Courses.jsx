@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 import { Link } from 'react-router-dom';
 
 const Courses = () => {
-  // const { user } = useAuth(); // Not currently used
   const [courses, setCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [filter, setFilter] = useState('all');
