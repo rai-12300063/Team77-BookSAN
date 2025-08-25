@@ -12,7 +12,7 @@
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/rai-12300063/Online-Learning-Progress-Tracker.git
    cd Online-Learning-Progress-Tracker
    ```
 
