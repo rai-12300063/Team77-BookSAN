@@ -1,7 +1,7 @@
 {
-  "name": "task-manager-backend",
+  "name": "qut-mit-learning-progress-tracker-backend",
   "version": "1.0.0",
-  "description": "Backend for Task Manager App",
+  "description": "Backend for QUT-MIT Learning Progress Tracker",
   "main": "server.js",
   "scripts": {
     "test": "mocha test/test.js test/courseTest.js --timeout 10000 --recursive",

@@ -19,7 +19,7 @@ const startServer = async () => {
     await connectDB();
     const PORT = process.env.PORT || 5001;
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`✅ Server running on port ${PORT}`);
+      console.log(`✅ QUT-MIT Learning Progress Tracker Server running on port ${PORT}`);
     });
   } catch (err) {
     console.error('❌ Failed to start server:', err);

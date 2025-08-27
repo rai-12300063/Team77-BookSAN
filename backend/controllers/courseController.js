@@ -1,5 +1,6 @@
 const Course = require('../models/Course');
 const LearningProgress = require('../models/LearningProgress');
+const User = require('../models/User'); // Add this import for unenroll function
 
 // Get all courses with pagination and filtering
 const getCourses = async (req, res) => {
@@ -211,21 +212,56 @@ const getEnrolledCourses = async (req, res) => {
             .populate('courseId')
             .sort({ enrollmentDate: -1 });
 
-        const enrolledCourses = enrollments.map(enrollment => ({
-            course: enrollment.courseId,
-            progress: {
-                completionPercentage: enrollment.completionPercentage,
-                currentModule: enrollment.currentModule,
-                totalTimeSpent: enrollment.totalTimeSpent,
-                lastAccessDate: enrollment.lastAccessDate,
-                isCompleted: enrollment.isCompleted,
-                grade: enrollment.grade
-            }
-        }));
-
-        res.json(enrolledCourses);
+        // Return the enrollments directly with populated courseId
+        res.json(enrollments);
     } catch (error) {
+        console.error('Error fetching enrolled courses:', error);
         res.status(500).json({ message: error.message });
+    }
+};
+
+// Unenroll from course
+const unenrollFromCourse = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.userId || req.user.id; // Handle both userId and id
+
+        // Check if course exists
+        const course = await Course.findById(id);
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        // Check if user is enrolled in the course
+        const existingProgress = await LearningProgress.findOne({
+            userId: userId,
+            courseId: id
+        });
+
+        if (!existingProgress) {
+            return res.status(400).json({ message: 'You are not enrolled in this course' });
+        }
+
+        // Remove the learning progress record
+        await LearningProgress.findOneAndDelete({
+            userId: userId,
+            courseId: id
+        });
+
+        // Decrement enrollment count
+        if (course.enrollmentCount > 0) {
+            course.enrollmentCount -= 1;
+            await course.save();
+        }
+
+        res.status(200).json({ 
+            message: 'Successfully unenrolled from course',
+            courseId: id
+        });
+
+    } catch (error) {
+        console.error('Unenroll error:', error);
+        res.status(500).json({ message: 'Error unenrolling from course', error: error.message });
     }
 };
 
@@ -236,5 +272,6 @@ module.exports = {
     updateCourse,
     deleteCourse,
     enrollInCourse,
+    unenrollFromCourse,
     getEnrolledCourses
 };
