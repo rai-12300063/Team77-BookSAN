@@ -55,36 +55,69 @@ const updateModuleCompletion = async (req, res) => {
       return res.status(404).json({ message: 'Progress record not found' });
     }
 
-    // Update module completion
-    const moduleIndex = progress.completedModules.findIndex(m => m.moduleId === moduleId);
+    // Get course to find module index
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Find the module index in the course syllabus
+    const moduleIndex = course.syllabus.findIndex(module => module._id.toString() === moduleId);
     if (moduleIndex === -1) {
-      progress.completedModules.push({
-        moduleId,
+      return res.status(400).json({ message: 'Module not found in course' });
+    }
+
+    // Check if module is already completed
+    const existingCompletion = progress.modulesCompleted.find(m => m.moduleIndex === moduleIndex);
+    
+    if (!existingCompletion) {
+      // Add new completion
+      progress.modulesCompleted.push({
+        moduleIndex,
         completedAt: new Date(),
         timeSpent: timeSpent || 0
       });
     } else {
-      progress.completedModules[moduleIndex].timeSpent += timeSpent || 0;
+      // Update existing completion time
+      existingCompletion.timeSpent += timeSpent || 0;
     }
 
-    // Get course to calculate completion percentage
-    const course = await Course.findById(courseId);
-    if (course) {
-      const totalModules = course.syllabus.length;
-      const completedModulesCount = progress.completedModules.length;
-      progress.completionPercentage = Math.round((completedModulesCount / totalModules) * 100);
+    // Calculate completion percentage
+    const totalModules = course.syllabus.length;
+    const completedModulesCount = progress.modulesCompleted.length;
+    progress.completionPercentage = Math.round((completedModulesCount / totalModules) * 100);
+
+    // Update total time spent and last accessed
+    progress.totalTimeSpent += timeSpent || 0;
+    progress.lastAccessDate = new Date();
+
+    // Update current module to the next incomplete one
+    progress.currentModule = Math.max(progress.currentModule, moduleIndex + 1);
+
+    // Check for course completion
+    if (progress.completionPercentage === 100) {
+      progress.isCompleted = true;
+      progress.completionDate = new Date();
+      
+      // Add course completion achievement if not already present
+      const hasCompletionAchievement = progress.achievements.some(a => a.type === 'course_completed');
+      if (!hasCompletionAchievement) {
+        progress.achievements.push({
+          type: 'course_completed',
+          description: `Completed ${course.title}`
+        });
+      }
     }
 
-    // Update time spent and last accessed
-    progress.timeSpent += timeSpent || 0;
-    progress.lastAccessed = new Date();
-
-    // Check for new achievements
-    if (progress.completionPercentage === 100 && !progress.achievements.includes('course_completed')) {
-      progress.achievements.push('course_completed');
-    }
-    if (progress.timeSpent >= 600 && !progress.achievements.includes('study_warrior')) { // 10 hours
-      progress.achievements.push('study_warrior');
+    // Check for time-based achievements
+    if (progress.totalTimeSpent >= 600) { // 10 hours
+      const hasTimeAchievement = progress.achievements.some(a => a.type === 'study_warrior');
+      if (!hasTimeAchievement) {
+        progress.achievements.push({
+          type: 'study_warrior',
+          description: 'Spent 10+ hours learning'
+        });
+      }
     }
 
     await progress.save();

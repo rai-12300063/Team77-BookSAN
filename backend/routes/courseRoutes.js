@@ -6,6 +6,7 @@ const {
     updateCourse, 
     deleteCourse, 
     enrollInCourse, 
+    unenrollFromCourse,
     getEnrolledCourses 
 } = require('../controllers/courseController');
 const { protect } = require('../middleware/authMiddleware');
@@ -27,6 +28,9 @@ router.get('/:id', getCourse);
 
 // POST /api/courses/:id/enroll - Enroll in a course
 router.post('/:id/enroll', protect, enrollInCourse);
+
+// POST /api/courses/:id/unenroll - Unenroll from a course
+router.post('/:id/unenroll', protect, unenrollFromCourse);
 
 // PUT /api/courses/:id - Update a course (instructor/admin only)
 router.put('/:id', protect, updateCourse);
