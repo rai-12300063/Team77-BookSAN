@@ -1,6 +1,7 @@
 const LearningProgress = require('../models/LearningProgress');
 const Course = require('../models/Course');
 const User = require('../models/User');
+const { USER_ROLES } = require('../constants/roles');
 
 // Get user's learning analytics
 const getLearningAnalytics = async (req, res) => {

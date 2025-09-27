@@ -7,34 +7,41 @@ const {
   getLearningStreaks,
   updateLearningGoals
 } = require('../controllers/progressController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, requireAnyRole, requirePermission } = require('../middleware/authMiddleware');
+const {
+    logApiAccess,
+    requireCourseEnrollment,
+    validateResourceOwnership
+} = require('../middleware/permissionMiddleware');
 
 // All routes require authentication
 router.use(protect);
+router.use(requireAnyRole);
+router.use(logApiAccess);
 
 // @route   GET /api/progress/analytics
 // @desc    Get user's learning analytics and statistics
 // @access  Private
-router.get('/analytics', getLearningAnalytics);
+router.get('/analytics', requirePermission('progress:read'), getLearningAnalytics);
 
 // @route   PUT /api/progress/module
 // @desc    Update module completion for a course
 // @access  Private
-router.put('/module', updateModuleCompletion);
+router.put('/module', requirePermission('progress:write'), updateModuleCompletion);
 
 // @route   GET /api/progress/course/:courseId
 // @desc    Get progress for a specific course
 // @access  Private
-router.get('/course/:courseId', getCourseProgress);
+router.get('/course/:courseId', requirePermission('progress:read'), requireCourseEnrollment, getCourseProgress);
 
 // @route   GET /api/progress/streaks
 // @desc    Get learning streaks and habits
 // @access  Private
-router.get('/streaks', getLearningStreaks);
+router.get('/streaks', requirePermission('progress:read'), getLearningStreaks);
 
 // @route   PUT /api/progress/goals
 // @desc    Update learning goals
 // @access  Private
-router.put('/goals', updateLearningGoals);
+router.put('/goals', requirePermission('progress:write'), updateLearningGoals);
 
 module.exports = router;

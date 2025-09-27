@@ -13,7 +13,6 @@
     "seed": "node seedCourses.js",
     "seed:courses": "node seedCourses.js",
     "create-test-user": "node createTestUser.js"
-
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
@@ -24,7 +23,8 @@
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.14",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "task-manager": "file:.."
   },
   "devDependencies": {
     "esm": "^3.2.25",

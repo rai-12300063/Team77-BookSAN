@@ -1,6 +1,7 @@
 
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const { USER_ROLES } = require('../constants/roles');
 
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -9,7 +10,12 @@ const userSchema = new mongoose.Schema({
     university: { type: String },
     address: { type: String },
     // Learning-specific fields
-    role: { type: String, enum: ['student', 'instructor', 'admin'], default: 'student' },
+    role: {
+        type: String,
+        enum: Object.values(USER_ROLES),
+        default: USER_ROLES.STUDENT,
+        required: true
+    },
     learningGoals: [{ type: String }],
     skillTags: [{ type: String }],
     learningPreferences: {
