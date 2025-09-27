@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import axiosInstance from '../../axiosConfig';
-import RoleBasedRender, { AdminOnly } from '../../components/RoleBasedRender';
-import PermissionGate, { CanWriteUsers, CanDeleteUsers } from '../../components/PermissionGate';
+import { AdminOnly } from '../../components/RoleBasedRender';
+import { CanWriteUsers, CanDeleteUsers } from '../../components/PermissionGate';
 import usePermissions from '../../hooks/usePermissions';
 
 const UserManagement = () => {

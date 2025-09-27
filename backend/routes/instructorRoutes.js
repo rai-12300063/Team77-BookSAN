@@ -8,10 +8,7 @@ const {
     getStudentProgress,
     updateStudentGrade,
     getCourseAnalytics,
-    getMyStudents,
-    enrollStudent,
-    removeStudent,
-    getAvailableStudents
+    getMyStudents
 } = require('../controllers/instructorController');
 const { protect, requireInstructorOrAdmin, requirePermission } = require('../middleware/authMiddleware');
 const {
@@ -44,9 +41,9 @@ router.route('/courses/:courseId/students/:studentId')
 
 router.get('/students', requirePermission('students:read'), getMyStudents);
 
-// Student enrollment management routes
-router.get('/available-students', requirePermission('students:read'), getAvailableStudents);
-router.post('/courses/:courseId/enroll', requirePermission('enrollment:write'), requireCourseInstructor, enrollStudent);
-router.delete('/courses/:courseId/students/:studentId', requirePermission('enrollment:delete'), requireCourseInstructor, removeStudent);
+// Student enrollment management routes - TODO: Implement these controllers
+// router.get('/available-students', requirePermission('students:read'), getAvailableStudents);
+// router.post('/courses/:courseId/enroll', requirePermission('enrollment:write'), requireCourseInstructor, enrollStudent);
+// router.delete('/courses/:courseId/students/:studentId', requirePermission('enrollment:delete'), requireCourseInstructor, removeStudent);
 
 module.exports = router;

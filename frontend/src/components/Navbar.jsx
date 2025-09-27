@@ -5,7 +5,7 @@ import usePermissions from '../hooks/usePermissions';
 
 const Navbar = () => {
   const { user, logout, isAdmin, isInstructor, isStudent } = useAuth();
-  const { getAccessibleRoutes } = usePermissions();
+  const { } = usePermissions();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -51,30 +51,9 @@ const Navbar = () => {
                 <Link to="/progress" className="hover:text-blue-200 transition-colors">Progress</Link>
               </PermissionGate>
 
-              {/* Instructor Navigation */}
-              <PermissionGate resource="courses" action="manage">
-                <Link to="/instructor/manage-courses" className="hover:text-blue-200 transition-colors">Manage Courses</Link>
-              </PermissionGate>
-
-              <PermissionGate resource="students" action="manage">
-                <Link to="/instructor/students" className="hover:text-blue-200 transition-colors">Students</Link>
-              </PermissionGate>
-
-              <PermissionGate resource="analytics" action="viewCourse">
-                <Link to="/instructor/analytics" className="hover:text-blue-200 transition-colors">Analytics</Link>
-              </PermissionGate>
-
               {/* Admin Navigation */}
               <PermissionGate resource="users" action="read">
                 <Link to="/admin/users" className="hover:text-blue-200 transition-colors">Users</Link>
-              </PermissionGate>
-
-              <PermissionGate resource="courses" action="viewAll">
-                <Link to="/admin/courses" className="hover:text-blue-200 transition-colors">All Courses</Link>
-              </PermissionGate>
-
-              <PermissionGate resource="analytics" action="viewSystem">
-                <Link to="/admin/analytics" className="hover:text-blue-200 transition-colors">System Analytics</Link>
               </PermissionGate>
 
               <PermissionGate resource="settings" action="systemSettings">
