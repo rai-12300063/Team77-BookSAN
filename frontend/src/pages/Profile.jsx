@@ -5,10 +5,13 @@ import axiosInstance from '../axiosConfig';
 const Profile = () => {
   const { user, token, login } = useAuth();
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
-    university: '',
+    phone: '',
     address: '',
+    dateOfBirth: '',
+    bio: '',
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
@@ -17,11 +20,19 @@ const Profile = () => {
   useEffect(() => {
     // Initialize form data with user context data
     if (user) {
+      // Split name into first and last name
+      const nameParts = (user.name || '').split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
       setFormData({
-        name: user.name || '',
+        firstName,
+        lastName,
         email: user.email || '',
-        university: user.university || '',
+        phone: user.phone || '',
         address: user.address || '',
+        dateOfBirth: user.dateOfBirth || '',
+        bio: user.bio || '',
       });
     }
   }, [user]);
@@ -33,10 +44,16 @@ const Profile = () => {
     setSuccess('');
 
     try {
-      const response = await axiosInstance.put('/api/auth/profile', formData);
+      // Combine first and last name for backend compatibility
+      const dataToSubmit = {
+        ...formData,
+        name: `${formData.firstName} ${formData.lastName}`.trim()
+      };
+
+      const response = await axiosInstance.put('/api/auth/profile', dataToSubmit);
 
       // Update the user context with new data
-      const updatedUser = { ...user, ...formData };
+      const updatedUser = { ...user, ...dataToSubmit };
       login(updatedUser, token);
 
       setSuccess('Profile updated successfully!');
@@ -78,7 +95,12 @@ const Profile = () => {
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div>
-                <h1 className="text-3xl font-bold">{user?.name || 'User Profile'}</h1>
+                <h1 className="text-3xl font-bold">
+                  {formData.firstName || formData.lastName
+                    ? `${formData.firstName} ${formData.lastName}`.trim()
+                    : user?.name || 'User Profile'
+                  }
+                </h1>
                 <div className="flex items-center mt-2">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getRoleColor(user?.role)}`}>
                     {getRoleDisplayName(user?.role)}
@@ -103,44 +125,75 @@ const Profile = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your full name"
-                />
+              {/* Name Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your first name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your last name"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your email address"
-                />
+              {/* Contact Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your email address"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
               </div>
 
+              {/* Personal Information */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  University/Institution
+                  Date of Birth
                 </label>
                 <input
-                  type="text"
-                  value={formData.university}
-                  onChange={(e) => setFormData({ ...formData, university: e.target.value })}
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your university or institution"
                 />
               </div>
 
@@ -153,8 +206,25 @@ const Profile = () => {
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your address"
+                  placeholder="Enter your complete address"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bio / About Me
+                </label>
+                <textarea
+                  rows="4"
+                  value={formData.bio}
+                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Tell us a bit about yourself, your interests, goals, or any other information you'd like to share..."
+                  maxLength="500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.bio.length}/500 characters
+                </p>
               </div>
 
               <div className="pt-4">
@@ -180,32 +250,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Additional Info */}
-        <div className="mt-6 bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Account Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-gray-600">User ID:</span>
-              <span className="ml-2 text-gray-800">{user?.id || 'N/A'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-600">Account Type:</span>
-              <span className="ml-2 text-gray-800">{getRoleDisplayName(user?.role)}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-600">Member Since:</span>
-              <span className="ml-2 text-gray-800">
-                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-              </span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-600">Last Updated:</span>
-              <span className="ml-2 text-gray-800">
-                {user?.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : 'N/A'}
-              </span>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   );
