@@ -240,11 +240,221 @@ const createUser = async (req, res) => {
     }
 };
 
+const getUsersByRole = async (req, res) => {
+    try {
+        const { role } = req.params;
+
+        if (!validateRole(role)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid role provided',
+                validRoles: Object.values(USER_ROLES)
+            });
+        }
+
+        const users = await User.find({ role }).select('-password');
+        res.status(200).json({
+            success: true,
+            count: users.length,
+            data: users
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error while fetching users by role',
+            error: error.message
+        });
+    }
+};
+
+const createInstructor = async (req, res) => {
+    try {
+        const { name, email, password, university, address } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Name, email, and password are required'
+            });
+        }
+
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({
+                success: false,
+                message: 'User already exists with this email'
+            });
+        }
+
+        const instructor = await User.create({
+            name,
+            email,
+            password,
+            role: USER_ROLES.INSTRUCTOR,
+            university,
+            address
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Instructor created successfully',
+            data: {
+                id: instructor._id,
+                name: instructor.name,
+                email: instructor.email,
+                role: instructor.role,
+                university: instructor.university,
+                address: instructor.address
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error while creating instructor',
+            error: error.message
+        });
+    }
+};
+
+const createStudent = async (req, res) => {
+    try {
+        const { name, email, password, university, address } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Name, email, and password are required'
+            });
+        }
+
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({
+                success: false,
+                message: 'User already exists with this email'
+            });
+        }
+
+        const student = await User.create({
+            name,
+            email,
+            password,
+            role: USER_ROLES.STUDENT,
+            university,
+            address
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Student created successfully',
+            data: {
+                id: student._id,
+                name: student.name,
+                email: student.email,
+                role: student.role,
+                university: student.university,
+                address: student.address
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error while creating student',
+            error: error.message
+        });
+    }
+};
+
+const deleteInstructor = async (req, res) => {
+    try {
+        const instructorId = req.params.id;
+        const instructor = await User.findById(instructorId);
+
+        if (!instructor) {
+            return res.status(404).json({
+                success: false,
+                message: 'Instructor not found'
+            });
+        }
+
+        if (instructor.role !== USER_ROLES.INSTRUCTOR) {
+            return res.status(400).json({
+                success: false,
+                message: 'User is not an instructor'
+            });
+        }
+
+        // Check if instructor has courses
+        const courseCount = await Course.countDocuments({ 'instructor.id': instructorId });
+        if (courseCount > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot delete instructor who has active courses. Please reassign or delete courses first.'
+            });
+        }
+
+        await User.findByIdAndDelete(instructorId);
+
+        res.status(200).json({
+            success: true,
+            message: 'Instructor deleted successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error while deleting instructor',
+            error: error.message
+        });
+    }
+};
+
+const deleteStudent = async (req, res) => {
+    try {
+        const studentId = req.params.id;
+        const student = await User.findById(studentId);
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found'
+            });
+        }
+
+        if (student.role !== USER_ROLES.STUDENT) {
+            return res.status(400).json({
+                success: false,
+                message: 'User is not a student'
+            });
+        }
+
+        // Remove student's learning progress records
+        await LearningProgress.deleteMany({ userId: studentId });
+
+        await User.findByIdAndDelete(studentId);
+
+        res.status(200).json({
+            success: true,
+            message: 'Student deleted successfully along with their learning progress'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error while deleting student',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     getAllUsers,
     getUserById,
     updateUserRole,
     deleteUser,
     getSystemStats,
-    createUser
+    createUser,
+    getUsersByRole,
+    createInstructor,
+    createStudent,
+    deleteInstructor,
+    deleteStudent
 };

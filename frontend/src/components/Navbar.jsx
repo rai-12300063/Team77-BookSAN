@@ -1,8 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import PermissionGate from './PermissionGate';
+import usePermissions from '../hooks/usePermissions';
 
 const Navbar = () => {
   const { user, logout, isAdmin, isInstructor, isStudent } = useAuth();
+  const { getAccessibleRoutes } = usePermissions();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -34,33 +37,49 @@ const Navbar = () => {
               <Link to="/" className="hover:text-blue-200 transition-colors">Dashboard</Link>
 
               {/* Student Navigation */}
-              {isStudent() && (
-                <>
-                  <Link to="/courses" className="hover:text-blue-200 transition-colors">Courses</Link>
-                  <Link to="/tasks" className="hover:text-blue-200 transition-colors">Tasks</Link>
-                  <Link to="/progress" className="hover:text-blue-200 transition-colors">Progress</Link>
-                </>
-              )}
+              <PermissionGate resource="courses" action="read">
+                <Link to="/courses" className="hover:text-blue-200 transition-colors">
+                  {isStudent() ? 'My Courses' : 'Courses'}
+                </Link>
+              </PermissionGate>
+
+              <PermissionGate resource="tasks" action="submit">
+                <Link to="/tasks" className="hover:text-blue-200 transition-colors">Tasks</Link>
+              </PermissionGate>
+
+              <PermissionGate resource="analytics" action="viewOwnProgress">
+                <Link to="/progress" className="hover:text-blue-200 transition-colors">Progress</Link>
+              </PermissionGate>
 
               {/* Instructor Navigation */}
-              {isInstructor() && (
-                <>
-                  <Link to="/courses" className="hover:text-blue-200 transition-colors">Courses</Link>
-                  <Link to="/instructor/manage-courses" className="hover:text-blue-200 transition-colors">Manage Courses</Link>
-                  <Link to="/instructor/students" className="hover:text-blue-200 transition-colors">Students</Link>
-                  <Link to="/instructor/analytics" className="hover:text-blue-200 transition-colors">Analytics</Link>
-                </>
-              )}
+              <PermissionGate resource="courses" action="manage">
+                <Link to="/instructor/manage-courses" className="hover:text-blue-200 transition-colors">Manage Courses</Link>
+              </PermissionGate>
+
+              <PermissionGate resource="students" action="manage">
+                <Link to="/instructor/students" className="hover:text-blue-200 transition-colors">Students</Link>
+              </PermissionGate>
+
+              <PermissionGate resource="analytics" action="viewCourse">
+                <Link to="/instructor/analytics" className="hover:text-blue-200 transition-colors">Analytics</Link>
+              </PermissionGate>
 
               {/* Admin Navigation */}
-              {isAdmin() && (
-                <>
-                  <Link to="/admin/users" className="hover:text-blue-200 transition-colors">Users</Link>
-                  <Link to="/admin/courses" className="hover:text-blue-200 transition-colors">All Courses</Link>
-                  <Link to="/admin/analytics" className="hover:text-blue-200 transition-colors">System Analytics</Link>
-                  <Link to="/admin/settings" className="hover:text-blue-200 transition-colors">Settings</Link>
-                </>
-              )}
+              <PermissionGate resource="users" action="read">
+                <Link to="/admin/users" className="hover:text-blue-200 transition-colors">Users</Link>
+              </PermissionGate>
+
+              <PermissionGate resource="courses" action="viewAll">
+                <Link to="/admin/courses" className="hover:text-blue-200 transition-colors">All Courses</Link>
+              </PermissionGate>
+
+              <PermissionGate resource="analytics" action="viewSystem">
+                <Link to="/admin/analytics" className="hover:text-blue-200 transition-colors">System Analytics</Link>
+              </PermissionGate>
+
+              <PermissionGate resource="settings" action="systemSettings">
+                <Link to="/admin/settings" className="hover:text-blue-200 transition-colors">Settings</Link>
+              </PermissionGate>
 
               <Link to="/profile" className="hover:text-blue-200 transition-colors">Profile</Link>
 

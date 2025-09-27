@@ -8,7 +8,10 @@ const {
     getStudentProgress,
     updateStudentGrade,
     getCourseAnalytics,
-    getMyStudents
+    getMyStudents,
+    enrollStudent,
+    removeStudent,
+    getAvailableStudents
 } = require('../controllers/instructorController');
 const { protect, requireInstructorOrAdmin, requirePermission } = require('../middleware/authMiddleware');
 const {
@@ -40,5 +43,10 @@ router.route('/courses/:courseId/students/:studentId')
     .put(requirePermission('progress:write'), requireCourseInstructor, updateStudentGrade);
 
 router.get('/students', requirePermission('students:read'), getMyStudents);
+
+// Student enrollment management routes
+router.get('/available-students', requirePermission('students:read'), getAvailableStudents);
+router.post('/courses/:courseId/enroll', requirePermission('enrollment:write'), requireCourseInstructor, enrollStudent);
+router.delete('/courses/:courseId/students/:studentId', requirePermission('enrollment:delete'), requireCourseInstructor, removeStudent);
 
 module.exports = router;

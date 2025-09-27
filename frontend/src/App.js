@@ -10,6 +10,7 @@ import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import ApiTest from './pages/ApiTest';
 import ProtectedRoute from './components/ProtectedRoute';
+import UserManagement from './pages/admin/UserManagement';
 
 function App() {
   return (
@@ -42,7 +43,7 @@ function App() {
           <Route path="/instructor/grade-book" element={<ProtectedRoute requireRole="instructor"><div>Grade Book</div></ProtectedRoute>} />
 
           {/* Admin routes */}
-          <Route path="/admin/users" element={<ProtectedRoute requireRole="admin"><div>User Management</div></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute requireRole="admin"><UserManagement /></ProtectedRoute>} />
           <Route path="/admin/courses" element={<ProtectedRoute requireRole="admin"><div>All Courses Management</div></ProtectedRoute>} />
           <Route path="/admin/analytics" element={<ProtectedRoute requireRole="admin"><div>System Analytics</div></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute requireRole="admin"><div>System Settings</div></ProtectedRoute>} />
