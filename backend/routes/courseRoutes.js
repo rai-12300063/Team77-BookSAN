@@ -9,7 +9,7 @@ const {
     unenrollFromCourse,
     getEnrolledCourses 
 } = require('../controllers/courseController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, requireInstructorOrAdmin, requirePermission, requireAnyRole } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // Public routes (no authentication required)
@@ -21,22 +21,22 @@ router.get('/', getCourses);
 router.get('/enrolled/my', protect, getEnrolledCourses);
 
 // POST /api/courses - Create a new course (instructor/admin only)
-router.post('/', protect, createCourse);
+router.post('/', protect, requireInstructorOrAdmin, requirePermission('courses:write'), createCourse);
 
 // GET /api/courses/:id - Get single course details
 router.get('/:id', getCourse);
 
 // POST /api/courses/:id/enroll - Enroll in a course
-router.post('/:id/enroll', protect, enrollInCourse);
+router.post('/:id/enroll', protect, requireAnyRole, enrollInCourse);
 
 // POST /api/courses/:id/unenroll - Unenroll from a course
-router.post('/:id/unenroll', protect, unenrollFromCourse);
+router.post('/:id/unenroll', protect, requireAnyRole, unenrollFromCourse);
 
 // PUT /api/courses/:id - Update a course (instructor/admin only)
-router.put('/:id', protect, updateCourse);
+router.put('/:id', protect, requireInstructorOrAdmin, updateCourse);
 
-// DELETE /api/courses/:id - Delete a course (admin only)
-router.delete('/:id', protect, deleteCourse);
+// DELETE /api/courses/:id - Delete a course (instructor/admin only)
+router.delete('/:id', protect, requireInstructorOrAdmin, deleteCourse);
 
 
 module.exports = router;

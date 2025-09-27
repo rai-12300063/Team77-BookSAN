@@ -1,6 +1,7 @@
 const Course = require('../models/Course');
 const LearningProgress = require('../models/LearningProgress');
-const User = require('../models/User'); // Add this import for unenroll function
+const User = require('../models/User');
+const { USER_ROLES, hasPermission } = require('../utils/rbac');
 
 // Get all courses with pagination and filtering
 const getCourses = async (req, res) => {
@@ -111,8 +112,11 @@ const updateCourse = async (req, res) => {
             return res.status(404).json({ message: 'Course not found' });
         }
 
-        // Check if user is instructor or admin
-        if (course.instructor.id.toString() !== req.user.id && req.user.role !== 'admin') {
+        // Check if user is instructor of this course or has admin permissions
+        const isInstructor = course.instructor.id.toString() === req.user.id;
+        const hasAdminPermissions = hasPermission(req.user.role, 'courses:write') && req.user.role === USER_ROLES.ADMIN;
+
+        if (!isInstructor && !hasAdminPermissions) {
             return res.status(403).json({ message: 'Not authorized to update this course' });
         }
 
@@ -156,8 +160,12 @@ const deleteCourse = async (req, res) => {
             return res.status(404).json({ message: 'Course not found' });
         }
 
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Admin access required' });
+        // Check if user has permission to delete courses (admin or instructor who owns the course)
+        const isInstructor = course.instructor.id.toString() === req.user.id;
+        const hasDeletePermission = hasPermission(req.user.role, 'courses:delete');
+
+        if (!hasDeletePermission && !isInstructor) {
+            return res.status(403).json({ message: 'Insufficient permissions to delete this course' });
         }
 
         await course.remove();
