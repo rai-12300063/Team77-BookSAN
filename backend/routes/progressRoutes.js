@@ -8,10 +8,16 @@ const {
   updateLearningGoals
 } = require('../controllers/progressController');
 const { protect, requireAnyRole, requirePermission } = require('../middleware/authMiddleware');
+const {
+    logApiAccess,
+    requireCourseEnrollment,
+    validateResourceOwnership
+} = require('../middleware/permissionMiddleware');
 
 // All routes require authentication
 router.use(protect);
 router.use(requireAnyRole);
+router.use(logApiAccess);
 
 // @route   GET /api/progress/analytics
 // @desc    Get user's learning analytics and statistics
@@ -26,7 +32,7 @@ router.put('/module', requirePermission('progress:write'), updateModuleCompletio
 // @route   GET /api/progress/course/:courseId
 // @desc    Get progress for a specific course
 // @access  Private
-router.get('/course/:courseId', requirePermission('progress:read'), getCourseProgress);
+router.get('/course/:courseId', requirePermission('progress:read'), requireCourseEnrollment, getCourseProgress);
 
 // @route   GET /api/progress/streaks
 // @desc    Get learning streaks and habits

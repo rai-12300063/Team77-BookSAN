@@ -6,7 +6,11 @@ const hasPermission = (userRole, requiredPermission) => {
     }
 
     const userPermissions = ROLE_PERMISSIONS[userRole];
-    return userPermissions && userPermissions.includes(requiredPermission);
+    if (!userPermissions) {
+        return false;
+    }
+
+    return userPermissions.includes(requiredPermission);
 };
 
 const hasAnyPermission = (userRole, requiredPermissions = []) => {

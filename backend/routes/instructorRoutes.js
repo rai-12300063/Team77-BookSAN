@@ -11,27 +11,33 @@ const {
     getMyStudents
 } = require('../controllers/instructorController');
 const { protect, requireInstructorOrAdmin, requirePermission } = require('../middleware/authMiddleware');
+const {
+    logApiAccess,
+    requireCourseInstructor,
+    requireOwnResourceOrRole
+} = require('../middleware/permissionMiddleware');
 
 const router = express.Router();
 
 router.use(protect);
 router.use(requireInstructorOrAdmin);
+router.use(logApiAccess);
 
 router.route('/courses')
     .get(requirePermission('courses:read'), getMyCourses)
     .post(requirePermission('courses:write'), createCourse);
 
 router.route('/courses/:id')
-    .put(requirePermission('courses:write'), updateCourse)
-    .delete(requirePermission('courses:delete'), deleteCourse);
+    .put(requirePermission('courses:write'), requireCourseInstructor, updateCourse)
+    .delete(requirePermission('courses:delete'), requireCourseInstructor, deleteCourse);
 
-router.get('/courses/:id/students', requirePermission('students:read'), getCourseStudents);
+router.get('/courses/:id/students', requirePermission('students:read'), requireCourseInstructor, getCourseStudents);
 
-router.get('/courses/:id/analytics', requirePermission('analytics:view'), getCourseAnalytics);
+router.get('/courses/:id/analytics', requirePermission('analytics:view'), requireCourseInstructor, getCourseAnalytics);
 
 router.route('/courses/:courseId/students/:studentId')
-    .get(requirePermission('students:progress:view'), getStudentProgress)
-    .put(requirePermission('progress:write'), updateStudentGrade);
+    .get(requirePermission('students:progress:view'), requireCourseInstructor, getStudentProgress)
+    .put(requirePermission('progress:write'), requireCourseInstructor, updateStudentGrade);
 
 router.get('/students', requirePermission('students:read'), getMyStudents);
 

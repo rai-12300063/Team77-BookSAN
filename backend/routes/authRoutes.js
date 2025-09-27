@@ -1,12 +1,16 @@
 
 const express = require('express');
 const { registerUser, loginUser, updateUserProfile, getProfile } = require('../controllers/authController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, requirePermission, requireAnyRole } = require('../middleware/authMiddleware');
+const { logApiAccess } = require('../middleware/permissionMiddleware');
 const router = express.Router();
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.get('/profile', protect, getProfile);
-router.put('/profile', protect, updateUserProfile);
+// Public routes
+router.post('/register', logApiAccess, registerUser);
+router.post('/login', logApiAccess, loginUser);
+
+// Protected routes
+router.get('/profile', protect, requireAnyRole, requirePermission('profile:read'), logApiAccess, getProfile);
+router.put('/profile', protect, requireAnyRole, requirePermission('profile:write'), logApiAccess, updateUserProfile);
 
 module.exports = router;
