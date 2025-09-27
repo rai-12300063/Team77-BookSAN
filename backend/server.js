@@ -12,9 +12,10 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/instructor', require('./routes/instructorRoutes'));
+app.use('/api/student', require('./routes/studentRoutes'));
 app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/progress', require('./routes/progressRoutes'));
-// app.use('/api/tasks', require('./routes/taskRoutes'));
+app.use('/api/tasks', require('./routes/taskRoutes'));
 
 const startServer = async () => {
   try {
