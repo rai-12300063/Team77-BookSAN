@@ -20,15 +20,35 @@ function App() {
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          
-          {/* Protected routes */}
+
+          {/* Protected routes - Available to all authenticated users */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
-          <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
-          <Route path="/courses/:courseId" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
-          <Route path="/api-test" element={<ProtectedRoute><ApiTest /></ProtectedRoute>} />
+
+          {/* Student routes */}
+          <Route path="/courses" element={<ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}><Courses /></ProtectedRoute>} />
+          <Route path="/courses/:courseId" element={<ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}><CourseDetail /></ProtectedRoute>} />
+          <Route path="/tasks" element={<ProtectedRoute allowedRoles={['student']}><Tasks /></ProtectedRoute>} />
+          <Route path="/progress" element={<ProtectedRoute allowedRoles={['student']}><div>Progress Page</div></ProtectedRoute>} />
+
+          {/* Instructor routes */}
+          <Route path="/instructor/manage-courses" element={<ProtectedRoute requireRole="instructor"><div>Instructor Course Management</div></ProtectedRoute>} />
+          <Route path="/instructor/students" element={<ProtectedRoute requireRole="instructor"><div>Student Management</div></ProtectedRoute>} />
+          <Route path="/instructor/analytics" element={<ProtectedRoute requireRole="instructor"><div>Instructor Analytics</div></ProtectedRoute>} />
+          <Route path="/instructor/create-course" element={<ProtectedRoute requireRole="instructor"><div>Create Course</div></ProtectedRoute>} />
+          <Route path="/instructor/courses/:id" element={<ProtectedRoute requireRole="instructor"><div>Course Details</div></ProtectedRoute>} />
+          <Route path="/instructor/courses/:id/analytics" element={<ProtectedRoute requireRole="instructor"><div>Course Analytics</div></ProtectedRoute>} />
+          <Route path="/instructor/grade-book" element={<ProtectedRoute requireRole="instructor"><div>Grade Book</div></ProtectedRoute>} />
+
+          {/* Admin routes */}
+          <Route path="/admin/users" element={<ProtectedRoute requireRole="admin"><div>User Management</div></ProtectedRoute>} />
+          <Route path="/admin/courses" element={<ProtectedRoute requireRole="admin"><div>All Courses Management</div></ProtectedRoute>} />
+          <Route path="/admin/analytics" element={<ProtectedRoute requireRole="admin"><div>System Analytics</div></ProtectedRoute>} />
+          <Route path="/admin/settings" element={<ProtectedRoute requireRole="admin"><div>System Settings</div></ProtectedRoute>} />
+
+          {/* Development/Testing routes - Admin only */}
+          <Route path="/api-test" element={<ProtectedRoute requireRole="admin"><ApiTest /></ProtectedRoute>} />
         </Routes>
       </Router>
     </AuthProvider>

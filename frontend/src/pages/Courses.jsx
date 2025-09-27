@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../axiosConfig';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { AdminOnly, InstructorOrAdmin } from '../components/RoleBasedRender';
 
 const Courses = () => {
+  const { isAdmin, isInstructor, isStudent } = useAuth();
   const [courses, setCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [filter, setFilter] = useState('all');
@@ -118,8 +121,31 @@ const Courses = () => {
     }
   };
 
+  // Admin function to delete course
+  const handleDeleteCourse = async (courseId) => {
+    const isConfirmed = window.confirm(
+      'Are you sure you want to delete this course? This action cannot be undone and will affect all enrolled students.'
+    );
+
+    if (!isConfirmed) return;
+
+    try {
+      console.log('🔄 Attempting to delete course:', courseId);
+      await axiosInstance.delete(`/api/admin/courses/${courseId}`);
+      console.log('✅ Course deletion successful');
+
+      // Refresh courses list
+      await fetchCourses();
+      alert('Course deleted successfully!');
+    } catch (error) {
+      console.error('❌ Error deleting course:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to delete course. Please try again.';
+      alert(errorMessage);
+    }
+  };
+
   const isEnrolled = (courseId) => {
-    return Array.isArray(enrolledCourses) && enrolledCourses.some(course => 
+    return Array.isArray(enrolledCourses) && enrolledCourses.some(course =>
       course?.courseId?._id === courseId
     );
   };
@@ -176,17 +202,55 @@ const Courses = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Courses</h1>
-        <p className="text-gray-600">Discover and enroll in courses to advance your learning journey</p>
-      
-        {/* Debug Info Panel */}
-        <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm">
-          <strong>Debug Info:</strong> 
-          {Array.isArray(courses) ? courses.length : 0} total courses loaded | 
-          {Array.isArray(enrolledCourses) ? enrolledCourses.length : 0} enrolled courses | 
-          {Array.isArray(filteredCourses) ? filteredCourses.length : 0} shown after filters |
-          Loading: {loading.toString()}
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Courses</h1>
+            <p className="text-gray-600">
+              {isStudent() && "Discover and enroll in courses to advance your learning journey"}
+              {isInstructor() && "Manage your courses and track student progress"}
+              {isAdmin() && "Oversee all courses in the system"}
+            </p>
+          </div>
+
+          {/* Role-based action buttons */}
+          <div className="flex space-x-3">
+            <InstructorOrAdmin>
+              <Link
+                to="/instructor/create-course"
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200 flex items-center"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Create Course
+              </Link>
+            </InstructorOrAdmin>
+
+            <AdminOnly>
+              <Link
+                to="/admin/courses"
+                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition duration-200 flex items-center"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Manage All
+              </Link>
+            </AdminOnly>
+          </div>
         </div>
+
+        {/* Debug Info Panel - Admin only */}
+        <AdminOnly>
+          <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm">
+            <strong>Debug Info:</strong>
+            {Array.isArray(courses) ? courses.length : 0} total courses loaded |
+            {Array.isArray(enrolledCourses) ? enrolledCourses.length : 0} enrolled courses |
+            {Array.isArray(filteredCourses) ? filteredCourses.length : 0} shown after filters |
+            Loading: {loading.toString()}
+          </div>
+        </AdminOnly>
       </div>
 
 
@@ -265,9 +329,10 @@ const Courses = () => {
                 )}
 
                 <div className="flex items-center justify-between">
-                  {enrolled ? (
+                  {/* Student actions */}
+                  {isStudent() && enrolled ? (
                     <div className="flex space-x-2 w-full">
-                      <Link 
+                      <Link
                         to={`/courses/${course._id}`}
                         className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200 flex items-center justify-center"
                       >
@@ -276,7 +341,7 @@ const Courses = () => {
                         </svg>
                         Continue Learning
                       </Link>
-                      <button 
+                      <button
                         onClick={() => handleUnenrollment(course._id)}
                         className="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600 transition duration-200"
                         title="Drop Course"
@@ -284,16 +349,76 @@ const Courses = () => {
                         Drop
                       </button>
                     </div>
-                  ) : (
-                    <button 
+                  ) : isStudent() && !enrolled ? (
+                    <button
                       onClick={() => handleEnrollment(course._id)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 flex items-center"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 flex items-center w-full"
                     >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
                       Enroll Now
                     </button>
+                  ) : null}
+
+                  {/* Instructor actions */}
+                  {isInstructor() && (
+                    <div className="flex space-x-2 w-full">
+                      <Link
+                        to={`/courses/${course._id}`}
+                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 flex items-center justify-center"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        View Course
+                      </Link>
+                      <Link
+                        to={`/instructor/courses/${course._id}`}
+                        className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition duration-200"
+                        title="Manage Course"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* Admin actions */}
+                  {isAdmin() && (
+                    <div className="flex space-x-2 w-full">
+                      <Link
+                        to={`/courses/${course._id}`}
+                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 flex items-center justify-center"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        View
+                      </Link>
+                      <Link
+                        to={`/admin/courses/${course._id}/edit`}
+                        className="bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition duration-200"
+                        title="Edit Course"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteCourse(course._id)}
+                        className="bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                        title="Delete Course"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   )}
                   
                   <div className="flex items-center text-gray-500 ml-4">
