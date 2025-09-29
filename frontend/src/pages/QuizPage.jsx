@@ -16,68 +16,18 @@ const QuizPage = () => {
         setLoading(true);
         setError('');
 
-        // This will be connected to the backend API in step 13.2
-        // For now, using mock data for the interface design
-        const mockQuizData = {
-          id: quizId,
-          title: "Module 1 Assessment",
-          description: "Test your understanding of the fundamental concepts covered in Module 1.",
-          instructions: "Read each question carefully and select the best answer. You have 30 minutes to complete this quiz. Make sure to review your answers before submitting.",
-          timeLimit: 30, // minutes
-          attempts: 3,
-          questions: [
-            {
-              id: 'q1',
-              type: 'multiple_choice',
-              question: "What is the primary purpose of a learning management system?",
-              options: [
-                { id: 'a', text: "To replace traditional classroom learning entirely" },
-                { id: 'b', text: "To facilitate online learning and course management" },
-                { id: 'c', text: "To store student grades only" },
-                { id: 'd', text: "To provide entertainment content" }
-              ]
-            },
-            {
-              id: 'q2',
-              type: 'multiple_select',
-              question: "Which of the following are benefits of online learning? (Select all that apply)",
-              options: [
-                { id: 'a', text: "Flexibility in scheduling" },
-                { id: 'b', text: "Access to diverse resources" },
-                { id: 'c', text: "Self-paced learning" },
-                { id: 'd', text: "Reduced technology requirements" }
-              ]
-            },
-            {
-              id: 'q3',
-              type: 'true_false',
-              question: "Effective online learning requires active student participation and engagement."
-            },
-            {
-              id: 'q4',
-              type: 'text',
-              question: "Describe one strategy you would use to stay motivated in an online learning environment."
-            },
-            {
-              id: 'q5',
-              type: 'multiple_choice',
-              question: "What is the most important factor for successful online learning?",
-              options: [
-                { id: 'a', text: "Fast internet connection" },
-                { id: 'b', text: "Expensive equipment" },
-                { id: 'c', text: "Self-discipline and time management" },
-                { id: 'd', text: "Previous online experience" }
-              ]
-            }
-          ]
-        };
-
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setQuizData(mockQuizData);
+        // Fetch quiz data from backend API
+        const response = await axiosInstance.get(`/api/quiz/${quizId}`);
+        setQuizData(response.data);
       } catch (err) {
         console.error('Error fetching quiz data:', err);
-        setError('Failed to load quiz. Please try again.');
+        if (err.response?.status === 404) {
+          setError('Quiz not found.');
+        } else if (err.response?.status === 403) {
+          setError(err.response.data.message || 'You do not have permission to access this quiz.');
+        } else {
+          setError('Failed to load quiz. Please try again.');
+        }
       } finally {
         setLoading(false);
       }

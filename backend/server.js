@@ -16,6 +16,7 @@ app.use('/api/student', require('./routes/studentRoutes'));
 app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/progress', require('./routes/progressRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
+app.use('/api/quiz', require('./routes/quizRoutes'));
 
 const startServer = async () => {
   try {
