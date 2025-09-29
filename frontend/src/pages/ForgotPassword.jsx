@@ -7,19 +7,40 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [validationError, setValidationError] = useState('');
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  const validateEmail = () => {
+    if (!email) {
+      setValidationError('Email address is required');
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setValidationError('Please enter a valid email address');
+      return false;
+    }
+
+    if (email.length > 254) {
+      setValidationError('Email address is too long');
+      return false;
+    }
+
+    setValidationError('');
+    return true;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitAttempted(true);
     setError('');
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
-      setLoading(false);
+    if (!validateEmail()) {
       return;
     }
+
+    setLoading(true);
 
     try {
       const response = await axiosInstance.post('/api/auth/forgot-password', {
@@ -31,10 +52,18 @@ const ForgotPassword = () => {
         setEmail(''); // Clear the form
       }
     } catch (err) {
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
+      console.error('Forgot password error:', err);
+
+      if (err.response?.status === 400) {
+        setError('Invalid email address. Please check and try again.');
+      } else if (err.response?.status === 429) {
+        setError('Too many reset attempts. Please wait 15 minutes before trying again.');
+      } else if (err.response?.status >= 500) {
+        setError('Server temporarily unavailable. Please try again in a few moments.');
+      } else if (err.code === 'NETWORK_ERROR' || !err.response) {
+        setError('Network error. Please check your internet connection and try again.');
       } else {
-        setError('An error occurred. Please try again later.');
+        setError(err.response?.data?.message || 'Unable to send reset email. Please try again later.');
       }
     } finally {
       setLoading(false);
@@ -43,9 +72,18 @@ const ForgotPassword = () => {
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
-    // Clear error when user starts typing
+
+    // Clear errors when user starts typing
     if (error) {
       setError('');
+    }
+    if (validationError) {
+      setValidationError('');
+    }
+
+    // Real-time validation for better UX
+    if (submitAttempted) {
+      setTimeout(() => validateEmail(), 300);
     }
   };
 
@@ -180,12 +218,15 @@ const ForgotPassword = () => {
                   value={email}
                   onChange={handleEmailChange}
                   className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm ${
-                    error ? 'border-red-300' : 'border-gray-300'
+                    validationError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Enter your email address"
                   disabled={loading}
                 />
               </div>
+              {validationError && (
+                <p className="mt-1 text-xs text-red-600">{validationError}</p>
+              )}
             </div>
 
             <div>

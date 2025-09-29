@@ -123,11 +123,36 @@ const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
 
+        // Enhanced validation
         if (!email) {
             return res.status(400).json({ message: 'Email is required' });
         }
 
-        const user = await User.findOne({ email: email.toLowerCase() });
+        if (typeof email !== 'string') {
+            return res.status(400).json({ message: 'Invalid email format' });
+        }
+
+        // Basic email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) {
+            return res.status(400).json({ message: 'Invalid email address' });
+        }
+
+        if (email.length > 254) {
+            return res.status(400).json({ message: 'Email address is too long' });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
+
+        // Check if user recently requested a reset (rate limiting)
+        if (user && user.resetPasswordExpires && user.resetPasswordExpires > Date.now()) {
+            const timeLeft = Math.ceil((user.resetPasswordExpires - Date.now()) / (1000 * 60));
+            if (timeLeft > 50) { // If more than 50 minutes left, they just requested
+                return res.status(429).json({
+                    message: `Please wait ${timeLeft} minutes before requesting another password reset.`
+                });
+            }
+        }
 
         if (!user) {
             // Don't reveal if email exists or not for security

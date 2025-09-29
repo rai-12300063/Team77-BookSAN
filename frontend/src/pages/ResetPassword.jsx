@@ -13,6 +13,9 @@ const ResetPassword = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [tokenValid, setTokenValid] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     // Check if token exists
@@ -24,23 +27,39 @@ const ResetPassword = () => {
     }
   }, [token]);
 
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters long';
+    } else if (formData.password.length > 128) {
+      errors.password = 'Password must be less than 128 characters';
+    } else if (!/(?=.*[a-zA-Z])/.test(formData.password)) {
+      errors.password = 'Password must contain at least one letter';
+    }
+
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitAttempted(true);
     setError('');
 
-    // Validate passwords
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
+    if (!validateForm()) {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setLoading(false);
-      return;
-    }
+    setLoading(true);
 
     try {
       const response = await axiosInstance.post(`/api/auth/reset-password/${token}`, {
@@ -49,16 +68,36 @@ const ResetPassword = () => {
 
       if (response.data.success) {
         setSuccess(true);
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
+        // Start countdown for redirect
+        let timeLeft = 3;
+        const countdownInterval = setInterval(() => {
+          setCountdown(timeLeft);
+          timeLeft--;
+          if (timeLeft < 0) {
+            clearInterval(countdownInterval);
+            navigate('/login');
+          }
+        }, 1000);
       }
     } catch (err) {
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
+      console.error('Reset password error:', err);
+
+      if (err.response?.status === 400) {
+        if (err.response.data?.message?.includes('token')) {
+          setError('This reset link has expired or is invalid. Please request a new password reset.');
+        } else {
+          setError(err.response.data.message || 'Invalid request. Please check your input and try again.');
+        }
+      } else if (err.response?.status === 404) {
+        setError('Reset link not found. Please request a new password reset.');
+      } else if (err.response?.status === 429) {
+        setError('Too many attempts. Please wait a few minutes before trying again.');
+      } else if (err.response?.status >= 500) {
+        setError('Server error. Please try again in a few moments.');
+      } else if (err.code === 'NETWORK_ERROR' || !err.response) {
+        setError('Network error. Please check your internet connection and try again.');
       } else {
-        setError('An error occurred. Please try again later.');
+        setError(err.response?.data?.message || 'An unexpected error occurred. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -72,9 +111,22 @@ const ResetPassword = () => {
       [name]: value
     }));
 
-    // Clear error when user starts typing
+    // Clear errors when user starts typing
     if (error) {
       setError('');
+    }
+
+    // Clear field-specific validation errors
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+
+    // Real-time validation for better UX
+    if (submitAttempted) {
+      setTimeout(() => validateForm(), 100);
     }
   };
 
@@ -162,7 +214,7 @@ const ResetPassword = () => {
               </p>
 
               <p className="text-sm text-gray-500 mb-6">
-                Redirecting to login page in 3 seconds...
+                Redirecting to login page in {countdown} second{countdown !== 1 ? 's' : ''}...
               </p>
 
               <Link
@@ -233,15 +285,19 @@ const ResetPassword = () => {
                   value={formData.password}
                   onChange={handleChange}
                   className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm ${
-                    error ? 'border-red-300' : 'border-gray-300'
+                    validationErrors.password ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Enter your new password"
                   disabled={loading}
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Must be at least 6 characters long
-              </p>
+              {validationErrors.password ? (
+                <p className="mt-1 text-xs text-red-600">{validationErrors.password}</p>
+              ) : (
+                <p className="mt-1 text-xs text-gray-500">
+                  Must be at least 6 characters long and contain at least one letter
+                </p>
+              )}
             </div>
 
             <div>
@@ -258,12 +314,15 @@ const ResetPassword = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm ${
-                    error ? 'border-red-300' : 'border-gray-300'
+                    validationErrors.confirmPassword ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Confirm your new password"
                   disabled={loading}
                 />
               </div>
+              {validationErrors.confirmPassword && (
+                <p className="mt-1 text-xs text-red-600">{validationErrors.confirmPassword}</p>
+              )}
             </div>
 
             <div>
