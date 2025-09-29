@@ -10,6 +10,7 @@ import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
+import QuizPage from './pages/QuizPage';
 import ApiTest from './pages/ApiTest';
 import ProtectedRoute from './components/ProtectedRoute';
 import UserManagement from './pages/admin/UserManagement';
@@ -34,6 +35,7 @@ function App() {
           {/* Student routes */}
           <Route path="/courses" element={<ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}><Courses /></ProtectedRoute>} />
           <Route path="/courses/:courseId" element={<ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}><CourseDetail /></ProtectedRoute>} />
+          <Route path="/courses/:courseId/quiz/:quizId" element={<ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}><QuizPage /></ProtectedRoute>} />
           <Route path="/tasks" element={<ProtectedRoute allowedRoles={['student']}><Tasks /></ProtectedRoute>} />
           <Route path="/progress" element={<ProtectedRoute allowedRoles={['student']}><div>Progress Page</div></ProtectedRoute>} />
 
