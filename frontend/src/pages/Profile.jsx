@@ -11,7 +11,6 @@ const Profile = () => {
     phone: '',
     address: '',
     dateOfBirth: '',
-    bio: '',
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
@@ -32,7 +31,6 @@ const Profile = () => {
         phone: user.phone || '',
         address: user.address || '',
         dateOfBirth: user.dateOfBirth || '',
-        bio: user.bio || '',
       });
     }
   }, [user]);
@@ -210,22 +208,6 @@ const Profile = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bio / About Me
-                </label>
-                <textarea
-                  rows="4"
-                  value={formData.bio}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Tell us a bit about yourself, your interests, goals, or any other information you'd like to share..."
-                  maxLength="500"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {formData.bio.length}/500 characters
-                </p>
-              </div>
 
               <div className="pt-4">
                 <button

@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
 import Courses from './pages/Courses';
@@ -23,6 +24,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Protected routes - Available to all authenticated users */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
