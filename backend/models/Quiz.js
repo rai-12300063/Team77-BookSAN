@@ -46,7 +46,7 @@ const quizSchema = new mongoose.Schema({
   dueDate: { type: Date },
 
   // Quiz metadata
-  difficulty: { type: Number, min: 1, max: 3, default: 1 }, // 1=Easy, 2=Medium, 3=Hard
+  difficulty: { type: Number, min: 1, max: 5, default: 1 }, // 1=Easy, 2=Medium, 3=Hard, 4=Expert, 5=Master
   estimatedDuration: { type: Number }, // in minutes
   status: {
     type: String,

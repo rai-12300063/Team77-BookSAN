@@ -5,7 +5,11 @@ const {
   startQuizAttempt,
   saveQuizProgress,
   submitQuizAttempt,
-  getQuizResults
+  getQuizResults,
+  createQuiz,
+  updateQuiz,
+  deleteQuiz,
+  getAllQuizzes
 } = require('../controllers/quizController');
 const { protect, requirePermission, requireAnyRole } = require('../middleware/authMiddleware');
 const { logApiAccess } = require('../middleware/permissionMiddleware');
@@ -56,6 +60,36 @@ router.get('/attempt/:attemptId/results',
   requirePermission('quiz:read'),
   logApiAccess,
   getQuizResults
+);
+
+// ========== ADMIN ROUTES ==========
+
+// Get all quizzes (admin management)
+router.get('/admin/all',
+  requirePermission('quiz:write'),
+  logApiAccess,
+  getAllQuizzes
+);
+
+// Create new quiz in a course
+router.post('/admin/course/:courseId',
+  requirePermission('quiz:write'),
+  logApiAccess,
+  createQuiz
+);
+
+// Update existing quiz
+router.put('/admin/:quizId',
+  requirePermission('quiz:write'),
+  logApiAccess,
+  updateQuiz
+);
+
+// Delete quiz
+router.delete('/admin/:quizId',
+  requirePermission('quiz:delete'),
+  logApiAccess,
+  deleteQuiz
 );
 
 module.exports = router;

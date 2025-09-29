@@ -372,11 +372,205 @@ const getQuizResults = async (req, res) => {
   }
 };
 
+// Admin: Create a new quiz
+const createQuiz = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const {
+      title,
+      description,
+      instructions,
+      timeLimit,
+      maxAttempts,
+      passingScore,
+      difficulty,
+      questions,
+      status = 'draft'
+    } = req.body;
+    const userId = req.user.id;
+
+    // Verify course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Calculate total points from questions
+    const totalPoints = questions.reduce((sum, question) => sum + (question.points || 1), 0);
+
+    // Create quiz
+    const quiz = new Quiz({
+      title,
+      description,
+      instructions,
+      timeLimit,
+      maxAttempts,
+      passingScore: passingScore || 70,
+      status,
+      difficulty: difficulty || 1,
+      courseId,
+      createdBy: userId,
+      questions: questions.map((question, index) => ({
+        id: question.id || `q${index + 1}`,
+        type: question.type,
+        question: question.question,
+        options: question.options || [],
+        correctAnswer: question.correctAnswer,
+        points: question.points || 1,
+        explanation: question.explanation
+      })),
+      totalPoints
+    });
+
+    await quiz.save();
+
+    res.status(201).json({
+      message: 'Quiz created successfully',
+      quiz: {
+        id: quiz._id,
+        title: quiz.title,
+        description: quiz.description,
+        questionsCount: quiz.questions.length,
+        totalPoints: quiz.totalPoints,
+        status: quiz.status
+      }
+    });
+  } catch (error) {
+    console.error('Error creating quiz:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Admin: Update an existing quiz
+const updateQuiz = async (req, res) => {
+  try {
+    const { quizId } = req.params;
+    const updateData = req.body;
+    const userId = req.user.id;
+
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ message: 'Quiz not found' });
+    }
+
+    // Recalculate total points if questions are updated
+    if (updateData.questions) {
+      updateData.totalPoints = updateData.questions.reduce((sum, question) => sum + (question.points || 1), 0);
+    }
+
+    // Update quiz
+    Object.assign(quiz, updateData);
+    quiz.updatedBy = userId;
+    quiz.updatedAt = new Date();
+
+    await quiz.save();
+
+    res.json({
+      message: 'Quiz updated successfully',
+      quiz: {
+        id: quiz._id,
+        title: quiz.title,
+        description: quiz.description,
+        questionsCount: quiz.questions.length,
+        totalPoints: quiz.totalPoints,
+        status: quiz.status
+      }
+    });
+  } catch (error) {
+    console.error('Error updating quiz:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Admin: Delete a quiz
+const deleteQuiz = async (req, res) => {
+  try {
+    const { quizId } = req.params;
+
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ message: 'Quiz not found' });
+    }
+
+    // Check if quiz has any attempts
+    const attemptCount = await QuizAttempt.countDocuments({ quizId });
+    if (attemptCount > 0) {
+      return res.status(403).json({
+        message: 'Cannot delete quiz with existing attempts',
+        attempts: attemptCount
+      });
+    }
+
+    await Quiz.findByIdAndDelete(quizId);
+
+    res.json({ message: 'Quiz deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting quiz:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Admin: Get all quizzes for management
+const getAllQuizzes = async (req, res) => {
+  try {
+    const { courseId } = req.query;
+
+    const filter = {};
+    if (courseId) {
+      filter.courseId = courseId;
+    }
+
+    const quizzes = await Quiz.find(filter)
+      .populate('courseId', 'title')
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ createdAt: -1 });
+
+    const quizzesWithStats = await Promise.all(
+      quizzes.map(async (quiz) => {
+        const attemptCount = await QuizAttempt.countDocuments({ quizId: quiz._id });
+        const completedAttempts = await QuizAttempt.countDocuments({
+          quizId: quiz._id,
+          status: { $in: ['submitted', 'auto_submitted'] }
+        });
+
+        return {
+          id: quiz._id,
+          title: quiz.title,
+          description: quiz.description,
+          course: quiz.courseId,
+          status: quiz.status,
+          difficulty: quiz.difficulty,
+          questionsCount: quiz.questions.length,
+          totalPoints: quiz.totalPoints,
+          timeLimit: quiz.timeLimit,
+          maxAttempts: quiz.maxAttempts,
+          passingScore: quiz.passingScore,
+          createdBy: quiz.createdBy,
+          createdAt: quiz.createdAt,
+          stats: {
+            totalAttempts: attemptCount,
+            completedAttempts
+          }
+        };
+      })
+    );
+
+    res.json(quizzesWithStats);
+  } catch (error) {
+    console.error('Error fetching quizzes:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
   getCourseQuizzes,
   getQuiz,
   startQuizAttempt,
   saveQuizProgress,
   submitQuizAttempt,
-  getQuizResults
+  getQuizResults,
+  createQuiz,
+  updateQuiz,
+  deleteQuiz,
+  getAllQuizzes
 };
