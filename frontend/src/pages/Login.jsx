@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 
 const Login = () => {
@@ -73,16 +73,37 @@ const Login = () => {
           required
           disabled={loading}
         />
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
           disabled={loading}
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
-        
-        <div className="mt-4 text-center text-sm text-gray-600">
-          <p>Test credentials:</p>
+
+        {/* Forgot Password Link */}
+        <div className="mt-4 text-center">
+          <Link
+            to="/forgot-password"
+            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            Forgot your password?
+          </Link>
+        </div>
+
+        {/* Register Link */}
+        <div className="mt-2 text-center">
+          <span className="text-sm text-gray-600">Don't have an account? </span>
+          <Link
+            to="/register"
+            className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
+          >
+            Sign up here
+          </Link>
+        </div>
+
+        <div className="mt-6 text-center text-sm text-gray-600 bg-gray-50 p-3 rounded">
+          <p className="font-medium mb-1">Test credentials:</p>
           <p><strong>Email:</strong> test@example.com</p>
           <p><strong>Password:</strong> password123</p>
         </div>
