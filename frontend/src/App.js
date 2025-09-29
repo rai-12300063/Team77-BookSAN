@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
 import Courses from './pages/Courses';
@@ -21,6 +22,7 @@ function App() {
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Protected routes - Available to all authenticated users */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -46,7 +48,6 @@ function App() {
           <Route path="/admin/users" element={<ProtectedRoute requireRole="admin"><UserManagement /></ProtectedRoute>} />
           <Route path="/admin/courses" element={<ProtectedRoute requireRole="admin"><div>All Courses Management</div></ProtectedRoute>} />
           <Route path="/admin/analytics" element={<ProtectedRoute requireRole="admin"><div>System Analytics</div></ProtectedRoute>} />
-          <Route path="/admin/settings" element={<ProtectedRoute requireRole="admin"><div>System Settings</div></ProtectedRoute>} />
 
           {/* Development/Testing routes - Admin only */}
           <Route path="/api-test" element={<ProtectedRoute requireRole="admin"><ApiTest /></ProtectedRoute>} />

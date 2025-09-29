@@ -56,9 +56,6 @@ const Navbar = () => {
                 <Link to="/admin/users" className="hover:text-blue-200 transition-colors">Users</Link>
               </PermissionGate>
 
-              <PermissionGate resource="settings" action="systemSettings">
-                <Link to="/admin/settings" className="hover:text-blue-200 transition-colors">Settings</Link>
-              </PermissionGate>
 
               <Link to="/profile" className="hover:text-blue-200 transition-colors">Profile</Link>
 
