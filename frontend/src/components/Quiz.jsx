@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axiosInstance from '../axiosConfig';
 
 const Quiz = ({
   quizData,
@@ -12,6 +13,8 @@ const Quiz = ({
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [quizStatus, setQuizStatus] = useState('not_started'); // 'not_started', 'in_progress', 'paused', 'completed', 'submitted'
   const [showReview, setShowReview] = useState(false);
+  const [attemptId, setAttemptId] = useState(null);
+  const [apiError, setApiError] = useState('');
 
   // Initialize quiz timer
   useEffect(() => {
@@ -40,21 +43,57 @@ const Quiz = ({
     };
   }, [quizStatus, timeRemaining]);
 
-  const handleStartQuiz = () => {
-    setQuizStatus('in_progress');
-    setCurrentQuestion(0);
-    setAnswers({});
+  const handleStartQuiz = async () => {
+    try {
+      setApiError('');
+      const response = await axiosInstance.post(`/api/quiz/${quizData.id}/attempt`);
+
+      setAttemptId(response.data.attemptId);
+      setQuizStatus(response.data.status);
+      setCurrentQuestion(response.data.currentQuestion || 0);
+      setTimeRemaining(response.data.timeRemaining);
+
+      // If resuming, load existing answers
+      if (response.data.answers && response.data.answers.length > 0) {
+        const existingAnswers = {};
+        response.data.answers.forEach(answer => {
+          existingAnswers[answer.questionId] = answer.selectedAnswer;
+        });
+        setAnswers(existingAnswers);
+      } else {
+        setAnswers({});
+      }
+    } catch (error) {
+      console.error('Error starting quiz:', error);
+      setApiError(error.response?.data?.message || 'Failed to start quiz. Please try again.');
+    }
   };
 
-  const handlePauseQuiz = () => {
-    setQuizStatus('paused');
-    if (onQuizPause) {
-      onQuizPause({
+  const handlePauseQuiz = async () => {
+    if (!attemptId) return;
+
+    try {
+      setApiError('');
+      await axiosInstance.put(`/api/quiz/attempt/${attemptId}/progress`, {
         currentQuestion,
         answers,
         timeRemaining,
         status: 'paused'
       });
+
+      setQuizStatus('paused');
+
+      if (onQuizPause) {
+        onQuizPause({
+          currentQuestion,
+          answers,
+          timeRemaining,
+          status: 'paused'
+        });
+      }
+    } catch (error) {
+      console.error('Error pausing quiz:', error);
+      setApiError(error.response?.data?.message || 'Failed to pause quiz.');
     }
   };
 
@@ -107,25 +146,64 @@ const Quiz = ({
     setShowReview(true);
   };
 
-  const handleFinalSubmit = () => {
-    setQuizStatus('submitted');
-    if (onQuizComplete) {
-      onQuizComplete({
+  const handleFinalSubmit = async () => {
+    if (!attemptId) return;
+
+    try {
+      setApiError('');
+      const response = await axiosInstance.post(`/api/quiz/attempt/${attemptId}/submit`, {
         answers,
         timeSpent: quizData?.timeLimit ? (quizData.timeLimit * 60) - timeRemaining : null,
         status: 'completed'
       });
+
+      setQuizStatus('submitted');
+
+      if (onQuizComplete) {
+        onQuizComplete({
+          ...response.data.results,
+          answers,
+          timeSpent: quizData?.timeLimit ? (quizData.timeLimit * 60) - timeRemaining : null
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      setApiError(error.response?.data?.message || 'Failed to submit quiz. Please try again.');
     }
   };
 
-  const handleAutoSubmit = () => {
-    setQuizStatus('submitted');
-    if (onQuizComplete) {
-      onQuizComplete({
+  const handleAutoSubmit = async () => {
+    if (!attemptId) return;
+
+    try {
+      const response = await axiosInstance.post(`/api/quiz/attempt/${attemptId}/submit`, {
         answers,
         timeSpent: quizData?.timeLimit * 60,
         status: 'auto_submitted'
       });
+
+      setQuizStatus('submitted');
+
+      if (onQuizComplete) {
+        onQuizComplete({
+          ...response.data.results,
+          answers,
+          timeSpent: quizData?.timeLimit * 60,
+          status: 'auto_submitted'
+        });
+      }
+    } catch (error) {
+      console.error('Error auto-submitting quiz:', error);
+      // Still mark as submitted locally even if API call fails
+      setQuizStatus('submitted');
+      if (onQuizComplete) {
+        onQuizComplete({
+          answers,
+          timeSpent: quizData?.timeLimit * 60,
+          status: 'auto_submitted',
+          error: 'Submission may have failed due to connection issues'
+        });
+      }
     }
   };
 
