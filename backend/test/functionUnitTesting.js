@@ -28,6 +28,7 @@ const Course = require('../models/Course');
 const LearningProgress = require('../models/LearningProgress');
 const Module = require('../models/Module');
 const ModuleProgress = require('../models/ModuleProgress');
+const ProgressSyncService = require('../services/progressSyncService');
 
 // Import external dependencies
 const bcrypt = require('bcrypt');
@@ -1113,7 +1114,170 @@ describe('🚀 OLPT Function Unit Testing Suite', () => {
     });
 
     // ===========================================
-    // 📋 TEST SUMMARY GENERATION
+    // � PROGRESS SYNCHRONIZATION TESTS
+    // ===========================================
+    describe('🔄 Progress Synchronization', () => {
+        
+        before(() => {
+            testStats.testModules.push({
+                name: 'Progress Synchronization',
+                icon: '🔄',
+                functions: ['syncModuleWithCourse', 'syncModuleCompletion', 'getProgressSyncReport'],
+                status: 'running'
+            });
+        });
+
+        describe('syncModuleWithCourse Function', () => {
+            it('✅ should sync module progress with course progress', async () => {
+                testStats.totalTests++;
+                
+                const userId = 'testUserId';
+                const courseId = 'testCourseId';
+                const moduleId = 'testModuleId';
+
+                // Mock module progress data
+                const mockModuleProgresses = [
+                    {
+                        userId,
+                        courseId,
+                        moduleId: { _id: moduleId, moduleNumber: 1 },
+                        isCompleted: true,
+                        totalTimeSpent: 45,
+                        moduleAssessment: { bestScorePercentage: 85 }
+                    }
+                ];
+
+                // Mock learning progress
+                const mockLearningProgress = {
+                    userId,
+                    courseId,
+                    moduleProgress: { totalModules: 0, completedModules: 0 },
+                    modulesCompleted: [],
+                    save: sinon.stub().resolves()
+                };
+
+                sinon.stub(ModuleProgress, 'find').resolves(mockModuleProgresses);
+                sinon.stub(Module, 'countDocuments').resolves(4);
+                sinon.stub(LearningProgress, 'findOne').resolves(mockLearningProgress);
+
+                const result = await ProgressSyncService.syncModuleWithCourse(userId, courseId);
+
+                expect(result).to.exist;
+                expect(mockLearningProgress.save.calledOnce).to.be.true;
+                
+                testStats.passedTests++;
+            });
+
+            it('📊 should calculate completion percentage correctly', async () => {
+                testStats.totalTests++;
+                
+                const userId = 'testUserId';
+                const courseId = 'testCourseId';
+
+                // Mock 2 completed out of 4 total modules
+                const mockModuleProgresses = [
+                    { isCompleted: true, moduleAssessment: { bestScorePercentage: 85 } },
+                    { isCompleted: true, moduleAssessment: { bestScorePercentage: 92 } },
+                    { isCompleted: false, moduleAssessment: { bestScorePercentage: 0 } },
+                    { isCompleted: false, moduleAssessment: { bestScorePercentage: 0 } }
+                ];
+
+                const mockLearningProgress = {
+                    userId,
+                    courseId,
+                    moduleProgress: { totalModules: 0, completedModules: 0 },
+                    modulesCompleted: [],
+                    save: sinon.stub().resolves()
+                };
+
+                sinon.stub(ModuleProgress, 'find').resolves(mockModuleProgresses);
+                sinon.stub(Module, 'countDocuments').resolves(4);
+                sinon.stub(LearningProgress, 'findOne').resolves(mockLearningProgress);
+
+                await ProgressSyncService.syncModuleWithCourse(userId, courseId);
+
+                // Should be 50% completion (2 out of 4 modules)
+                expect(mockLearningProgress.completionPercentage).to.equal(50);
+                
+                testStats.passedTests++;
+            });
+        });
+
+        describe('syncModuleCompletion Function', () => {
+            it('✅ should mark module as completed and sync with course', async () => {
+                testStats.totalTests++;
+                
+                const userId = 'testUserId';
+                const courseId = 'testCourseId';
+                const moduleId = 'testModuleId';
+                const completionData = { timeSpent: 30, score: 95 };
+
+                const mockModuleProgress = {
+                    userId,
+                    courseId,
+                    moduleId,
+                    isCompleted: false,
+                    totalTimeSpent: 60,
+                    moduleAssessment: { bestScorePercentage: 80 },
+                    save: sinon.stub().resolves()
+                };
+
+                sinon.stub(ModuleProgress, 'findOne').resolves(mockModuleProgress);
+                sinon.stub(ProgressSyncService, 'syncModuleWithCourse').resolves({});
+
+                await ProgressSyncService.syncModuleCompletion(userId, courseId, moduleId, completionData);
+
+                expect(mockModuleProgress.isCompleted).to.be.true;
+                expect(mockModuleProgress.status).to.equal('completed');
+                expect(mockModuleProgress.save.calledOnce).to.be.true;
+                
+                testStats.passedTests++;
+            });
+        });
+
+        describe('getProgressSyncReport Function', () => {
+            it('✅ should generate comprehensive progress report', async () => {
+                testStats.totalTests++;
+                
+                const userId = 'testUserId';
+                const courseId = 'testCourseId';
+
+                const mockLearningProgress = {
+                    moduleProgress: {
+                        completedModules: 2,
+                        averageModuleScore: 87,
+                        strugglingModules: []
+                    },
+                    totalTimeSpent: 120,
+                    isCompleted: false,
+                    achievements: [{ type: 'first-module', description: 'Completed first module' }],
+                    lastAccessDate: new Date()
+                };
+
+                const mockModuleProgresses = [
+                    { status: 'completed' },
+                    { status: 'in-progress' },
+                    { status: 'not-started' }
+                ];
+
+                sinon.stub(LearningProgress, 'findOne').resolves(mockLearningProgress);
+                sinon.stub(ModuleProgress, 'find').resolves(mockModuleProgresses);
+                sinon.stub(Module, 'countDocuments').resolves(4);
+
+                const report = await ProgressSyncService.getProgressSyncReport(userId, courseId);
+
+                expect(report).to.have.property('summary');
+                expect(report.summary.completedModules).to.equal(2);
+                expect(report.summary.totalModules).to.equal(4);
+                expect(report).to.have.property('achievements');
+                
+                testStats.passedTests++;
+            });
+        });
+    });
+
+    // ===========================================
+    // �📋 TEST SUMMARY GENERATION
     // ===========================================
     describe('📋 Test Results Summary', () => {
         

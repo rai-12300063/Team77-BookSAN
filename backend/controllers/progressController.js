@@ -1,6 +1,7 @@
 const LearningProgress = require('../models/LearningProgress');
 const Course = require('../models/Course');
 const User = require('../models/User');
+const ProgressSyncService = require('../services/progressSyncService');
 
 // Get user's learning analytics
 const getLearningAnalytics = async (req, res) => {
@@ -228,10 +229,58 @@ const updateLearningGoals = async (req, res) => {
   }
 };
 
+// Manually sync progress for a user and course
+const syncProgress = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const userId = req.user.id;
+
+    const updatedProgress = await ProgressSyncService.syncModuleWithCourse(userId, courseId);
+
+    res.json({
+      message: 'Progress synchronized successfully',
+      progress: updatedProgress,
+      completionPercentage: updatedProgress.completionPercentage,
+      moduleProgress: updatedProgress.moduleProgress
+    });
+
+  } catch (error) {
+    console.error('Error syncing progress:', error);
+    res.status(500).json({ 
+      message: 'Failed to sync progress', 
+      error: error.message 
+    });
+  }
+};
+
+// Get detailed progress sync report
+const getDetailedProgressReport = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const userId = req.user.id;
+
+    const report = await ProgressSyncService.getProgressSyncReport(userId, courseId);
+
+    res.json({
+      message: 'Progress report generated successfully',
+      report
+    });
+
+  } catch (error) {
+    console.error('Error getting progress report:', error);
+    res.status(500).json({ 
+      message: 'Failed to generate progress report', 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   getLearningAnalytics,
   updateModuleCompletion,
   getCourseProgress,
   getLearningStreaks,
-  updateLearningGoals
+  updateLearningGoals,
+  syncProgress,
+  getDetailedProgressReport
 };

@@ -5,7 +5,9 @@ const {
   updateModuleCompletion,
   getCourseProgress,
   getLearningStreaks,
-  updateLearningGoals
+  updateLearningGoals,
+  syncProgress,
+  getDetailedProgressReport
 } = require('../controllers/progressController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -36,5 +38,15 @@ router.get('/streaks', getLearningStreaks);
 // @desc    Update learning goals
 // @access  Private
 router.put('/goals', updateLearningGoals);
+
+// @route   POST /api/progress/course/:courseId/sync
+// @desc    Manually sync module progress with course progress
+// @access  Private
+router.post('/course/:courseId/sync', syncProgress);
+
+// @route   GET /api/progress/course/:courseId/detailed-report
+// @desc    Get detailed progress synchronization report
+// @access  Private
+router.get('/course/:courseId/detailed-report', getDetailedProgressReport);
 
 module.exports = router;
