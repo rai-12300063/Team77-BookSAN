@@ -7,7 +7,7 @@
  * into test modules for systematic validation and quality assurance.
  * 
  * Test Framework: Mocha + Chai + Sinon
- * Coverage: Authentication, Tasks, Courses, Progress, Integration
+ * Coverage: Authentication, Tasks, Courses, Modules, Progress, Integration
  */
 
 const { expect } = require('chai');
@@ -19,12 +19,15 @@ const authController = require('../controllers/authController');
 const taskController = require('../controllers/taskController');
 const courseController = require('../controllers/courseController');
 const progressController = require('../controllers/progressController');
+const moduleController = require('../controllers/moduleController');
 
 // Import models for mocking
 const User = require('../models/User');
 const Task = require('../models/Task');
 const Course = require('../models/Course');
 const LearningProgress = require('../models/LearningProgress');
+const Module = require('../models/Module');
+const ModuleProgress = require('../models/ModuleProgress');
 
 // Import external dependencies
 const bcrypt = require('bcrypt');
@@ -47,7 +50,7 @@ describe('🚀 OLPT Function Unit Testing Suite', () => {
     before(() => {
         console.log('\n🧪 Starting Function Unit Testing Suite');
         console.log('📊 Test Framework: Mocha + Chai + Sinon');
-        console.log('🎯 Coverage: All Backend Functions');
+        console.log('🎯 Coverage: Auth, Tasks, Courses, Modules, Progress, Integration');
         testStats.startTime = Date.now();
     });
 
@@ -523,7 +526,415 @@ describe('🚀 OLPT Function Unit Testing Suite', () => {
     });
 
     // ===========================================
-    // 📊 PROGRESS TRACKING MODULE TESTS
+    // � MODULE SYSTEM TESTS
+    // ===========================================
+    describe('📚 Module System', () => {
+        
+        before(() => {
+            testStats.testModules.push({
+                name: 'Module System',
+                icon: '📚',
+                functions: ['getCourseModules', 'getModule', 'createModule', 'updateModule'],
+                status: 'running'
+            });
+        });
+
+        describe('getCourseModules Function', () => {
+            it('✅ should retrieve modules for a specific course', async () => {
+                testStats.totalTests++;
+                
+                req.params.courseId = 'testCourseId';
+                
+                const mockModules = [
+                    {
+                        _id: 'module1',
+                        courseId: 'testCourseId',
+                        moduleNumber: 1,
+                        title: 'Introduction to Programming',
+                        description: 'Basic programming concepts',
+                        estimatedDuration: 120,
+                        difficulty: 'Beginner'
+                    },
+                    {
+                        _id: 'module2',
+                        courseId: 'testCourseId',
+                        moduleNumber: 2,
+                        title: 'Advanced Concepts',
+                        description: 'Advanced programming topics',
+                        estimatedDuration: 180,
+                        difficulty: 'Intermediate'
+                    }
+                ];
+                
+                sinon.stub(Module, 'find').resolves(mockModules);
+                
+                await moduleController.getCourseModules(req, res);
+                
+                expect(Module.find.calledWith({ courseId: 'testCourseId' })).to.be.true;
+                expect(res.json.calledOnce).to.be.true;
+                
+                testStats.passedTests++;
+            });
+
+            it('🔍 should filter modules by difficulty', async () => {
+                testStats.totalTests++;
+                
+                req.params.courseId = 'testCourseId';
+                req.query.difficulty = 'Beginner';
+                
+                sinon.stub(Module, 'find').resolves([]);
+                
+                await moduleController.getCourseModules(req, res);
+                
+                expect(Module.find.calledWith({ 
+                    courseId: 'testCourseId',
+                    difficulty: 'Beginner'
+                })).to.be.true;
+                
+                testStats.passedTests++;
+            });
+
+            it('📊 should return modules with progress data', async () => {
+                testStats.totalTests++;
+                
+                req.params.courseId = 'testCourseId';
+                
+                const mockModulesWithProgress = [
+                    {
+                        _id: 'module1',
+                        title: 'Test Module',
+                        progress: { completed: true, score: 85 }
+                    }
+                ];
+                
+                sinon.stub(Module, 'find').resolves(mockModulesWithProgress);
+                
+                await moduleController.getCourseModules(req, res);
+                
+                expect(res.json.calledOnce).to.be.true;
+                
+                testStats.passedTests++;
+            });
+        });
+
+        describe('getModule Function', () => {
+            it('✅ should retrieve single module by ID', async () => {
+                testStats.totalTests++;
+                
+                req.params.moduleId = 'specificModuleId';
+                
+                const mockModule = {
+                    _id: 'specificModuleId',
+                    title: 'Specific Module',
+                    description: 'Module description',
+                    contents: [
+                        { type: 'video', title: 'Intro Video', duration: 30 },
+                        { type: 'quiz', title: 'Knowledge Check', duration: 15 }
+                    ],
+                    learningObjectives: ['Understand concepts', 'Apply knowledge']
+                };
+                
+                sinon.stub(Module, 'findById').resolves(mockModule);
+                
+                await moduleController.getModule(req, res);
+                
+                expect(Module.findById.calledWith('specificModuleId')).to.be.true;
+                expect(res.json.calledWith(mockModule)).to.be.true;
+                
+                testStats.passedTests++;
+            });
+
+            it('❌ should handle module not found', async () => {
+                testStats.totalTests++;
+                
+                req.params.moduleId = 'nonExistentModule';
+                
+                sinon.stub(Module, 'findById').resolves(null);
+                
+                await moduleController.getModule(req, res);
+                
+                expect(res.status.calledWith(404)).to.be.true;
+                
+                testStats.passedTests++;
+            });
+        });
+
+        describe('createModule Function', () => {
+            it('✅ should create new module with valid data', async () => {
+                testStats.totalTests++;
+                
+                req.body = {
+                    courseId: 'testCourseId',
+                    moduleNumber: 1,
+                    title: 'New Module',
+                    description: 'Module description',
+                    estimatedDuration: 120,
+                    difficulty: 'Beginner',
+                    learningObjectives: ['Learn basics', 'Practice skills'],
+                    contents: []
+                };
+                
+                const newModule = {
+                    _id: 'newModuleId',
+                    ...req.body
+                };
+                
+                sinon.stub(Module, 'create').resolves(newModule);
+                
+                await moduleController.createModule(req, res);
+                
+                expect(Module.create.calledOnce).to.be.true;
+                expect(res.status.calledWith(201)).to.be.true;
+                
+                testStats.passedTests++;
+            });
+
+            it('⚡ should validate required module fields', async () => {
+                testStats.totalTests++;
+                
+                req.body = { 
+                    title: 'Incomplete Module'
+                    // Missing required fields
+                };
+                
+                await moduleController.createModule(req, res);
+                
+                expect(res.status.calledWith(400)).to.be.true;
+                
+                testStats.passedTests++;
+            });
+
+            it('🔒 should validate module structure', async () => {
+                testStats.totalTests++;
+                
+                req.body = {
+                    courseId: 'testCourseId',
+                    moduleNumber: 1,
+                    title: 'Structured Module',
+                    description: 'Well-structured module',
+                    estimatedDuration: 120,
+                    difficulty: 'Beginner',
+                    contents: [
+                        {
+                            type: 'video',
+                            title: 'Introduction',
+                            duration: 30,
+                            order: 1
+                        }
+                    ]
+                };
+                
+                sinon.stub(Module, 'create').resolves({ _id: 'structuredModule', ...req.body });
+                
+                await moduleController.createModule(req, res);
+                
+                expect(Module.create.calledOnce).to.be.true;
+                
+                testStats.passedTests++;
+            });
+        });
+
+        describe('updateModule Function', () => {
+            it('✅ should update existing module', async () => {
+                testStats.totalTests++;
+                
+                req.params.moduleId = 'existingModuleId';
+                req.body = {
+                    title: 'Updated Module Title',
+                    description: 'Updated description',
+                    difficulty: 'Intermediate'
+                };
+                
+                const updatedModule = {
+                    _id: 'existingModuleId',
+                    ...req.body
+                };
+                
+                sinon.stub(Module, 'findByIdAndUpdate').resolves(updatedModule);
+                
+                await moduleController.updateModule(req, res);
+                
+                expect(Module.findByIdAndUpdate.calledWith('existingModuleId', req.body)).to.be.true;
+                expect(res.json.calledWith(updatedModule)).to.be.true;
+                
+                testStats.passedTests++;
+            });
+
+            it('📊 should update module contents', async () => {
+                testStats.totalTests++;
+                
+                req.params.moduleId = 'moduleWithContents';
+                req.body = {
+                    contents: [
+                        { type: 'video', title: 'New Video', duration: 45, order: 1 },
+                        { type: 'quiz', title: 'Updated Quiz', duration: 20, order: 2 }
+                    ]
+                };
+                
+                sinon.stub(Module, 'findByIdAndUpdate').resolves({
+                    _id: 'moduleWithContents',
+                    contents: req.body.contents
+                });
+                
+                await moduleController.updateModule(req, res);
+                
+                expect(Module.findByIdAndUpdate.calledOnce).to.be.true;
+                
+                testStats.passedTests++;
+            });
+        });
+    });
+
+    // ===========================================
+    // 📈 MODULE PROGRESS TESTS
+    // ===========================================
+    describe('📈 Module Progress', () => {
+        
+        before(() => {
+            testStats.testModules.push({
+                name: 'Module Progress',
+                icon: '📈',
+                functions: ['getModuleProgress', 'updateModuleProgress', 'completeModule'],
+                status: 'running'
+            });
+        });
+
+        describe('getModuleProgress Function', () => {
+            it('✅ should retrieve user progress for module', async () => {
+                testStats.totalTests++;
+                
+                req.params.moduleId = 'testModuleId';
+                
+                const mockProgress = {
+                    userId: 'testUserId',
+                    moduleId: 'testModuleId',
+                    isCompleted: false,
+                    completionPercentage: 60,
+                    timeSpent: 45,
+                    contentProgress: [
+                        { contentId: 'content1', status: 'completed', timeSpent: 20 },
+                        { contentId: 'content2', status: 'in_progress', timeSpent: 15 }
+                    ]
+                };
+                
+                sinon.stub(ModuleProgress, 'findOne').resolves(mockProgress);
+                
+                await moduleController.getModuleProgress(req, res);
+                
+                expect(ModuleProgress.findOne.calledWith({
+                    userId: 'testUserId',
+                    moduleId: 'testModuleId'
+                })).to.be.true;
+                expect(res.json.calledWith(mockProgress)).to.be.true;
+                
+                testStats.passedTests++;
+            });
+
+            it('📊 should calculate progress statistics', async () => {
+                testStats.totalTests++;
+                
+                req.params.moduleId = 'statsModuleId';
+                
+                const progressWithStats = {
+                    userId: 'testUserId',
+                    moduleId: 'statsModuleId',
+                    completionPercentage: 75,
+                    averageScore: 82,
+                    timeSpent: 120
+                };
+                
+                sinon.stub(ModuleProgress, 'findOne').resolves(progressWithStats);
+                
+                await moduleController.getModuleProgress(req, res);
+                
+                expect(res.json.calledOnce).to.be.true;
+                
+                testStats.passedTests++;
+            });
+        });
+
+        describe('updateModuleProgress Function', () => {
+            it('✅ should update content progress', async () => {
+                testStats.totalTests++;
+                
+                req.params.moduleId = 'progressModuleId';
+                req.body = {
+                    contentId: 'content1',
+                    status: 'completed',
+                    timeSpent: 30,
+                    score: 95
+                };
+                
+                const updatedProgress = {
+                    userId: 'testUserId',
+                    moduleId: 'progressModuleId',
+                    contentProgress: [
+                        { contentId: 'content1', status: 'completed', timeSpent: 30, score: 95 }
+                    ]
+                };
+                
+                sinon.stub(ModuleProgress, 'findOneAndUpdate').resolves(updatedProgress);
+                
+                await moduleController.updateModuleProgress(req, res);
+                
+                expect(ModuleProgress.findOneAndUpdate.calledOnce).to.be.true;
+                expect(res.json.calledWith(updatedProgress)).to.be.true;
+                
+                testStats.passedTests++;
+            });
+        });
+
+        describe('completeModule Function', () => {
+            it('✅ should mark module as completed', async () => {
+                testStats.totalTests++;
+                
+                req.params.moduleId = 'completableModuleId';
+                
+                const completedModule = {
+                    userId: 'testUserId',
+                    moduleId: 'completableModuleId',
+                    isCompleted: true,
+                    completionPercentage: 100,
+                    completedAt: new Date()
+                };
+                
+                sinon.stub(ModuleProgress, 'findOneAndUpdate').resolves(completedModule);
+                
+                await moduleController.completeModule(req, res);
+                
+                expect(ModuleProgress.findOneAndUpdate.calledOnce).to.be.true;
+                expect(res.json.calledWith(completedModule)).to.be.true;
+                
+                testStats.passedTests++;
+            });
+
+            it('🏆 should update course progress when module completed', async () => {
+                testStats.totalTests++;
+                
+                req.params.moduleId = 'courseProgressModuleId';
+                
+                // Mock updating course progress
+                sinon.stub(ModuleProgress, 'findOneAndUpdate').resolves({
+                    isCompleted: true,
+                    courseId: 'testCourseId'
+                });
+                
+                sinon.stub(LearningProgress, 'findOneAndUpdate').resolves({
+                    completedModules: 5,
+                    totalModules: 10
+                });
+                
+                await moduleController.completeModule(req, res);
+                
+                expect(ModuleProgress.findOneAndUpdate.calledOnce).to.be.true;
+                
+                testStats.passedTests++;
+            });
+        });
+    });
+
+    // ===========================================
+    // �📊 PROGRESS TRACKING MODULE TESTS
     // ===========================================
     describe('📊 Progress Tracking Module', () => {
         

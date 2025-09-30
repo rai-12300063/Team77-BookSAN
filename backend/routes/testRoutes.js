@@ -8,6 +8,11 @@ const router = express.Router();
 const testController = require('../controllers/testController');
 const authMiddleware = require('../middleware/authMiddleware');
 
+// Health check endpoint
+router.get('/health', (req, res) => {
+    res.json({ status: 'OK', message: 'Test API is working', timestamp: new Date().toISOString() });
+});
+
 // Get comprehensive test results
 router.get('/results', testController.getTestResults);
 
