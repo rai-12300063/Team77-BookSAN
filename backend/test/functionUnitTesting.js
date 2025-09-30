@@ -1,10 +1,10 @@
 ﻿/**
- * 🧪 Comprehensive Test Suite - Merged Testing System
- * =====================================================
+ * 🧪 Function Unit Testing Suite - Comprehensive Testing System
+ * ============================================================
  * 
- * This file combines all unit tests into a single comprehensive test suite
- * providing complete coverage of all backend functionality with organized
- * test modules for easy management and dashboard display.
+ * This file provides comprehensive unit testing for all backend functions
+ * with complete coverage of controllers, models, and integrations organized
+ * into test modules for systematic validation and quality assurance.
  * 
  * Test Framework: Mocha + Chai + Sinon
  * Coverage: Authentication, Tasks, Courses, Progress, Integration
@@ -39,15 +39,15 @@ let testStats = {
     startTime: Date.now()
 };
 
-describe('🚀 OLPT Comprehensive Test Suite', () => {
+describe('🚀 OLPT Function Unit Testing Suite', () => {
     
     // Global test setup
     let req, res, next;
     
     before(() => {
-        console.log('\n🧪 Starting Comprehensive Test Suite');
+        console.log('\n🧪 Starting Function Unit Testing Suite');
         console.log('📊 Test Framework: Mocha + Chai + Sinon');
-        console.log('🎯 Coverage: All Backend Controllers');
+        console.log('🎯 Coverage: All Backend Functions');
         testStats.startTime = Date.now();
     });
 
