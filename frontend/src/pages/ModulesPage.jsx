@@ -17,12 +17,9 @@ const ModulesPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Check if debug mode is enabled via URL parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const debugMode = urlParams.get('debug') === 'true';
-
     useEffect(() => {
         fetchCourseData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [courseId]);
 
     const fetchCourseData = async () => {
@@ -45,11 +42,6 @@ const ModulesPage = () => {
         // Navigate to module learning page
         navigate(`/courses/${courseId}/modules/${moduleId}`);
     };
-
-    // Enable debug mode with ?debug=true URL parameter
-    if (debugMode) {
-        return <ModuleDebug />;
-    }
 
     if (loading) {
         return (
