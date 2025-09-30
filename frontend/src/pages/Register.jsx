@@ -45,8 +45,13 @@ const Register = () => {
 
   return (
     <div className="max-w-md mx-auto mt-20">
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">QUT-MIT Learning Progress Tracker</h1>
+        <p className="text-gray-600">Join us and start tracking your learning progress</p>
+      </div>
+      
       <form onSubmit={handleSubmit} className="bg-white p-6 shadow-md rounded">
-        <h1 className="text-2xl font-bold mb-4 text-center">Register</h1>
+        <h2 className="text-2xl font-bold mb-4 text-center">Register</h2>
         
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
