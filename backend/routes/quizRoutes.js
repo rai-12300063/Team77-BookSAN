@@ -9,7 +9,13 @@ const {
   createQuiz,
   updateQuiz,
   deleteQuiz,
-  getAllQuizzes
+  getAllQuizzes,
+  getInstructorQuizzes,
+  createInstructorQuiz,
+  updateInstructorQuiz,
+  deleteInstructorQuiz,
+  getInstructorCourses,
+  getAllCoursesForAdmin
 } = require('../controllers/quizController');
 const { protect, requirePermission, requireAnyRole } = require('../middleware/authMiddleware');
 const { logApiAccess } = require('../middleware/permissionMiddleware');
@@ -64,6 +70,13 @@ router.get('/attempt/:attemptId/results',
 
 // ========== ADMIN ROUTES ==========
 
+// Get all courses for admin (no restrictions)
+router.get('/admin/courses',
+  requirePermission('quiz:write'),
+  logApiAccess,
+  getAllCoursesForAdmin
+);
+
 // Get all quizzes (admin management)
 router.get('/admin/all',
   requirePermission('quiz:write'),
@@ -71,7 +84,7 @@ router.get('/admin/all',
   getAllQuizzes
 );
 
-// Create new quiz in a course
+// Create new quiz in a course (admin can create in ANY course)
 router.post('/admin/course/:courseId',
   requirePermission('quiz:write'),
   logApiAccess,
@@ -90,6 +103,43 @@ router.delete('/admin/:quizId',
   requirePermission('quiz:delete'),
   logApiAccess,
   deleteQuiz
+);
+
+// ========== INSTRUCTOR ROUTES ==========
+
+// Get instructor's courses for quiz creation
+router.get('/instructor/courses',
+  requirePermission('quiz:write'),
+  logApiAccess,
+  getInstructorCourses
+);
+
+// Get quizzes for instructor's courses
+router.get('/instructor/my-quizzes',
+  requirePermission('quiz:write'),
+  logApiAccess,
+  getInstructorQuizzes
+);
+
+// Create new quiz in instructor's assigned course
+router.post('/instructor/course/:courseId',
+  requirePermission('quiz:write'),
+  logApiAccess,
+  createInstructorQuiz
+);
+
+// Update quiz in instructor's assigned course
+router.put('/instructor/:quizId',
+  requirePermission('quiz:write'),
+  logApiAccess,
+  updateInstructorQuiz
+);
+
+// Delete quiz in instructor's assigned course
+router.delete('/instructor/:quizId',
+  requirePermission('quiz:write'),
+  logApiAccess,
+  deleteInstructorQuiz
 );
 
 module.exports = router;
