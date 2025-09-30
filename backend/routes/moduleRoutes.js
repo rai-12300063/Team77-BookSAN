@@ -6,7 +6,10 @@ const {
     getModule,
     updateModuleProgress,
     calculateModuleGrade,
-    getModuleAnalytics
+    getModuleAnalytics,
+    completeModule,
+    getProgressSyncReport,
+    syncAllUsersInCourse
 } = require('../controllers/moduleController');
 const { protect: authMiddleware } = require('../middleware/authMiddleware');
 
@@ -244,5 +247,19 @@ router.delete('/:moduleId/progress/:userId', async (req, res, next) => {
         res.status(500).json({ message: 'Failed to reset progress', error: error.message });
     }
 });
+
+// Complete a module and sync with course progress
+router.post('/:moduleId/complete', completeModule);
+
+// Get progress synchronization report for a course
+router.get('/course/:courseId/progress-sync-report', getProgressSyncReport);
+
+// Admin route: Sync all users' progress in a course
+router.post('/course/:courseId/sync-all-users', async (req, res, next) => {
+    if (req.user.role !== 'admin' && req.user.role !== 'instructor') {
+        return res.status(403).json({ message: 'Access denied. Admin or instructor role required.' });
+    }
+    next();
+}, syncAllUsersInCourse);
 
 module.exports = router;

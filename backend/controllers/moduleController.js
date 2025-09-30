@@ -2,6 +2,7 @@
 const ModuleProgress = require('../models/ModuleProgress');
 const Course = require('../models/Course');
 const LearningProgress = require('../models/LearningProgress');
+const ProgressSyncService = require('../services/progressSyncService');
 
 // Import design patterns
 const { ContentFactory } = require('../patterns/factory');
@@ -338,8 +339,12 @@ const updateModuleProgress = async (req, res) => {
 
         await moduleProgress.save();
 
-        // Update overall course progress
-        await updateCourseProgress(userId, moduleProgress.courseId);
+        // Sync module progress with course progress using new service
+        const updatedLearningProgress = await ProgressSyncService.syncModuleWithCourse(
+            userId, 
+            moduleProgress.courseId, 
+            moduleId
+        );
 
         // Notify observers using Observer Pattern
         progressTracker.notify({
@@ -351,6 +356,7 @@ const updateModuleProgress = async (req, res) => {
             contentId
         }, {
             progress: moduleProgress.toObject(),
+            courseProgress: updatedLearningProgress.toObject(),
             updatedAt: new Date()
         });
 
@@ -683,11 +689,105 @@ const getModuleAnalytics = async (req, res) => {
     }
 };
 
+// Complete a module and sync with course progress
+const completeModule = async (req, res) => {
+    try {
+        const { moduleId } = req.params;
+        const { timeSpent, score } = req.body;
+        const userId = req.user.id;
+
+        // Get module and course info
+        const module = await Module.findById(moduleId);
+        if (!module) {
+            return res.status(404).json({ message: 'Module not found' });
+        }
+
+        // Use the sync service to complete the module
+        const updatedLearningProgress = await ProgressSyncService.syncModuleCompletion(
+            userId,
+            module.courseId,
+            moduleId,
+            { timeSpent, score }
+        );
+
+        // Get updated module progress
+        const moduleProgress = await ModuleProgress.findOne({ userId, moduleId });
+
+        res.json({
+            message: 'Module completed successfully',
+            moduleProgress,
+            courseProgress: updatedLearningProgress,
+            achievements: updatedLearningProgress.achievements.slice(-3) // Last 3 achievements
+        });
+
+    } catch (error) {
+        console.error('Error completing module:', error);
+        res.status(500).json({ 
+            message: 'Failed to complete module', 
+            error: error.message 
+        });
+    }
+};
+
+// Get progress synchronization report
+const getProgressSyncReport = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const userId = req.user.id;
+
+        const report = await ProgressSyncService.getProgressSyncReport(userId, courseId);
+
+        res.json({
+            message: 'Progress sync report retrieved successfully',
+            report
+        });
+
+    } catch (error) {
+        console.error('Error getting progress sync report:', error);
+        res.status(500).json({ 
+            message: 'Failed to get progress sync report', 
+            error: error.message 
+        });
+    }
+};
+
+// Admin function to sync all users in a course
+const syncAllUsersInCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+
+        // Check if user is admin (add proper auth check)
+        if (req.user.role !== 'admin' && req.user.role !== 'instructor') {
+            return res.status(403).json({ message: 'Insufficient permissions' });
+        }
+
+        const results = await ProgressSyncService.syncAllUsersInCourse(courseId);
+
+        res.json({
+            message: 'Course-wide progress sync completed',
+            results,
+            totalUsers: results.length,
+            successfulSyncs: results.filter(r => r.success).length,
+            failedSyncs: results.filter(r => !r.success).length
+        });
+
+    } catch (error) {
+        console.error('Error syncing all users in course:', error);
+        res.status(500).json({ 
+            message: 'Failed to sync all users', 
+            error: error.message 
+        });
+    }
+};
+
 module.exports = {
     createModule,
     getCourseModules,
     getModule,
     updateModuleProgress,
     calculateModuleGrade,
-    getModuleAnalytics
+    getModuleAnalytics,
+    completeModule,
+    getProgressSyncReport,
+    syncAllUsersInCourse
 };
