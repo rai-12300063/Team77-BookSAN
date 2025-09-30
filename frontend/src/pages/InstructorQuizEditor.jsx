@@ -51,6 +51,12 @@ const InstructorQuizEditor = () => {
   };
 
   const addQuestion = () => {
+    // Limit quiz to 10 questions
+    if (questions.length >= 10) {
+      alert('Maximum quiz limit reached! You can only add up to 10 questions per quiz.');
+      return;
+    }
+
     const newQuestion = {
       id: `q${questions.length + 1}`,
       type: 'multiple_choice',
@@ -129,7 +135,7 @@ const InstructorQuizEditor = () => {
           </button>
           <h1 className="text-2xl font-bold text-gray-900">{quiz.title}</h1>
           <p className="text-gray-600 mt-1">
-            {questions.length} question{questions.length !== 1 ? 's' : ''} •
+            {questions.length}/10 question{questions.length !== 1 ? 's' : ''} •
             {questions.reduce((sum, q) => sum + (q.points || 1), 0)} total points
           </p>
         </div>
@@ -143,9 +149,11 @@ const InstructorQuizEditor = () => {
           </button>
           <button
             onClick={addQuestion}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+            disabled={questions.length >= 10}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={questions.length >= 10 ? 'Maximum 10 questions reached' : 'Add new question'}
           >
-            Add Question
+            Add Question {questions.length >= 10 && '(Max)'}
           </button>
         </div>
       </div>

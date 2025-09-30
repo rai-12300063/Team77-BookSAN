@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 
 const InstructorQuizManagement = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [quizzes, setQuizzes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedCourse, setSelectedCourse] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(location.state?.selectedCourseId || '');
+  const [showCreateModal, setShowCreateModal] = useState(!!location.state?.selectedCourseId);
 
   useEffect(() => {
     fetchQuizzes();
@@ -276,6 +277,7 @@ const InstructorQuizManagement = () => {
       {showCreateModal && (
         <CreateInstructorQuizModal
           courses={courses}
+          preSelectedCourseId={location.state?.selectedCourseId}
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);
@@ -288,10 +290,10 @@ const InstructorQuizManagement = () => {
 };
 
 // Create Instructor Quiz Modal Component
-const CreateInstructorQuizModal = ({ courses, onClose, onSuccess }) => {
+const CreateInstructorQuizModal = ({ courses, preSelectedCourseId, onClose, onSuccess }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    courseId: '',
+    courseId: preSelectedCourseId || '',
     title: '',
     description: '',
     instructions: '',
