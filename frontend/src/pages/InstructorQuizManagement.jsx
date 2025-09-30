@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 
-const AdminQuizManagement = () => {
+const InstructorQuizManagement = () => {
   const navigate = useNavigate();
   const [quizzes, setQuizzes] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -13,28 +13,27 @@ const AdminQuizManagement = () => {
 
   useEffect(() => {
     fetchQuizzes();
-    fetchCourses();
+    fetchInstructorCourses();
   }, []);
 
   const fetchQuizzes = async () => {
     try {
-      const response = await axiosInstance.get('/api/quiz/admin/all');
+      const response = await axiosInstance.get('/api/quiz/instructor/my-quizzes');
       setQuizzes(response.data);
     } catch (error) {
-      console.error('Error fetching quizzes:', error);
+      console.error('Error fetching instructor quizzes:', error);
       setError('Failed to load quizzes');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCourses = async () => {
+  const fetchInstructorCourses = async () => {
     try {
-      // Admin can fetch ALL courses (no restrictions)
-      const response = await axiosInstance.get('/api/quiz/admin/courses');
+      const response = await axiosInstance.get('/api/quiz/instructor/courses');
       setCourses(response.data);
     } catch (error) {
-      console.error('Error fetching courses:', error);
+      console.error('Error fetching instructor courses:', error);
     }
   };
 
@@ -44,7 +43,7 @@ const AdminQuizManagement = () => {
     }
 
     try {
-      await axiosInstance.delete(`/api/quiz/admin/${quizId}`);
+      await axiosInstance.delete(`/api/quiz/instructor/${quizId}`);
       setQuizzes(quizzes.filter(quiz => quiz.id !== quizId));
     } catch (error) {
       console.error('Error deleting quiz:', error);
@@ -112,47 +111,67 @@ const AdminQuizManagement = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quiz Management</h1>
-          <p className="text-gray-600 mt-1">Create and manage quizzes for all courses</p>
+          <h1 className="text-2xl font-bold text-gray-900">My Course Quizzes</h1>
+          <p className="text-gray-600 mt-1">Manage quizzes for your assigned courses</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="mt-4 sm:mt-0 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+          disabled={courses.length === 0}
+          className="mt-4 sm:mt-0 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Create New Quiz
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Filter by Course
-            </label>
-            <select
-              value={selectedCourse}
-              onChange={(e) => setSelectedCourse(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">All Courses</option>
-              {courses.map(course => (
-                <option key={course._id} value={course._id}>
-                  {course.title}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-end">
-            <button
-              onClick={fetchQuizzes}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition duration-200"
-            >
-              Refresh
-            </button>
+      {/* No courses assigned message */}
+      {courses.length === 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+          <div className="flex items-center">
+            <svg className="w-6 h-6 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div>
+              <h3 className="text-yellow-800 font-medium">No Courses Assigned</h3>
+              <p className="text-yellow-700 text-sm mt-1">
+                You need to be assigned to courses before you can create quizzes. Please contact your administrator.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Filters */}
+      {courses.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filter by Course
+              </label>
+              <select
+                value={selectedCourse}
+                onChange={(e) => setSelectedCourse(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">All My Courses</option>
+                {courses.map(course => (
+                  <option key={course._id} value={course._id}>
+                    {course.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={fetchQuizzes}
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition duration-200"
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error Display */}
       {error && (
@@ -171,12 +190,14 @@ const AdminQuizManagement = () => {
               </svg>
             </div>
             <p className="text-gray-600">No quizzes found</p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="mt-4 text-blue-600 hover:text-blue-800"
-            >
-              Create your first quiz
-            </button>
+            {courses.length > 0 && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="mt-4 text-blue-600 hover:text-blue-800"
+              >
+                Create your first quiz
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -230,7 +251,7 @@ const AdminQuizManagement = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        onClick={() => navigate(`/admin/quiz/edit/${quiz.id}`)}
+                        onClick={() => navigate(`/instructor/quiz/edit/${quiz.id}`)}
                         className="text-blue-600 hover:text-blue-900 mr-4"
                       >
                         Edit
@@ -253,7 +274,7 @@ const AdminQuizManagement = () => {
 
       {/* Create Quiz Modal */}
       {showCreateModal && (
-        <CreateQuizModal
+        <CreateInstructorQuizModal
           courses={courses}
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
@@ -266,8 +287,8 @@ const AdminQuizManagement = () => {
   );
 };
 
-// Create Quiz Modal Component
-const CreateQuizModal = ({ courses, onClose, onSuccess }) => {
+// Create Instructor Quiz Modal Component
+const CreateInstructorQuizModal = ({ courses, onClose, onSuccess }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     courseId: '',
@@ -289,14 +310,14 @@ const CreateQuizModal = ({ courses, onClose, onSuccess }) => {
     setError('');
 
     try {
-      const response = await axiosInstance.post(`/api/quiz/admin/course/${formData.courseId}`, {
+      const response = await axiosInstance.post(`/api/quiz/instructor/course/${formData.courseId}`, {
         ...formData,
         questions: [] // Start with empty questions, will be added in edit mode
       });
 
       onSuccess();
       // Navigate to quiz editor to add questions
-      navigate(`/admin/quiz/edit/${response.data.quiz.id}`);
+      navigate(`/instructor/quiz/edit/${response.data.quiz.id}`);
     } catch (error) {
       console.error('Error creating quiz:', error);
       setError(error.response?.data?.message || 'Failed to create quiz');
@@ -469,4 +490,4 @@ const CreateQuizModal = ({ courses, onClose, onSuccess }) => {
   );
 };
 
-export default AdminQuizManagement;
+export default InstructorQuizManagement;

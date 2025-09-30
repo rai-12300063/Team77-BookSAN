@@ -562,6 +562,259 @@ const getAllQuizzes = async (req, res) => {
   }
 };
 
+// ========== INSTRUCTOR METHODS ==========
+
+// Instructor: Get quizzes for instructor's courses
+const getInstructorQuizzes = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { courseId } = req.query;
+
+    // Build filter - either specific course or all instructor's courses
+    let filter = {};
+    if (courseId) {
+      // Verify instructor owns this course
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+      if (course.instructor.id.toString() !== userId) {
+        return res.status(403).json({ message: 'You can only view quizzes for your own courses' });
+      }
+      filter.courseId = courseId;
+    } else {
+      // Get all courses taught by this instructor
+      const instructorCourses = await Course.find({ 'instructor.id': userId });
+      const courseIds = instructorCourses.map(course => course._id);
+      filter.courseId = { $in: courseIds };
+    }
+
+    const quizzes = await Quiz.find(filter)
+      .populate('courseId', 'title')
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ createdAt: -1 });
+
+    const quizzesWithStats = await Promise.all(
+      quizzes.map(async (quiz) => {
+        const attemptCount = await QuizAttempt.countDocuments({ quizId: quiz._id });
+        const completedAttempts = await QuizAttempt.countDocuments({
+          quizId: quiz._id,
+          status: { $in: ['submitted', 'auto_submitted'] }
+        });
+
+        return {
+          id: quiz._id,
+          title: quiz.title,
+          description: quiz.description,
+          course: quiz.courseId,
+          status: quiz.status,
+          difficulty: quiz.difficulty,
+          questionsCount: quiz.questions.length,
+          totalPoints: quiz.totalPoints,
+          timeLimit: quiz.timeLimit,
+          maxAttempts: quiz.maxAttempts,
+          passingScore: quiz.passingScore,
+          createdBy: quiz.createdBy,
+          createdAt: quiz.createdAt,
+          stats: {
+            totalAttempts: attemptCount,
+            completedAttempts
+          }
+        };
+      })
+    );
+
+    res.json(quizzesWithStats);
+  } catch (error) {
+    console.error('Error fetching instructor quizzes:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Instructor: Create quiz in assigned course
+const createInstructorQuiz = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const {
+      title,
+      description,
+      instructions,
+      timeLimit,
+      maxAttempts,
+      passingScore,
+      difficulty,
+      questions,
+      status = 'draft'
+    } = req.body;
+    const userId = req.user.id;
+
+    // Verify course exists and instructor owns it
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    if (course.instructor.id.toString() !== userId) {
+      return res.status(403).json({ message: 'You can only create quizzes for your own courses' });
+    }
+
+    // Calculate total points from questions
+    const totalPoints = questions.reduce((sum, question) => sum + (question.points || 1), 0);
+
+    // Create quiz
+    const quiz = new Quiz({
+      title,
+      description,
+      instructions,
+      timeLimit,
+      maxAttempts,
+      passingScore: passingScore || 70,
+      status,
+      difficulty: difficulty || 1,
+      courseId,
+      createdBy: userId,
+      questions: questions.map((question, index) => ({
+        id: question.id || `q${index + 1}`,
+        type: question.type,
+        question: question.question,
+        options: question.options || [],
+        correctAnswer: question.correctAnswer,
+        points: question.points || 1,
+        explanation: question.explanation
+      })),
+      totalPoints
+    });
+
+    await quiz.save();
+
+    res.status(201).json({
+      message: 'Quiz created successfully',
+      quiz: {
+        id: quiz._id,
+        title: quiz.title,
+        description: quiz.description,
+        questionsCount: quiz.questions.length,
+        totalPoints: quiz.totalPoints,
+        status: quiz.status
+      }
+    });
+  } catch (error) {
+    console.error('Error creating instructor quiz:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Instructor: Update quiz in assigned course
+const updateInstructorQuiz = async (req, res) => {
+  try {
+    const { quizId } = req.params;
+    const updateData = req.body;
+    const userId = req.user.id;
+
+    const quiz = await Quiz.findById(quizId).populate('courseId');
+    if (!quiz) {
+      return res.status(404).json({ message: 'Quiz not found' });
+    }
+
+    // Verify instructor owns the course this quiz belongs to
+    if (quiz.courseId.instructor.id.toString() !== userId) {
+      return res.status(403).json({ message: 'You can only update quizzes for your own courses' });
+    }
+
+    // Recalculate total points if questions are updated
+    if (updateData.questions) {
+      updateData.totalPoints = updateData.questions.reduce((sum, question) => sum + (question.points || 1), 0);
+    }
+
+    // Update quiz
+    Object.assign(quiz, updateData);
+    quiz.lastModifiedBy = userId;
+    quiz.updatedAt = new Date();
+
+    await quiz.save();
+
+    res.json({
+      message: 'Quiz updated successfully',
+      quiz: {
+        id: quiz._id,
+        title: quiz.title,
+        description: quiz.description,
+        questionsCount: quiz.questions.length,
+        totalPoints: quiz.totalPoints,
+        status: quiz.status
+      }
+    });
+  } catch (error) {
+    console.error('Error updating instructor quiz:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Instructor: Delete quiz in assigned course
+const deleteInstructorQuiz = async (req, res) => {
+  try {
+    const { quizId } = req.params;
+    const userId = req.user.id;
+
+    const quiz = await Quiz.findById(quizId).populate('courseId');
+    if (!quiz) {
+      return res.status(404).json({ message: 'Quiz not found' });
+    }
+
+    // Verify instructor owns the course this quiz belongs to
+    if (quiz.courseId.instructor.id.toString() !== userId) {
+      return res.status(403).json({ message: 'You can only delete quizzes for your own courses' });
+    }
+
+    // Check if quiz has any attempts
+    const attemptCount = await QuizAttempt.countDocuments({ quizId });
+    if (attemptCount > 0) {
+      return res.status(403).json({
+        message: 'Cannot delete quiz with existing attempts',
+        attempts: attemptCount
+      });
+    }
+
+    await Quiz.findByIdAndDelete(quizId);
+
+    res.json({ message: 'Quiz deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting instructor quiz:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Instructor: Get instructor's assigned courses for quiz creation
+const getInstructorCourses = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const courses = await Course.find({ 'instructor.id': userId })
+      .select('title description category difficulty enrollmentCount')
+      .sort({ title: 1 });
+
+    res.json(courses);
+  } catch (error) {
+    console.error('Error fetching instructor courses:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Admin: Get all courses for quiz creation (no restrictions)
+const getAllCoursesForAdmin = async (req, res) => {
+  try {
+    const courses = await Course.find({})
+      .select('title description category difficulty enrollmentCount instructor')
+      .populate('instructor.id', 'firstName lastName email')
+      .sort({ title: 1 });
+
+    res.json(courses);
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
   getCourseQuizzes,
   getQuiz,
@@ -572,5 +825,11 @@ module.exports = {
   createQuiz,
   updateQuiz,
   deleteQuiz,
-  getAllQuizzes
+  getAllQuizzes,
+  getInstructorQuizzes,
+  createInstructorQuiz,
+  updateInstructorQuiz,
+  deleteInstructorQuiz,
+  getInstructorCourses,
+  getAllCoursesForAdmin
 };
