@@ -9,6 +9,7 @@ import Tasks from './pages/Tasks';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import ModulesPage from './pages/ModulesPage';
+import TestModules from './pages/TestModules';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
           <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
           <Route path="/courses/:courseId" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
           <Route path="/courses/:courseId/modules" element={<ProtectedRoute><ModulesPage /></ProtectedRoute>} />
+          <Route path="/test-modules" element={<ProtectedRoute><TestModules /></ProtectedRoute>} />
         </Routes>
       </Router>
     </AuthProvider>

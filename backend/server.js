@@ -16,7 +16,7 @@ app.use('/api/modules', require('./routes/moduleRoutes'));
 app.use('/api/module-progress', require('./routes/moduleProgressRoutes'));
 app.use('/api/oop', require('./routes/oopRoutes'));
 app.use('/api/patterns', require('./routes/enhancedPatternsRoutes'));
-app.use('/api/tests', require('./routes/testRoutes'));
+app.use('/api/test', require('./routes/testRoutes'));
 // app.use('/api/tasks', require('./routes/taskRoutes'));
 
 const startServer = async () => {

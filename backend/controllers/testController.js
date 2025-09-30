@@ -15,11 +15,11 @@ const getTestResults = async (req, res) => {
         // Mock test results (in real implementation, this would run actual tests)
         const testResults = {
             summary: {
-                totalTests: 45,
-                passedTests: 42,
-                failedTests: 3,
-                coverage: 93,
-                duration: 2340,
+                totalTests: 60,
+                passedTests: 28,
+                failedTests: 32,
+                coverage: 75,
+                duration: 3200,
                 timestamp: new Date().toISOString(),
                 framework: 'Mocha + Chai + Sinon'
             },
@@ -53,6 +53,26 @@ const getTestResults = async (req, res) => {
                     passed: 10,
                     failed: 0,
                     coverage: 100
+                },
+                {
+                    name: 'Module System',
+                    icon: '📚',
+                    functions: ['getCourseModules', 'getModule', 'createModule', 'updateModule'],
+                    status: 'running',
+                    tests: 10,
+                    passed: 1,
+                    failed: 9,
+                    coverage: 45
+                },
+                {
+                    name: 'Module Progress',
+                    icon: '📈',
+                    functions: ['getModuleProgress', 'updateModuleProgress', 'completeModule'],
+                    status: 'warning',
+                    tests: 5,
+                    passed: 0,
+                    failed: 5,
+                    coverage: 30
                 },
                 {
                     name: 'Progress Tracking',
@@ -92,7 +112,19 @@ const getTestResults = async (req, res) => {
                     name: 'Course Management Module',
                     status: 'passed',
                     duration: 520,
+                    timestamp: new Date(Date.now() - 240000).toISOString()
+                },
+                {
+                    name: 'Module System',
+                    status: 'failed',
+                    duration: 890,
                     timestamp: new Date(Date.now() - 180000).toISOString()
+                },
+                {
+                    name: 'Module Progress',
+                    status: 'failed',
+                    duration: 450,
+                    timestamp: new Date(Date.now() - 150000).toISOString()
                 },
                 {
                     name: 'Progress Tracking Module',
