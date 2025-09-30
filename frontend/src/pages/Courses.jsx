@@ -84,6 +84,40 @@ const Courses = () => {
     }
   };
 
+  // Handle course unenrollment
+  const handleUnenrollment = async (courseId) => {
+    // Get course title for confirmation
+    const course = courses.find(c => c._id === courseId);
+    const courseName = course ? course.title : 'this course';
+    
+    // Show confirmation dialog
+    const isConfirmed = window.confirm(
+      `Are you sure you want to drop "${courseName}"?\n\nThis will remove all your progress and you'll need to re-enroll to continue learning.`
+    );
+    
+    if (!isConfirmed) {
+      return; // User cancelled
+    }
+
+    try {
+      console.log('🔄 Attempting to unenroll from course:', courseId);
+      const response = await axiosInstance.post(`/api/courses/${courseId}/unenroll`);
+      console.log('✅ Unenrollment successful:', response.data);
+      
+      // Refresh both courses and enrolled courses
+      await Promise.all([
+        fetchCourses(),
+        fetchEnrolledCourses()
+      ]);
+      
+      alert('Successfully dropped the course!');
+    } catch (error) {
+      console.error('❌ Error unenrolling from course:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to drop course. Please try again.';
+      alert(errorMessage);
+    }
+  };
+
   const isEnrolled = (courseId) => {
     return Array.isArray(enrolledCourses) && enrolledCourses.some(course => 
       course?.courseId?._id === courseId
@@ -232,15 +266,24 @@ const Courses = () => {
 
                 <div className="flex items-center justify-between">
                   {enrolled ? (
-                    <Link 
-                      to={`/courses/${course._id}`}
-                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200 flex items-center"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6 0v2a2 2 0 002 2h2a2 2 0 002-2v-2M7 7h2a2 2 0 012 2v1" />
-                      </svg>
-                      Continue Learning
-                    </Link>
+                    <div className="flex space-x-2 w-full">
+                      <Link 
+                        to={`/courses/${course._id}`}
+                        className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200 flex items-center justify-center"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6 0v2a2 2 0 002 2h2a2 2 0 002-2v-2M7 7h2a2 2 0 012 2v1" />
+                        </svg>
+                        Continue Learning
+                      </Link>
+                      <button 
+                        onClick={() => handleUnenrollment(course._id)}
+                        className="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600 transition duration-200"
+                        title="Drop Course"
+                      >
+                        Drop
+                      </button>
+                    </div>
                   ) : (
                     <button 
                       onClick={() => handleEnrollment(course._id)}
@@ -253,7 +296,7 @@ const Courses = () => {
                     </button>
                   )}
                   
-                  <div className="flex items-center text-gray-500">
+                  <div className="flex items-center text-gray-500 ml-4">
                     <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>

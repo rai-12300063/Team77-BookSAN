@@ -12,12 +12,13 @@ const Navbar = () => {
 
   return (
     <nav className="bg-green-600 text-white p-4 flex justify-between items-center">
-      <Link to="/" className="text-2xl font-bold">Learning Tracker</Link>
+      <Link to="/" className="text-2xl font-bold">QUT-MIT Learning Progress Tracker</Link>
       <div>
         {user ? (
           <>
             <Link to="/" className="mr-4 hover:text-blue-200">Dashboard</Link>
             <Link to="/courses" className="mr-4 hover:text-blue-200">Courses</Link>
+            <Link to="/test-modules" className="mr-4 hover:text-blue-200">Test Modules</Link>
             <Link to="/tasks" className="mr-4 hover:text-blue-200">Tasks</Link>
             <Link to="/profile" className="mr-4 hover:text-blue-200">Profile</Link>
             <button

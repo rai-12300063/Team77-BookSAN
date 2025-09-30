@@ -12,6 +12,11 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/progress', require('./routes/progressRoutes'));
+app.use('/api/modules', require('./routes/moduleRoutes'));
+app.use('/api/module-progress', require('./routes/moduleProgressRoutes'));
+app.use('/api/oop', require('./routes/oopRoutes'));
+app.use('/api/patterns', require('./routes/enhancedPatternsRoutes'));
+app.use('/api/tests', require('./routes/testRoutes'));
 // app.use('/api/tasks', require('./routes/taskRoutes'));
 
 const startServer = async () => {
