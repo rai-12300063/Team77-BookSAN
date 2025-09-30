@@ -29,9 +29,8 @@ const quizSchema = new mongoose.Schema({
 
   // Quiz settings
   timeLimit: { type: Number }, // in minutes
-  maxAttempts: { type: Number, default: 3 },
   passingScore: { type: Number, default: 70 }, // percentage
-  showResults: { type: Boolean, default: true },
+  showResults: { type: Boolean, default: false },
   showCorrectAnswers: { type: Boolean, default: false },
   randomizeQuestions: { type: Boolean, default: false },
   randomizeOptions: { type: Boolean, default: false },

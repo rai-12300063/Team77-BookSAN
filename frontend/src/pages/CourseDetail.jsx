@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
   const [progress, setProgress] = useState(null);
@@ -147,6 +149,23 @@ const CourseDetail = () => {
     // Check if this module index is in the completed modules array
     const moduleIndex = course?.syllabus?.findIndex(module => module._id === moduleId);
     return progress?.modulesCompleted?.some(completed => completed.moduleIndex === moduleIndex) || false;
+  };
+
+  const handleCreateQuiz = () => {
+    // Navigate to appropriate quiz creation page based on role
+    if (user?.role === 'admin') {
+      navigate(`/admin/quiz`, { state: { selectedCourseId: courseId } });
+    } else if (user?.role === 'instructor') {
+      navigate(`/instructor/quiz`, { state: { selectedCourseId: courseId } });
+    }
+  };
+
+  // Check if user can create quiz (admin or instructor who owns the course)
+  const canCreateQuiz = () => {
+    if (!user) return false;
+    if (user.role === 'admin') return true;
+    if (user.role === 'instructor' && course?.instructor?.id === user.id) return true;
+    return false;
   };
 
   if (loading) {
@@ -354,6 +373,22 @@ const CourseDetail = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Quiz Management - Admin/Instructor Only */}
+          {canCreateQuiz() && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Quiz Management</h3>
+              <button
+                onClick={handleCreateQuiz}
+                className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Create Quiz for this Course
+              </button>
+            </div>
+          )}
+
           {/* Enrollment Actions */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Course Actions</h3>

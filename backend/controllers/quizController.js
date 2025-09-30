@@ -1,6 +1,7 @@
 const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const Course = require('../models/Course');
+const LearningProgress = require('../models/LearningProgress');
 
 // Get all quizzes for a course
 const getCourseQuizzes = async (req, res) => {
@@ -9,10 +10,16 @@ const getCourseQuizzes = async (req, res) => {
     const userId = req.user.id;
 
     // Check if user has access to the course
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(courseId).select('syllabus');
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
+
+    // Get user's progress
+    const progress = await LearningProgress.findOne({ userId, courseId });
+    const totalModules = course.syllabus ? course.syllabus.length : 0;
+    const completedModules = progress && progress.modulesCompleted ? progress.modulesCompleted.length : 0;
+    const allModulesCompleted = completedModules >= totalModules && totalModules > 0;
 
     // Get all published quizzes for the course
     const quizzes = await Quiz.find({
@@ -35,17 +42,15 @@ const getCourseQuizzes = async (req, res) => {
         const bestScore = Math.max(...attempts.filter(a => a.isCompleted()).map(a => a.percentage), 0);
 
         quizObj.userStats = {
-          attemptsTaken: attempts.length,
-          bestScore: bestScore || null,
           latestAttempt: latestAttempt ? {
             status: latestAttempt.status,
-            percentage: latestAttempt.percentage,
-            submittedAt: latestAttempt.submittedAt,
-            currentQuestion: latestAttempt.currentQuestion
+            submittedAt: latestAttempt.submittedAt
           } : null,
-          canAttempt: !quiz.maxAttempts || attempts.length < quiz.maxAttempts,
           isAvailable: quiz.isAvailable(),
-          isOverdue: quiz.isOverdue()
+          isOverdue: quiz.isOverdue(),
+          allModulesCompleted,
+          requiredModules: totalModules,
+          completedModules
         };
 
         return quizObj;
@@ -65,7 +70,7 @@ const getQuiz = async (req, res) => {
     const { quizId } = req.params;
     const userId = req.user.id;
 
-    const quiz = await Quiz.findById(quizId).populate('courseId', 'title');
+    const quiz = await Quiz.findById(quizId).populate('courseId', 'title syllabus');
     if (!quiz) {
       return res.status(404).json({ message: 'Quiz not found' });
     }
@@ -74,10 +79,25 @@ const getQuiz = async (req, res) => {
       return res.status(403).json({ message: 'Quiz is not currently available' });
     }
 
-    // Check if user has attempts remaining
-    const attemptCount = await QuizAttempt.getUserAttemptCount(quizId, userId);
-    if (quiz.maxAttempts && attemptCount >= quiz.maxAttempts) {
-      return res.status(403).json({ message: 'Maximum attempts reached' });
+    // Check if user has completed all modules before allowing quiz access
+    const course = quiz.courseId;
+    const progress = await LearningProgress.findOne({ userId, courseId: course._id });
+
+    if (!progress) {
+      return res.status(403).json({
+        message: 'You must enroll in the course before taking the quiz'
+      });
+    }
+
+    const totalModules = course.syllabus ? course.syllabus.length : 0;
+    const completedModules = progress.modulesCompleted ? progress.modulesCompleted.length : 0;
+
+    if (completedModules < totalModules) {
+      return res.status(403).json({
+        message: `Quiz is only available after completing all course modules. You have completed ${completedModules} out of ${totalModules} modules.`,
+        requiredModules: totalModules,
+        completedModules: completedModules
+      });
     }
 
     // Get student view (without correct answers)
@@ -87,11 +107,8 @@ const getQuiz = async (req, res) => {
     const latestAttempt = await QuizAttempt.getUserLatestAttempt(quizId, userId);
 
     studentQuiz.userStats = {
-      attemptsTaken: attemptCount,
-      canAttempt: !quiz.maxAttempts || attemptCount < quiz.maxAttempts,
       latestAttempt: latestAttempt ? {
         status: latestAttempt.status,
-        attemptNumber: latestAttempt.attemptNumber,
         currentQuestion: latestAttempt.currentQuestion,
         timeRemaining: latestAttempt.getRemainingTime()
       } : null
@@ -110,7 +127,7 @@ const startQuizAttempt = async (req, res) => {
     const { quizId } = req.params;
     const userId = req.user.id;
 
-    const quiz = await Quiz.findById(quizId);
+    const quiz = await Quiz.findById(quizId).populate('courseId', 'syllabus');
     if (!quiz) {
       return res.status(404).json({ message: 'Quiz not found' });
     }
@@ -119,10 +136,25 @@ const startQuizAttempt = async (req, res) => {
       return res.status(403).json({ message: 'Quiz is not currently available' });
     }
 
-    // Check if user has attempts remaining
-    const attemptCount = await QuizAttempt.getUserAttemptCount(quizId, userId);
-    if (quiz.maxAttempts && attemptCount >= quiz.maxAttempts) {
-      return res.status(403).json({ message: 'Maximum attempts reached' });
+    // Check if user has completed all modules before allowing quiz attempt
+    const course = quiz.courseId;
+    const progress = await LearningProgress.findOne({ userId, courseId: course._id });
+
+    if (!progress) {
+      return res.status(403).json({
+        message: 'You must enroll in the course before taking the quiz'
+      });
+    }
+
+    const totalModules = course.syllabus ? course.syllabus.length : 0;
+    const completedModules = progress.modulesCompleted ? progress.modulesCompleted.length : 0;
+
+    if (completedModules < totalModules) {
+      return res.status(403).json({
+        message: `Quiz is only available after completing all course modules. You have completed ${completedModules} out of ${totalModules} modules.`,
+        requiredModules: totalModules,
+        completedModules: completedModules
+      });
     }
 
     // Check if user has an active attempt
@@ -302,14 +334,8 @@ const submitQuizAttempt = async (req, res) => {
       message: 'Quiz submitted successfully',
       results: {
         attemptId: attempt._id,
-        pointsEarned: attempt.pointsEarned,
-        totalPoints: quiz.totalPoints,
-        percentage: attempt.percentage,
-        passed: attempt.passed,
         status: attempt.status,
-        submittedAt: attempt.submittedAt,
-        showResults: quiz.showResults,
-        showCorrectAnswers: quiz.showCorrectAnswers
+        submittedAt: attempt.submittedAt
       }
     });
   } catch (error) {
@@ -381,7 +407,6 @@ const createQuiz = async (req, res) => {
       description,
       instructions,
       timeLimit,
-      maxAttempts,
       passingScore,
       difficulty,
       questions,
@@ -395,6 +420,11 @@ const createQuiz = async (req, res) => {
       return res.status(404).json({ message: 'Course not found' });
     }
 
+    // Validate question limit (max 10 questions)
+    if (questions && questions.length > 10) {
+      return res.status(400).json({ message: 'Quiz cannot have more than 10 questions' });
+    }
+
     // Calculate total points from questions
     const totalPoints = questions.reduce((sum, question) => sum + (question.points || 1), 0);
 
@@ -404,7 +434,6 @@ const createQuiz = async (req, res) => {
       description,
       instructions,
       timeLimit,
-      maxAttempts,
       passingScore: passingScore || 70,
       status,
       difficulty: difficulty || 1,
@@ -451,6 +480,11 @@ const updateQuiz = async (req, res) => {
     const quiz = await Quiz.findById(quizId);
     if (!quiz) {
       return res.status(404).json({ message: 'Quiz not found' });
+    }
+
+    // Validate question limit (max 10 questions)
+    if (updateData.questions && updateData.questions.length > 10) {
+      return res.status(400).json({ message: 'Quiz cannot have more than 10 questions' });
     }
 
     // Recalculate total points if questions are updated
@@ -543,7 +577,6 @@ const getAllQuizzes = async (req, res) => {
           questionsCount: quiz.questions.length,
           totalPoints: quiz.totalPoints,
           timeLimit: quiz.timeLimit,
-          maxAttempts: quiz.maxAttempts,
           passingScore: quiz.passingScore,
           createdBy: quiz.createdBy,
           createdAt: quiz.createdAt,
@@ -612,7 +645,6 @@ const getInstructorQuizzes = async (req, res) => {
           questionsCount: quiz.questions.length,
           totalPoints: quiz.totalPoints,
           timeLimit: quiz.timeLimit,
-          maxAttempts: quiz.maxAttempts,
           passingScore: quiz.passingScore,
           createdBy: quiz.createdBy,
           createdAt: quiz.createdAt,
@@ -640,7 +672,6 @@ const createInstructorQuiz = async (req, res) => {
       description,
       instructions,
       timeLimit,
-      maxAttempts,
       passingScore,
       difficulty,
       questions,
@@ -658,6 +689,11 @@ const createInstructorQuiz = async (req, res) => {
       return res.status(403).json({ message: 'You can only create quizzes for your own courses' });
     }
 
+    // Validate question limit (max 10 questions)
+    if (questions && questions.length > 10) {
+      return res.status(400).json({ message: 'Quiz cannot have more than 10 questions' });
+    }
+
     // Calculate total points from questions
     const totalPoints = questions.reduce((sum, question) => sum + (question.points || 1), 0);
 
@@ -667,7 +703,6 @@ const createInstructorQuiz = async (req, res) => {
       description,
       instructions,
       timeLimit,
-      maxAttempts,
       passingScore: passingScore || 70,
       status,
       difficulty: difficulty || 1,
@@ -719,6 +754,11 @@ const updateInstructorQuiz = async (req, res) => {
     // Verify instructor owns the course this quiz belongs to
     if (quiz.courseId.instructor.id.toString() !== userId) {
       return res.status(403).json({ message: 'You can only update quizzes for your own courses' });
+    }
+
+    // Validate question limit (max 10 questions)
+    if (updateData.questions && updateData.questions.length > 10) {
+      return res.status(400).json({ message: 'Quiz cannot have more than 10 questions' });
     }
 
     // Recalculate total points if questions are updated
