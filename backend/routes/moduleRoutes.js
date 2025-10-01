@@ -9,7 +9,9 @@ const {
     getModuleAnalytics,
     completeModule,
     getProgressSyncReport,
-    syncAllUsersInCourse
+    syncAllUsersInCourse,
+    getModuleAnalytics
+
 } = require('../controllers/moduleController');
 const { protect: authMiddleware } = require('../middleware/authMiddleware');
 
@@ -18,11 +20,13 @@ const { protect: authMiddleware } = require('../middleware/authMiddleware');
  * All routes use Middleware Pattern for authentication and authorization
  */
 
+
 // Apply authentication middleware to protected routes
 // Note: Some development routes may skip authentication
 
 // Create a new module (instructors and admins only)
 router.post('/', authMiddleware, async (req, res, next) => {
+
     // Authorization middleware using Middleware Pattern
     if (req.user.role !== 'instructor' && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Access denied. Instructor or admin role required.' });
@@ -40,6 +44,7 @@ router.get('/debug', (req, res) => {
 });
 
 // Get all modules for a course
+
 router.get('/course/:courseId', authMiddleware, getCourseModules);
 
 // Get specific module with detailed information
@@ -53,6 +58,7 @@ router.post('/:moduleId/grade', authMiddleware, calculateModuleGrade);
 
 // Get module analytics (instructors and admins only)
 router.get('/:moduleId/analytics', authMiddleware, async (req, res, next) => {
+  
     if (req.user.role !== 'instructor' && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Access denied. Instructor or admin role required.' });
     }
@@ -60,7 +66,9 @@ router.get('/:moduleId/analytics', authMiddleware, async (req, res, next) => {
 }, getModuleAnalytics);
 
 // Update specific content progress within a module
+
 router.put('/:moduleId/content/:contentId/progress', authMiddleware, async (req, res, next) => {
+
     try {
         // Add contentId to request body for processing
         req.body.contentId = req.params.contentId;
@@ -71,7 +79,9 @@ router.put('/:moduleId/content/:contentId/progress', authMiddleware, async (req,
 });
 
 // Get module progress for a specific user (admin/instructor can view others)
+
 router.get('/:moduleId/progress/:userId?', authMiddleware, async (req, res) => {
+
     try {
         const { moduleId, userId } = req.params;
         const requestingUserId = req.user.id;

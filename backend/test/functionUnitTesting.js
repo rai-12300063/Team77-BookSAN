@@ -30,6 +30,7 @@ const Module = require('../models/Module');
 const ModuleProgress = require('../models/ModuleProgress');
 const ProgressSyncService = require('../services/progressSyncService');
 
+
 // Import external dependencies
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');

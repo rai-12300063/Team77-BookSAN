@@ -4,6 +4,7 @@ const Course = require('../models/Course');
 const LearningProgress = require('../models/LearningProgress');
 const ProgressSyncService = require('../services/progressSyncService');
 
+
 // Import design patterns
 const { ContentFactory } = require('../patterns/factory');
 const { LearningProgressTracker } = require('../patterns/observer');
@@ -339,12 +340,14 @@ const updateModuleProgress = async (req, res) => {
 
         await moduleProgress.save();
 
+
         // Sync module progress with course progress using new service
         const updatedLearningProgress = await ProgressSyncService.syncModuleWithCourse(
             userId, 
             moduleProgress.courseId, 
             moduleId
         );
+
 
         // Notify observers using Observer Pattern
         progressTracker.notify({
@@ -356,6 +359,7 @@ const updateModuleProgress = async (req, res) => {
             contentId
         }, {
             progress: moduleProgress.toObject(),
+
             courseProgress: updatedLearningProgress.toObject(),
             updatedAt: new Date()
         });
@@ -780,6 +784,7 @@ const syncAllUsersInCourse = async (req, res) => {
     }
 };
 
+
 module.exports = {
     createModule,
     getCourseModules,
@@ -789,5 +794,7 @@ module.exports = {
     getModuleAnalytics,
     completeModule,
     getProgressSyncReport,
-    syncAllUsersInCourse
+    syncAllUsersInCourse,
+    getModuleAnalytics
+
 };
