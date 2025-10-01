@@ -1,20 +1,40 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../axiosConfig';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Courses = () => {
+  const navigate = useNavigate();
+  const { user, isAdmin, isInstructor } = useAuth();
   const [courses, setCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [filter, setFilter] = useState('all');
   const [category, setCategory] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [instructorCourses, setInstructorCourses] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    category: 'Programming',
+    difficulty: 'Beginner',
+    duration: { weeks: 1, hoursPerWeek: 1 },
+    estimatedCompletionTime: 1,
+    prerequisites: '',
+    learningObjectives: '',
+    syllabus: ''
+  });
+  const [creating, setCreating] = useState(false);
   // const [error, setError] = useState(null); // Not currently used
 
   useEffect(() => {
     console.log('Component mounted, fetching data...');
     fetchCourses();
     fetchEnrolledCourses();
-  }, []);
+    if (isInstructor) {
+      fetchInstructorCourses();
+    }
+  }, [isInstructor]);
 
   const fetchCourses = async () => {
     try {
@@ -43,7 +63,7 @@ const Courses = () => {
     try {
       console.log('🔄 Fetching enrolled courses...');
       const response = await axiosInstance.get('/api/courses/enrolled/my');
-      
+
       // Ensure we have an array
       const enrolledData = response.data || [];
       if (Array.isArray(enrolledData)) {
@@ -59,6 +79,32 @@ const Courses = () => {
     } finally {
       setLoading(false);
       console.log('🏁 Loading complete');
+    }
+  };
+
+  const fetchInstructorCourses = async () => {
+    try {
+      const response = await axiosInstance.get('/api/quiz/instructor/courses');
+      setInstructorCourses(response.data || []);
+    } catch (error) {
+      console.error('❌ Error fetching instructor courses:', error);
+      setInstructorCourses([]);
+    }
+  };
+
+  const canCreateQuizForCourse = (courseId) => {
+    if (isAdmin) return true;
+    if (isInstructor) {
+      return instructorCourses.some(course => course._id === courseId);
+    }
+    return false;
+  };
+
+  const handleAddQuiz = (courseId) => {
+    if (isAdmin) {
+      navigate('/admin/quizzes', { state: { selectedCourseId: courseId } });
+    } else if (isInstructor) {
+      navigate('/instructor/quizzes', { state: { selectedCourseId: courseId } });
     }
   };
 
@@ -89,12 +135,12 @@ const Courses = () => {
     // Get course title for confirmation
     const course = courses.find(c => c._id === courseId);
     const courseName = course ? course.title : 'this course';
-    
+
     // Show confirmation dialog
     const isConfirmed = window.confirm(
       `Are you sure you want to drop "${courseName}"?\n\nThis will remove all your progress and you'll need to re-enroll to continue learning.`
     );
-    
+
     if (!isConfirmed) {
       return; // User cancelled
     }
@@ -103,18 +149,102 @@ const Courses = () => {
       console.log('🔄 Attempting to unenroll from course:', courseId);
       const response = await axiosInstance.post(`/api/courses/${courseId}/unenroll`);
       console.log('✅ Unenrollment successful:', response.data);
-      
+
       // Refresh both courses and enrolled courses
       await Promise.all([
         fetchCourses(),
         fetchEnrolledCourses()
       ]);
-      
+
       alert('Successfully dropped the course!');
     } catch (error) {
       console.error('❌ Error unenrolling from course:', error);
       const errorMessage = error.response?.data?.message || 'Failed to drop course. Please try again.';
       alert(errorMessage);
+    }
+  };
+
+  const handleCreateCourse = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+
+    try {
+      // Parse arrays from comma-separated strings
+      const prerequisites = formData.prerequisites
+        ? formData.prerequisites.split(',').map(p => p.trim()).filter(Boolean)
+        : [];
+
+      const learningObjectives = formData.learningObjectives
+        ? formData.learningObjectives.split(',').map(o => o.trim()).filter(Boolean)
+        : [];
+
+      // Parse syllabus (format: "Module Title:Topic1,Topic2:3" per line)
+      const syllabus = formData.syllabus
+        ? formData.syllabus.split('\n').map(line => {
+            const parts = line.trim().split(':');
+            if (parts.length >= 3) {
+              return {
+                moduleTitle: parts[0].trim(),
+                topics: parts[1].split(',').map(t => t.trim()).filter(Boolean),
+                estimatedHours: parseInt(parts[2]) || 1
+              };
+            }
+            return null;
+          }).filter(Boolean)
+        : [];
+
+      const courseData = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        difficulty: formData.difficulty,
+        duration: formData.duration,
+        estimatedCompletionTime: formData.estimatedCompletionTime,
+        prerequisites,
+        learningObjectives,
+        syllabus
+      };
+
+      await axiosInstance.post('/api/courses', courseData);
+      alert('Course created successfully!');
+      setShowCreateModal(false);
+
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        category: 'Programming',
+        difficulty: 'Beginner',
+        duration: { weeks: 1, hoursPerWeek: 1 },
+        estimatedCompletionTime: 1,
+        prerequisites: '',
+        learningObjectives: '',
+        syllabus: ''
+      });
+
+      // Refresh courses
+      fetchCourses();
+    } catch (error) {
+      console.error('Error creating course:', error);
+      alert(error.response?.data?.message || 'Failed to create course');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name.startsWith('duration.')) {
+      const field = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        duration: { ...prev.duration, [field]: parseInt(value) || 0 }
+      }));
+    } else if (name === 'estimatedCompletionTime') {
+      setFormData(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
@@ -176,16 +306,32 @@ const Courses = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Courses</h1>
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="text-3xl font-bold text-gray-800">Courses</h1>
+          {isAdmin() && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 flex items-center"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Create Course
+            </button>
+          )}
+        </div>
         <p className="text-gray-600">Discover and enroll in courses to advance your learning journey</p>
-      
+
         {/* Debug Info Panel */}
         <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm">
-          <strong>Debug Info:</strong> 
-          {Array.isArray(courses) ? courses.length : 0} total courses loaded | 
-          {Array.isArray(enrolledCourses) ? enrolledCourses.length : 0} enrolled courses | 
+          <strong>Debug Info:</strong>
+          {Array.isArray(courses) ? courses.length : 0} total courses loaded |
+          {Array.isArray(enrolledCourses) ? enrolledCourses.length : 0} enrolled courses |
           {Array.isArray(filteredCourses) ? filteredCourses.length : 0} shown after filters |
-          Loading: {loading.toString()}
+          Loading: {loading.toString()} |
+          User: {user?.name || 'Not logged in'} |
+          Role: {user?.role || 'N/A'} |
+          isAdmin(): {isAdmin().toString()}
         </div>
       </div>
 
@@ -264,44 +410,59 @@ const Courses = () => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between">
-                  {enrolled ? (
-                    <div className="flex space-x-2 w-full">
-                      <Link 
-                        to={`/courses/${course._id}`}
-                        className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200 flex items-center justify-center"
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    {enrolled ? (
+                      <div className="flex space-x-2 w-full">
+                        <Link
+                          to={`/courses/${course._id}`}
+                          className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200 flex items-center justify-center"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6 0v2a2 2 0 002 2h2a2 2 0 002-2v-2M7 7h2a2 2 0 012 2v1" />
+                          </svg>
+                          Continue Learning
+                        </Link>
+                        <button
+                          onClick={() => handleUnenrollment(course._id)}
+                          className="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600 transition duration-200"
+                          title="Drop Course"
+                        >
+                          Drop
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleEnrollment(course._id)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 flex items-center"
                       >
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6 0v2a2 2 0 002 2h2a2 2 0 002-2v-2M7 7h2a2 2 0 012 2v1" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
-                        Continue Learning
-                      </Link>
-                      <button 
-                        onClick={() => handleUnenrollment(course._id)}
-                        className="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600 transition duration-200"
-                        title="Drop Course"
-                      >
-                        Drop
+                        Enroll Now
                       </button>
+                    )}
+
+                    <div className="flex items-center text-gray-500 ml-4">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <span className="text-sm">{course.rating || 'N/A'}</span>
                     </div>
-                  ) : (
-                    <button 
-                      onClick={() => handleEnrollment(course._id)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 flex items-center"
+                  </div>
+
+                  {/* Add Quiz Button for Admin and Instructors */}
+                  {canCreateQuizForCourse(course._id) && (
+                    <button
+                      onClick={() => handleAddQuiz(course._id)}
+                      className="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition duration-200 flex items-center justify-center text-sm"
                     >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                       </svg>
-                      Enroll Now
+                      Add Quiz
                     </button>
                   )}
-                  
-                  <div className="flex items-center text-gray-500 ml-4">
-                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    <span className="text-sm">{course.rating || 'N/A'}</span>
-                  </div>
                 </div>
 
                 {course.prerequisites?.length > 0 && (
@@ -324,11 +485,137 @@ const Courses = () => {
           </svg>
           <h3 className="mt-2 text-sm font-medium text-gray-900">No courses found</h3>
           <p className="mt-1 text-sm text-gray-500">
-            {filter === 'enrolled' 
+            {filter === 'enrolled'
               ? "You haven't enrolled in any courses yet."
               : "No courses match your current filters."
             }
           </p>
+        </div>
+      )}
+
+      {/* Create Course Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Create New Course</h2>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateCourse} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                    rows={3}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    >
+                      <option value="Programming">Programming</option>
+                      <option value="Web Development">Web Development</option>
+                      <option value="Data Science">Data Science</option>
+                      <option value="Business">Business</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty *</label>
+                    <select
+                      name="difficulty"
+                      value={formData.difficulty}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    >
+                      <option value="Beginner">Beginner</option>
+                      <option value="Intermediate">Intermediate</option>
+                      <option value="Advanced">Advanced</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Duration (Weeks) *</label>
+                    <input
+                      type="number"
+                      name="duration.weeks"
+                      value={formData.duration.weeks}
+                      onChange={handleInputChange}
+                      required
+                      min="1"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Hours *</label>
+                    <input
+                      type="number"
+                      name="estimatedCompletionTime"
+                      value={formData.estimatedCompletionTime}
+                      onChange={handleInputChange}
+                      required
+                      min="1"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {creating ? 'Creating...' : 'Create Course'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
     </div>

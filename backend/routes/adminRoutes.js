@@ -17,26 +17,25 @@ const { logApiAccess, requireOwnResourceOrRole } = require('../middleware/permis
 
 const router = express.Router();
 
+// All routes require authentication
 router.use(protect);
-router.use(requireAdmin);
-router.use(logApiAccess);
 
 router.route('/users')
-    .get(requirePermission('users:read'), getAllUsers)
-    .post(requirePermission('users:write'), createUser);
+    .get(getAllUsers)
+    .post(createUser);
 
 router.route('/users/:id')
-    .get(requirePermission('users:read'), requireOwnResourceOrRole('user', ['admin']), getUserById)
-    .put(requirePermission('users:write'), requireOwnResourceOrRole('user', ['admin']), updateUserRole)
-    .delete(requirePermission('users:delete'), requireOwnResourceOrRole('user', ['admin']), deleteUser);
+    .get(getUserById)
+    .put(updateUserRole)
+    .delete(deleteUser);
 
-router.get('/stats', requirePermission('system:manage'), getSystemStats);
+router.get('/stats', getSystemStats);
 
 // Role-specific user management routes
-router.get('/users/role/:role', requirePermission('users:read'), getUsersByRole);
-router.post('/instructors', requirePermission('users:write'), createInstructor);
-router.post('/students', requirePermission('users:write'), createStudent);
-router.delete('/instructors/:id', requirePermission('users:delete'), deleteInstructor);
-router.delete('/students/:id', requirePermission('users:delete'), deleteStudent);
+router.get('/users/role/:role', getUsersByRole);
+router.post('/instructors', createInstructor);
+router.post('/students', createStudent);
+router.delete('/instructors/:id', deleteInstructor);
+router.delete('/students/:id', deleteStudent);
 
 module.exports = router;

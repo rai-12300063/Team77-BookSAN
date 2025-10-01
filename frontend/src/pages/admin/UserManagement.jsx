@@ -31,12 +31,29 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('Fetching users...');
       const response = await axiosInstance.get('/api/admin/users');
-      setUsers(response.data.data);
-      setError('');
+      console.log('Users response:', response.data);
+
+      if (response.data.success && response.data.data) {
+        setUsers(response.data.data);
+        setError('');
+      } else {
+        setUsers([]);
+        setError('No users found');
+      }
     } catch (err) {
-      setError('Failed to fetch users');
       console.error('Error fetching users:', err);
+      console.error('Error response:', err.response?.data);
+
+      if (err.response?.status === 403) {
+        setError('Permission denied. You need admin privileges to view users.');
+      } else if (err.response?.status === 401) {
+        setError('Unauthorized. Please log in again.');
+      } else {
+        setError(err.response?.data?.message || 'Failed to fetch users');
+      }
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -221,14 +238,9 @@ const UserManagement = () => {
                 {filteredUsers.map((userItem) => (
                   <tr key={userItem._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium mr-4">
-                          {userItem.name?.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{userItem.name}</div>
-                          <div className="text-sm text-gray-500">{userItem.email}</div>
-                        </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{userItem.name}</div>
+                        <div className="text-sm text-gray-500">{userItem.email}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

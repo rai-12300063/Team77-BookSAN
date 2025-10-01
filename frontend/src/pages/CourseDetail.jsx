@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
+import Quiz from '../components/Quiz';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -11,12 +12,14 @@ const CourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [activeModule, setActiveModule] = useState(0);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [quizzes, setQuizzes] = useState([]);
+  const [showQuiz, setShowQuiz] = useState(false);
 
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
         console.log('🔄 Fetching course data for courseId:', courseId);
-        const [courseRes, modulesRes, progressRes] = await Promise.all([
+        const [courseRes, modulesRes, progressRes, quizzesRes] = await Promise.all([
           axiosInstance.get(`/api/courses/${courseId}`),
           axiosInstance.get(`/api/modules/course/${courseId}`).catch((error) => {
             console.log('⚠️ Modules fetch failed:', error.response?.status);
@@ -25,17 +28,23 @@ const CourseDetail = () => {
           axiosInstance.get(`/api/progress/course/${courseId}`).catch((error) => {
             console.log('⚠️ Progress fetch failed (user might not be enrolled):', error.response?.status);
             return { data: null };
+          }),
+          axiosInstance.get(`/api/quizzes/course/${courseId}`).catch((error) => {
+            console.log('⚠️ Quizzes fetch failed:', error.response?.status);
+            return { data: [] };
           })
         ]);
         console.log('📚 Course data:', courseRes.data);
         console.log('📋 Modules data:', modulesRes.data);
         console.log('📈 Progress data:', progressRes.data);
-        
+        console.log('📝 Quizzes data:', quizzesRes.data);
+
         setCourse(courseRes.data);
         setModules(modulesRes.data || []);
         setProgress(progressRes.data);
         setIsEnrolled(!!progressRes.data); // User is enrolled if progress exists
-        
+        setQuizzes(quizzesRes.data || []);
+
         console.log('✅ Data fetch complete. isEnrolled:', !!progressRes.data, 'modules:', modulesRes.data?.length);
       } catch (error) {
         console.error('❌ Error fetching course data:', error);
@@ -336,6 +345,73 @@ const CourseDetail = () => {
                   </div>
                 ) : (
                   <p className="text-gray-600">No modules available for this course.</p>
+                )}
+
+                {/* Quiz Section */}
+                {quizzes && quizzes.length > 0 && (
+                  <div className="mt-8">
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Course Quiz</h2>
+                    {quizzes.map((quiz) => {
+                      const allModulesCompleted = progress?.completionPercentage === 100;
+                      const isQuizDisabled = !allModulesCompleted;
+
+                      return (
+                        <div
+                          key={quiz._id}
+                          className={`border rounded-lg p-6 ${
+                            isQuizDisabled
+                              ? 'bg-gray-100 border-gray-300 opacity-60'
+                              : 'bg-white border-blue-300'
+                          }`}
+                        >
+                          {showQuiz && !isQuizDisabled ? (
+                            <Quiz
+                              courseId={courseId}
+                              quizId={quiz._id}
+                              onComplete={() => {
+                                setShowQuiz(false);
+                                refetchData();
+                              }}
+                            />
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                                    {course?.title}
+                                  </h3>
+                                  <p className="text-gray-600 mb-4">{quiz.description}</p>
+                                  <div className="flex gap-4 text-sm text-gray-600">
+                                    <span>📝 {quiz.questions?.length || 0} Questions</span>
+                                    <span>⏱️ {quiz.duration} minutes</span>
+                                    <span>🎯 Passing Score: {quiz.passingScore}%</span>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => setShowQuiz(true)}
+                                  disabled={isQuizDisabled}
+                                  className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                                    isQuizDisabled
+                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                                  }`}
+                                >
+                                  {isQuizDisabled ? '🔒 Locked' : 'Start Quiz'}
+                                </button>
+                              </div>
+                              {isQuizDisabled && (
+                                <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                  <p className="text-sm text-yellow-800">
+                                    ⚠️ Complete all modules to unlock the quiz
+                                  </p>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </>
             ) : (

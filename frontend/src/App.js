@@ -13,6 +13,11 @@ import TestModules from './pages/TestModules';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
+import UserManagement from './pages/admin/UserManagement';
+import AdminQuizManagement from './pages/AdminQuizManagement';
+import InstructorQuizManagement from './pages/InstructorQuizManagement';
+import AdminQuizEditor from './pages/AdminQuizEditor';
+import InstructorQuizEditor from './pages/InstructorQuizEditor';
 
 function App() {
   return (
@@ -35,6 +40,11 @@ function App() {
           <Route path="/courses/:courseId" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
           <Route path="/courses/:courseId/modules" element={<ProtectedRoute><ModulesPage /></ProtectedRoute>} />
           <Route path="/test-modules" element={<ProtectedRoute><TestModules /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+          <Route path="/admin/quizzes" element={<ProtectedRoute><AdminQuizManagement /></ProtectedRoute>} />
+          <Route path="/admin/quiz/edit/:quizId" element={<ProtectedRoute><AdminQuizEditor /></ProtectedRoute>} />
+          <Route path="/instructor/quizzes" element={<ProtectedRoute><InstructorQuizManagement /></ProtectedRoute>} />
+          <Route path="/instructor/quiz/edit/:quizId" element={<ProtectedRoute><InstructorQuizEditor /></ProtectedRoute>} />
         </Routes>
       </Router>
     </AuthProvider>
