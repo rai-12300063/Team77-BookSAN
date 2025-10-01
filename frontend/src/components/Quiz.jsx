@@ -652,8 +652,6 @@ const Quiz = ({
                 className={`w-8 h-8 rounded-full text-sm font-medium transition duration-200 ${
                   index === currentQuestion
                     ? 'bg-blue-600 text-white'
-                    : isQuestionAnswered(index)
-                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
