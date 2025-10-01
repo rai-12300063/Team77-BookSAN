@@ -9,9 +9,7 @@ const {
     getModuleAnalytics,
     completeModule,
     getProgressSyncReport,
-    syncAllUsersInCourse,
-    getModuleAnalytics
-
+    syncAllUsersInCourse
 } = require('../controllers/moduleController');
 const { protect: authMiddleware } = require('../middleware/authMiddleware');
 
