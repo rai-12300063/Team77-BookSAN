@@ -11,12 +11,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "prod": "node server.js",
-    "seed": "node seedCourses.js",
-    "seed:courses": "node seedCourses.js",
-    "seed:modules": "node seedModules.js",
     "seed:qut": "node seedQUTCurriculum.js",
-    "seed:all": "npm run seed:qut",
-    "create-test-user": "node createTestUser.js"
+    "seed:quizzes": "node seedQuizzes.js",
+    "seed:students": "node seedStudents.js"
   },
   "dependencies": {
     "axios": "^1.12.2",

@@ -20,8 +20,6 @@ app.use('/api/test', require('./routes/testRoutes'));
 app.use('/api/populate', require('./routes/populateRoutes'));
 app.use('/api/quiz', require('./routes/quizRoutes'));
 
-// app.use('/api/tasks', require('./routes/taskRoutes'));
-
 const startServer = async () => {
   try {
     await connectDB();
