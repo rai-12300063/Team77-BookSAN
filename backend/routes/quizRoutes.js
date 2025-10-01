@@ -2,14 +2,12 @@ const express = require('express');
 const {
   getCourseQuizzes,
   getQuiz,
-  startQuizAttempt,
-  saveQuizProgress,
   submitQuizAttempt,
-  getQuizResults,
   createQuiz,
   updateQuiz,
   deleteQuiz,
   getAllQuizzes,
+  getQuizForEdit,
   getInstructorQuizzes,
   createInstructorQuiz,
   updateInstructorQuiz,
@@ -33,39 +31,16 @@ router.get('/course/:courseId',
   getCourseQuizzes
 );
 
-// Get a specific quiz (for taking)
 router.get('/:quizId',
   requirePermission('quiz:read'),
   logApiAccess,
   getQuiz
 );
 
-// Start a new quiz attempt
-router.post('/:quizId/attempt',
-  requirePermission('quiz:take'),
-  logApiAccess,
-  startQuizAttempt
-);
-
-// Save quiz progress (pause functionality)
-router.put('/attempt/:attemptId/progress',
-  requirePermission('quiz:take'),
-  logApiAccess,
-  saveQuizProgress
-);
-
-// Submit quiz attempt
-router.post('/attempt/:attemptId/submit',
+router.post('/:quizId/submit',
   requirePermission('quiz:take'),
   logApiAccess,
   submitQuizAttempt
-);
-
-// Get quiz results
-router.get('/attempt/:attemptId/results',
-  requirePermission('quiz:read'),
-  logApiAccess,
-  getQuizResults
 );
 
 // ========== ADMIN ROUTES ==========
@@ -82,6 +57,13 @@ router.get('/admin/all',
   requirePermission('quiz:write'),
   logApiAccess,
   getAllQuizzes
+);
+
+// Get a specific quiz for editing (admin - no module completion check)
+router.get('/admin/:quizId',
+  requirePermission('quiz:write'),
+  logApiAccess,
+  getQuizForEdit
 );
 
 // Create new quiz in a course (admin can create in ANY course)
@@ -106,6 +88,13 @@ router.delete('/admin/:quizId',
 );
 
 // ========== INSTRUCTOR ROUTES ==========
+
+// Get a specific quiz for editing (instructor - no module completion check)
+router.get('/instructor/:quizId',
+  requirePermission('quiz:write'),
+  logApiAccess,
+  getQuizForEdit
+);
 
 // Get instructor's courses for quiz creation
 router.get('/instructor/courses',

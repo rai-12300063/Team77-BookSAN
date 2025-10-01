@@ -21,7 +21,6 @@ const UserManagement = () => {
     email: '',
     password: '',
     role: 'student',
-    university: '',
     address: ''
   });
 
@@ -98,7 +97,6 @@ const UserManagement = () => {
           email: '',
           password: '',
           role: 'student',
-          university: '',
           address: ''
         });
         setTimeout(() => setSuccess(''), 3000);
@@ -212,9 +210,6 @@ const UserManagement = () => {
                     Role
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    University
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Joined
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -252,9 +247,6 @@ const UserManagement = () => {
                           {userItem.role}
                         </span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {userItem.university || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(userItem.createdAt).toLocaleDateString()}
@@ -347,15 +339,6 @@ const UserManagement = () => {
                       <option value="instructor">Instructor</option>
                       <option value="admin">Admin</option>
                     </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">University</label>
-                    <input
-                      type="text"
-                      value={newUser.university}
-                      onChange={(e) => setNewUser({ ...newUser, university: e.target.value })}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>

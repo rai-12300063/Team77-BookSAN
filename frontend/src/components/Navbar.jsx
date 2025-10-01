@@ -56,6 +56,15 @@ const Navbar = () => {
                 <Link to="/admin/users" className="hover:text-blue-200 transition-colors">Users</Link>
               </PermissionGate>
 
+              {/* Quiz Management - Admin & Instructor */}
+              <PermissionGate resource="quiz" action="write">
+                <Link
+                  to={isAdmin() ? "/admin/quiz" : "/instructor/quiz"}
+                  className="hover:text-blue-200 transition-colors"
+                >
+                  Quiz Management
+                </Link>
+              </PermissionGate>
 
               <Link to="/profile" className="hover:text-blue-200 transition-colors">Profile</Link>
 

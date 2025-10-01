@@ -183,7 +183,7 @@ const getSystemStats = async (req, res) => {
 
 const createUser = async (req, res) => {
     try {
-        const { name, email, password, role, university, address } = req.body;
+        const { name, email, password, role, address } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({
@@ -213,7 +213,6 @@ const createUser = async (req, res) => {
             email,
             password,
             role: role || USER_ROLES.STUDENT,
-            university,
             address
         };
 

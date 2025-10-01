@@ -8,16 +8,11 @@ const optionSchema = new mongoose.Schema({
 
 const questionSchema = new mongoose.Schema({
   id: { type: String, required: true },
-  type: {
-    type: String,
-    enum: ['multiple_choice', 'multiple_select', 'true_false', 'text'],
-    required: true
-  },
   question: { type: String, required: true },
-  options: [optionSchema], // For multiple choice/select questions
-  correctAnswer: { type: mongoose.Schema.Types.Mixed }, // For true/false, text, or correct option IDs
+  options: [optionSchema],
+  correctAnswer: { type: mongoose.Schema.Types.Mixed },
   points: { type: Number, default: 1 },
-  explanation: { type: String } // Optional explanation for the answer
+  explanation: { type: String }
 });
 
 const quizSchema = new mongoose.Schema({
@@ -90,7 +85,6 @@ quizSchema.methods.getStudentView = function() {
   quiz.questions = quiz.questions.map(question => {
     const studentQuestion = {
       id: question.id,
-      type: question.type,
       question: question.question,
       points: question.points
     };

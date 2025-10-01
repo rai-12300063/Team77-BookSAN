@@ -83,10 +83,19 @@ const updateModuleCompletion = async (req, res) => {
       existingCompletion.timeSpent += timeSpent || 0;
     }
 
-    // Calculate completion percentage
+    // Calculate completion percentage based on module completion only
+    // Note: Course is only fully completed (100%) after passing the quiz
     const totalModules = course.syllabus.length;
     const completedModulesCount = progress.modulesCompleted.length;
-    progress.completionPercentage = Math.round((completedModulesCount / totalModules) * 100);
+
+    // If all modules are completed but quiz not passed, show 99% or calculate based on modules only
+    // The final 100% and isCompleted flag will be set when the quiz is passed
+    if (completedModulesCount >= totalModules) {
+      // All modules completed, but course completion requires quiz
+      progress.completionPercentage = 99; // Just under 100% until quiz is passed
+    } else {
+      progress.completionPercentage = Math.round((completedModulesCount / totalModules) * 100);
+    }
 
     // Update total time spent and last accessed
     progress.totalTimeSpent += timeSpent || 0;
@@ -95,20 +104,8 @@ const updateModuleCompletion = async (req, res) => {
     // Update current module to the next incomplete one
     progress.currentModule = Math.max(progress.currentModule, moduleIndex + 1);
 
-    // Check for course completion
-    if (progress.completionPercentage === 100) {
-      progress.isCompleted = true;
-      progress.completionDate = new Date();
-      
-      // Add course completion achievement if not already present
-      const hasCompletionAchievement = progress.achievements.some(a => a.type === 'course_completed');
-      if (!hasCompletionAchievement) {
-        progress.achievements.push({
-          type: 'course_completed',
-          description: `Completed ${course.title}`
-        });
-      }
-    }
+    // Note: Course completion (isCompleted = true) is now handled in quizController
+    // when the student passes the quiz, not here
 
     // Check for time-based achievements
     if (progress.totalTimeSpent >= 600) { // 10 hours

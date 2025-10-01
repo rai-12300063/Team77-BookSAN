@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
+import QuizCard from '../components/QuizCard';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -12,6 +13,8 @@ const CourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [activeModule, setActiveModule] = useState(0);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [quizzes, setQuizzes] = useState([]);
+  const [quizzesLoading, setQuizzesLoading] = useState(false);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -26,12 +29,18 @@ const CourseDetail = () => {
         ]);
         console.log('📚 Course data:', courseRes.data);
         console.log('📈 Progress data:', progressRes.data);
-        
+
         setCourse(courseRes.data);
         setProgress(progressRes.data);
-        setIsEnrolled(!!progressRes.data); // User is enrolled if progress exists
-        
-        console.log('✅ Data fetch complete. isEnrolled:', !!progressRes.data);
+        const enrolled = !!progressRes.data;
+        setIsEnrolled(enrolled);
+
+        // Fetch quizzes if enrolled (student) or if admin/instructor
+        if ((enrolled && user?.role === 'student') || user?.role === 'admin' || user?.role === 'instructor') {
+          fetchQuizzes();
+        }
+
+        console.log('✅ Data fetch complete. isEnrolled:', enrolled);
       } catch (error) {
         console.error('❌ Error fetching course data:', error);
         if (error.response?.status === 404) {
@@ -43,7 +52,21 @@ const CourseDetail = () => {
     };
 
     fetchCourseData();
-  }, [courseId, navigate]);
+  }, [courseId, navigate, user]);
+
+  const fetchQuizzes = async () => {
+    try {
+      setQuizzesLoading(true);
+      console.log('🎯 Fetching quizzes for course:', courseId);
+      const response = await axiosInstance.get(`/api/quiz/course/${courseId}`);
+      console.log('📝 Quizzes fetched:', response.data);
+      setQuizzes(response.data);
+    } catch (error) {
+      console.error('❌ Error fetching quizzes:', error);
+    } finally {
+      setQuizzesLoading(false);
+    }
+  };
 
   const refetchData = async () => {
     try {
@@ -53,7 +76,13 @@ const CourseDetail = () => {
       ]);
       setCourse(courseRes.data);
       setProgress(progressRes.data);
-      setIsEnrolled(!!progressRes.data);
+      const enrolled = !!progressRes.data;
+      setIsEnrolled(enrolled);
+
+      // Refetch quizzes if enrolled and student
+      if (enrolled && user?.role === 'student') {
+        fetchQuizzes();
+      }
     } catch (error) {
       console.error('Error fetching course data:', error);
     }
@@ -336,6 +365,92 @@ const CourseDetail = () => {
               </div>
             )}
           </div>
+
+          {/* Quiz Section - For students (enrolled), admins, and instructors */}
+          {((isEnrolled && user?.role === 'student') || user?.role === 'admin' || user?.role === 'instructor') && (
+            <div className="bg-white rounded-lg shadow-md p-6 mt-8">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Course Quiz</h2>
+
+              {quizzesLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
+              ) : quizzes.length > 0 ? (
+                <>
+                  {(() => {
+                    const isStudent = user?.role === 'student';
+                    const totalModules = course.syllabus ? course.syllabus.length : 0;
+                    const completedModules = progress?.modulesCompleted?.length || 0;
+                    const allModulesCompleted = totalModules > 0 && completedModules >= totalModules;
+
+                    return (
+                      <div className="space-y-4">
+                        {/* Show completion message when all modules done (students only) */}
+                        {isStudent && allModulesCompleted && (
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                            <div className="flex items-center">
+                              <svg className="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              <p className="text-green-800">
+                                Great job! You've completed all modules. Take the quiz to complete the course.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Always show quiz, but grayed out if student hasn't completed modules */}
+                        <div className={isStudent && !allModulesCompleted ? 'opacity-50 pointer-events-none' : ''}>
+                          {quizzes.map((quiz) => (
+                            <QuizCard
+                              key={quiz._id}
+                              quiz={{
+                                id: quiz._id,
+                                title: quiz.title,
+                                description: quiz.description,
+                                questionCount: quiz.questions?.length || 0,
+                                timeLimit: quiz.timeLimit,
+                                difficulty: quiz.difficulty,
+                                status: quiz.userStats?.latestAttempt?.status || 'not_started',
+                              }}
+                              courseId={courseId}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Show lock message when student hasn't completed modules */}
+                        {isStudent && !allModulesCompleted && (
+                          <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mt-4">
+                            <div className="flex items-start">
+                              <svg className="w-6 h-6 text-gray-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                              <div>
+                                <h3 className="text-lg font-semibold text-gray-700 mb-1">Quiz Locked</h3>
+                                <p className="text-gray-600 mb-2">
+                                  Complete all course modules to unlock the quiz.
+                                </p>
+                                <p className="text-gray-600 font-medium">
+                                  Progress: {completedModules} / {totalModules} modules completed ({progress?.completionPercentage || 0}%)
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-gray-600">No quiz available for this course yet.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}
