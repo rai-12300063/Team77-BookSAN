@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 
 const Login = () => {
@@ -80,6 +80,15 @@ const Login = () => {
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
+        
+        <div className="mt-4 text-center">
+          <Link 
+            to="/forgot-password" 
+            className="text-blue-600 hover:text-blue-800 text-sm"
+          >
+            Forgot your password?
+          </Link>
+        </div>
         
         <div className="mt-4 text-center text-sm text-gray-600">
           <p>Test credentials:</p>

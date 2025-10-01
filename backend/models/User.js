@@ -21,7 +21,10 @@ const userSchema = new mongoose.Schema({
     currentStreak: { type: Number, default: 0 },
     longestStreak: { type: Number, default: 0 },
     lastLearningDate: { type: Date },
-    joinDate: { type: Date, default: Date.now }
+    joinDate: { type: Date, default: Date.now },
+    // Password reset fields
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date }
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {
