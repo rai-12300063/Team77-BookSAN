@@ -1,18 +1,16 @@
 
 const express = require('express');
-const { registerUser, loginUser, updateUserProfile, getProfile, forgotPassword, resetPassword } = require('../controllers/authController');
-const { protect, requirePermission, requireAnyRole } = require('../middleware/authMiddleware');
-const { logApiAccess } = require('../middleware/permissionMiddleware');
+const { registerUser, loginUser, updateUserProfile, getProfile, requestPasswordReset, resetPassword } = require('../controllers/authController');
+const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
-// Public routes
-router.post('/register', logApiAccess, registerUser);
-router.post('/login', logApiAccess, loginUser);
-router.post('/forgot-password', logApiAccess, forgotPassword);
-router.post('/reset-password/:token', logApiAccess, resetPassword);
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+router.get('/profile', protect, getProfile);
+router.put('/profile', protect, updateUserProfile);
 
-// Protected routes
-router.get('/profile', protect, requireAnyRole, requirePermission('profile:read'), logApiAccess, getProfile);
-router.put('/profile', protect, requireAnyRole, requirePermission('profile:write'), logApiAccess, updateUserProfile);
+// Password reset routes
+router.post('/forgot-password', requestPasswordReset);
+router.post('/reset-password', resetPassword);
 
 module.exports = router;

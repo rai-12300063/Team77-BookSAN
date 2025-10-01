@@ -5,12 +5,7 @@
   "scripts": {
     "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend",
     "start": "concurrently \"npm run prod --prefix backend\" \"npm start --prefix frontend\"",
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix frontend\"",
-    "test:roles": "node test-runner.js",
-    "test:backend": "npm test --prefix backend",
-    "test:frontend": "npm test --prefix frontend",
-    "test:integration": "npm run test:backend -- --grep \"Integration\"",
-    "test:all": "npm run test:backend && npm run test:frontend"
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix frontend\""
   },
   "devDependencies": {
     "chai": "^5.1.2",

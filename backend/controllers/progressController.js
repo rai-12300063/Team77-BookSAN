@@ -1,7 +1,7 @@
 const LearningProgress = require('../models/LearningProgress');
 const Course = require('../models/Course');
 const User = require('../models/User');
-const { USER_ROLES } = require('../constants/roles');
+const ProgressSyncService = require('../services/progressSyncService');
 
 // Get user's learning analytics
 const getLearningAnalytics = async (req, res) => {
@@ -83,19 +83,10 @@ const updateModuleCompletion = async (req, res) => {
       existingCompletion.timeSpent += timeSpent || 0;
     }
 
-    // Calculate completion percentage based on module completion only
-    // Note: Course is only fully completed (100%) after passing the quiz
+    // Calculate completion percentage
     const totalModules = course.syllabus.length;
     const completedModulesCount = progress.modulesCompleted.length;
-
-    // If all modules are completed but quiz not passed, show 99% or calculate based on modules only
-    // The final 100% and isCompleted flag will be set when the quiz is passed
-    if (completedModulesCount >= totalModules) {
-      // All modules completed, but course completion requires quiz
-      progress.completionPercentage = 99; // Just under 100% until quiz is passed
-    } else {
-      progress.completionPercentage = Math.round((completedModulesCount / totalModules) * 100);
-    }
+    progress.completionPercentage = Math.round((completedModulesCount / totalModules) * 100);
 
     // Update total time spent and last accessed
     progress.totalTimeSpent += timeSpent || 0;
@@ -104,8 +95,20 @@ const updateModuleCompletion = async (req, res) => {
     // Update current module to the next incomplete one
     progress.currentModule = Math.max(progress.currentModule, moduleIndex + 1);
 
-    // Note: Course completion (isCompleted = true) is now handled in quizController
-    // when the student passes the quiz, not here
+    // Check for course completion
+    if (progress.completionPercentage === 100) {
+      progress.isCompleted = true;
+      progress.completionDate = new Date();
+      
+      // Add course completion achievement if not already present
+      const hasCompletionAchievement = progress.achievements.some(a => a.type === 'course_completed');
+      if (!hasCompletionAchievement) {
+        progress.achievements.push({
+          type: 'course_completed',
+          description: `Completed ${course.title}`
+        });
+      }
+    }
 
     // Check for time-based achievements
     if (progress.totalTimeSpent >= 600) { // 10 hours
@@ -226,10 +229,58 @@ const updateLearningGoals = async (req, res) => {
   }
 };
 
+// Manually sync progress for a user and course
+const syncProgress = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const userId = req.user.id;
+
+    const updatedProgress = await ProgressSyncService.syncModuleWithCourse(userId, courseId);
+
+    res.json({
+      message: 'Progress synchronized successfully',
+      progress: updatedProgress,
+      completionPercentage: updatedProgress.completionPercentage,
+      moduleProgress: updatedProgress.moduleProgress
+    });
+
+  } catch (error) {
+    console.error('Error syncing progress:', error);
+    res.status(500).json({ 
+      message: 'Failed to sync progress', 
+      error: error.message 
+    });
+  }
+};
+
+// Get detailed progress sync report
+const getDetailedProgressReport = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const userId = req.user.id;
+
+    const report = await ProgressSyncService.getProgressSyncReport(userId, courseId);
+
+    res.json({
+      message: 'Progress report generated successfully',
+      report
+    });
+
+  } catch (error) {
+    console.error('Error getting progress report:', error);
+    res.status(500).json({ 
+      message: 'Failed to generate progress report', 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   getLearningAnalytics,
   updateModuleCompletion,
   getCourseProgress,
   getLearningStreaks,
-  updateLearningGoals
+  updateLearningGoals,
+  syncProgress,
+  getDetailedProgressReport
 };

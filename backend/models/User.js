@@ -1,20 +1,15 @@
 
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const { USER_ROLES } = require('../constants/roles');
 
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    university: { type: String },
     address: { type: String },
     // Learning-specific fields
-    role: {
-        type: String,
-        enum: Object.values(USER_ROLES),
-        default: USER_ROLES.STUDENT,
-        required: true
-    },
+    role: { type: String, enum: ['student', 'instructor', 'admin'], default: 'student' },
     learningGoals: [{ type: String }],
     skillTags: [{ type: String }],
     learningPreferences: {
@@ -27,6 +22,7 @@ const userSchema = new mongoose.Schema({
     longestStreak: { type: Number, default: 0 },
     lastLearningDate: { type: Date },
     joinDate: { type: Date, default: Date.now },
+    // Password reset fields
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date }
 }, { timestamps: true });
