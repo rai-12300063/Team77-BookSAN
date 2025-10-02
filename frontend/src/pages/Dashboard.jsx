@@ -114,7 +114,7 @@ const Dashboard = () => {
         <h1 className="text-3xl font-bold text-gray-800 mb-2">
           Welcome back, {user?.name}!
         </h1>
-        <p className="text-gray-600">QUT-MIT Learning Progress Tracker - Track your learning progress and achieve your educational goals</p>
+        <p className="text-gray-600">BookSAN Learning Progress Tracker - Track your learning progress and achieve your educational goals</p>
       </div>
       
       {/* Quick Stats */}
@@ -296,8 +296,8 @@ const Dashboard = () => {
                 <p className="text-gray-600 mb-6">Start your learning journey by enrolling in a course</p>
                 <Link 
                   to="/courses" 
-                  className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition duration-200 inline-flex items-center"
-                >
+                  className="text-white px-6 py-3 rounded-md transition duration-200 inline-flex items-center"
+                style={{backgroundColor: '#FA1E1C'}}>
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
