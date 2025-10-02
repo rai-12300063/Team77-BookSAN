@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 import Quiz from '../components/Quiz';
+
 
 const CourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
   const [progress, setProgress] = useState(null);
@@ -13,6 +16,7 @@ const CourseDetail = () => {
   const [activeModule, setActiveModule] = useState(0);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [quizzes, setQuizzes] = useState([]);
+
   const [showQuiz, setShowQuiz] = useState(false);
 
   useEffect(() => {
@@ -39,6 +43,7 @@ const CourseDetail = () => {
         console.log('📈 Progress data:', progressRes.data);
         console.log('📝 Quizzes data:', quizzesRes.data);
 
+
         setCourse(courseRes.data);
         setModules(modulesRes.data || []);
         setProgress(progressRes.data);
@@ -57,7 +62,21 @@ const CourseDetail = () => {
     };
 
     fetchCourseData();
-  }, [courseId, navigate]);
+  }, [courseId, navigate, user]);
+
+  const fetchQuizzes = async () => {
+    try {
+      setQuizzesLoading(true);
+      console.log('🎯 Fetching quizzes for course:', courseId);
+      const response = await axiosInstance.get(`/api/quiz/course/${courseId}`);
+      console.log('📝 Quizzes fetched:', response.data);
+      setQuizzes(response.data);
+    } catch (error) {
+      console.error('❌ Error fetching quizzes:', error);
+    } finally {
+      setQuizzesLoading(false);
+    }
+  };
 
   const refetchData = async () => {
     try {
@@ -69,7 +88,13 @@ const CourseDetail = () => {
       setCourse(courseRes.data);
       setModules(modulesRes.data || []);
       setProgress(progressRes.data);
-      setIsEnrolled(!!progressRes.data);
+      const enrolled = !!progressRes.data;
+      setIsEnrolled(enrolled);
+
+      // Refetch quizzes if enrolled and student
+      if (enrolled && user?.role === 'student') {
+        fetchQuizzes();
+      }
     } catch (error) {
       console.error('Error fetching course data:', error);
     }
@@ -156,6 +181,23 @@ const CourseDetail = () => {
     // Check if this module index is in the completed modules array
     const moduleIndex = course?.syllabus?.findIndex(module => module._id === moduleId);
     return progress?.modulesCompleted?.some(completed => completed.moduleIndex === moduleIndex) || false;
+  };
+
+  const handleCreateQuiz = () => {
+    // Navigate to appropriate quiz creation page based on role
+    if (user?.role === 'admin') {
+      navigate(`/admin/quiz`, { state: { selectedCourseId: courseId } });
+    } else if (user?.role === 'instructor') {
+      navigate(`/instructor/quiz`, { state: { selectedCourseId: courseId } });
+    }
+  };
+
+  // Check if user can create quiz (admin or instructor who owns the course)
+  const canCreateQuiz = () => {
+    if (!user) return false;
+    if (user.role === 'admin') return true;
+    if (user.role === 'instructor' && course?.instructor?.id === user.id) return true;
+    return false;
   };
 
   if (loading) {
@@ -426,10 +468,112 @@ const CourseDetail = () => {
               </div>
             )}
           </div>
+
+          {/* Quiz Section - For students (enrolled), admins, and instructors */}
+          {((isEnrolled && user?.role === 'student') || user?.role === 'admin' || user?.role === 'instructor') && (
+            <div className="bg-white rounded-lg shadow-md p-6 mt-8">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Course Quiz</h2>
+
+              {quizzesLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
+              ) : quizzes.length > 0 ? (
+                <>
+                  {(() => {
+                    const isStudent = user?.role === 'student';
+                    const totalModules = course.syllabus ? course.syllabus.length : 0;
+                    const completedModules = progress?.modulesCompleted?.length || 0;
+                    const allModulesCompleted = totalModules > 0 && completedModules >= totalModules;
+
+                    return (
+                      <div className="space-y-4">
+                        {/* Show completion message when all modules done (students only) */}
+                        {isStudent && allModulesCompleted && (
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                            <div className="flex items-center">
+                              <svg className="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              <p className="text-green-800">
+                                Great job! You've completed all modules. Take the quiz to complete the course.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Always show quiz, but grayed out if student hasn't completed modules */}
+                        <div className={isStudent && !allModulesCompleted ? 'opacity-50 pointer-events-none' : ''}>
+                          {quizzes.map((quiz) => (
+                            <QuizCard
+                              key={quiz._id}
+                              quiz={{
+                                id: quiz._id,
+                                title: quiz.title,
+                                description: quiz.description,
+                                questionCount: quiz.questions?.length || 0,
+                                timeLimit: quiz.timeLimit,
+                                difficulty: quiz.difficulty,
+                                status: quiz.userStats?.latestAttempt?.status || 'not_started',
+                              }}
+                              courseId={courseId}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Show lock message when student hasn't completed modules */}
+                        {isStudent && !allModulesCompleted && (
+                          <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mt-4">
+                            <div className="flex items-start">
+                              <svg className="w-6 h-6 text-gray-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                              <div>
+                                <h3 className="text-lg font-semibold text-gray-700 mb-1">Quiz Locked</h3>
+                                <p className="text-gray-600 mb-2">
+                                  Complete all course modules to unlock the quiz.
+                                </p>
+                                <p className="text-gray-600 font-medium">
+                                  Progress: {completedModules} / {totalModules} modules completed ({progress?.completionPercentage || 0}%)
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-gray-600">No quiz available for this course yet.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Quiz Management - Admin/Instructor Only */}
+          {canCreateQuiz() && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Quiz Management</h3>
+              <button
+                onClick={handleCreateQuiz}
+                className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Create Quiz for this Course
+              </button>
+            </div>
+          )}
+
           {/* Enrollment Actions */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Course Actions</h3>

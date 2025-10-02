@@ -73,13 +73,14 @@ const Login = () => {
           required
           disabled={loading}
         />
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
           disabled={loading}
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
+
         
         <div className="mt-4 text-center">
           <Link 

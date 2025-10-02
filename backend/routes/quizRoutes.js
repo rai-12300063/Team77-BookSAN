@@ -22,6 +22,7 @@ const router = express.Router();
 
 // All quiz routes require authentication
 router.use(protect);
+
 // router.use(requireAnyRole); // TODO: Implement requireAnyRole middleware
 
 // Get all quizzes for a course
@@ -34,6 +35,7 @@ router.post('/:quizId/submit', submitQuizAttempt);
 // ========== ADMIN ROUTES ==========
 
 // Get all courses for admin (no restrictions)
+
 router.get('/admin/courses', getAllCoursesForAdmin);
 
 // Get all quizzes (admin management)
@@ -54,6 +56,7 @@ router.delete('/admin/:quizId', deleteQuiz);
 // ========== INSTRUCTOR ROUTES ==========
 
 // Get a specific quiz for editing (instructor - no module completion check)
+
 router.get('/instructor/:quizId', getQuizForEdit);
 
 // Get instructor's courses for quiz creation

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
+
 import SimpleQuizCreation from '../components/SimpleQuizCreation';
 
 const AdminQuizManagement = () => {
@@ -34,6 +35,7 @@ const AdminQuizManagement = () => {
     try {
       // Admin can fetch ALL courses (no restrictions)
       const response = await axiosInstance.get('/api/quiz/admin/courses');
+
       console.log('Courses fetched:', response.data);
       setCourses(response.data);
     } catch (error) {
@@ -65,6 +67,7 @@ const AdminQuizManagement = () => {
   };
 
 
+
   // Group quizzes by course
   const courseQuizMap = {};
   quizzes.forEach(quiz => {
@@ -90,6 +93,7 @@ const AdminQuizManagement = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
+
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Quiz Management</h1>
         <p className="text-gray-600">Manage quizzes for all courses</p>
@@ -161,6 +165,7 @@ const AdminQuizManagement = () => {
 
       {/* Create Quiz Modal */}
       {showCreateModal && (
+
         <SimpleQuizCreation
           userRole="admin"
           preselectedCourseId={selectedCourse || location.state?.selectedCourseId}
@@ -182,6 +187,7 @@ const AdminQuizManagement = () => {
 // Create Quiz Modal Component
 const CreateQuizModal = ({ courses, preSelectedCourseId, onClose, onSuccess }) => {
   const navigate = useNavigate();
+
 
   console.log('CreateQuizModal - courses:', courses);
   console.log('CreateQuizModal - preSelectedCourseId:', preSelectedCourseId);
@@ -258,6 +264,7 @@ const CreateQuizModal = ({ courses, preSelectedCourseId, onClose, onSuccess }) =
                 onChange={(e) => {
                   const courseId = e.target.value;
                   console.log('Course selected:', courseId);
+
                   setFormData({
                     ...formData,
                     courseId: courseId,

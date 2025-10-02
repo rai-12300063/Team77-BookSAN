@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 import SimpleQuizCreation from '../components/SimpleQuizCreation';
 
+
 const InstructorQuizManagement = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -62,6 +63,7 @@ const InstructorQuizManagement = () => {
       courseQuizMap[courseId] = quiz;
     }
   });
+
 
   if (loading) {
     return (
@@ -150,6 +152,7 @@ const InstructorQuizManagement = () => {
 
       {/* Create Quiz Modal */}
       {showCreateModal && (
+        
         <SimpleQuizCreation
           userRole="instructor"
           preselectedCourseId={selectedCourse || location.state?.selectedCourseId}
@@ -174,6 +177,7 @@ const CreateInstructorQuizModal = ({ courses, preSelectedCourseId, onClose, onSu
 
   console.log('CreateInstructorQuizModal - courses:', courses);
   console.log('CreateInstructorQuizModal - preSelectedCourseId:', preSelectedCourseId);
+
 
   // Auto-generate quiz title when course is selected
   const getQuizTitle = (courseId) => {
@@ -247,6 +251,7 @@ const CreateInstructorQuizModal = ({ courses, preSelectedCourseId, onClose, onSu
                 onChange={(e) => {
                   const courseId = e.target.value;
                   console.log('Course selected:', courseId);
+
                   setFormData({...formData, courseId: courseId, title: getQuizTitle(courseId)});
                 }}
                 required

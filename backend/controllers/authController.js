@@ -8,6 +8,27 @@ const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
+// Configure email transporter
+const createEmailTransporter = () => {
+    if (process.env.NODE_ENV === 'production') {
+        // Production email service (e.g., SendGrid, SES)
+        return nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASSWORD
+            }
+        });
+    } else {
+        // Development/testing - log emails to console
+        return nodemailer.createTransport({
+            streamTransport: true,
+            newline: 'unix',
+            buffer: true
+        });
+    }
+};
+
 const registerUser = async (req, res) => {
     const { name, email, password } = req.body;
     try {
@@ -71,6 +92,7 @@ const updateUserProfile = async (req, res) => {
     }
 };
 
+
 // Request password reset
 const requestPasswordReset = async (req, res) => {
     const { email } = req.body;
@@ -108,10 +130,12 @@ const resetPassword = async (req, res) => {
     try {
         const user = await User.findOne({
             resetPasswordToken: token,
+
             resetPasswordExpires: { $gt: Date.now() }
         });
 
         if (!user) {
+
             return res.status(400).json({ message: 'Password reset token is invalid or has expired' });
         }
 
@@ -120,6 +144,7 @@ const resetPassword = async (req, res) => {
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
         await user.save();
+
 
         res.json({
             message: 'Password has been reset successfully',

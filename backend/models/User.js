@@ -6,7 +6,6 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    university: { type: String },
     address: { type: String },
     // Learning-specific fields
     role: { type: String, enum: ['student', 'instructor', 'admin'], default: 'student' },
@@ -22,7 +21,7 @@ const userSchema = new mongoose.Schema({
     longestStreak: { type: Number, default: 0 },
     lastLearningDate: { type: Date },
     joinDate: { type: Date, default: Date.now },
-    // Password reset fields
+
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date }
 }, { timestamps: true });
