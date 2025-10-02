@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ModuleDetailPage.jsx - Individual module learning page with rich content display
  */
 
@@ -174,6 +174,7 @@ const ModuleDetailPage = () => {
                         )}
                         {!isInProgress && !isCompleted && (
                             <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
+
                         )}
                     </div>
                 </div>
@@ -186,6 +187,7 @@ const ModuleDetailPage = () => {
             return (
                 <div className="flex items-center justify-center h-64 text-gray-500">
                     Select a content item to view
+
                 </div>
             );
         }
@@ -334,6 +336,7 @@ const ModuleDetailPage = () => {
                             </div>
                         </div>
                     )}
+
                 </div>
             </div>
         );
@@ -378,6 +381,7 @@ const ModuleDetailPage = () => {
                     >
                         Back to Modules
                     </button>
+
                 </div>
             </div>
         );

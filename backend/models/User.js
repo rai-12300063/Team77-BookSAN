@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
     longestStreak: { type: Number, default: 0 },
     lastLearningDate: { type: Date },
     joinDate: { type: Date, default: Date.now },
+
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date }
 }, { timestamps: true });

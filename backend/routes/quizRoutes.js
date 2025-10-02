@@ -22,6 +22,7 @@ const router = express.Router();
 // All quiz routes require authentication
 router.use(protect);
 
+
 // Get all quizzes for a course
 router.get('/course/:courseId',
   
@@ -44,6 +45,7 @@ router.post('/:quizId/submit',
 // ========== ADMIN ROUTES ==========
 
 // Get all courses for admin (no restrictions)
+
 router.get('/admin/courses',
   
   

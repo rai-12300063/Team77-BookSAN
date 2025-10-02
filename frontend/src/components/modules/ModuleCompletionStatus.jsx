@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 const ModuleCompletionStatus = ({ progress, totalModules, className = '' }) => {
   const completionPercentage = totalModules > 0 ? (progress / totalModules) * 100 : 0;

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axiosInstance from '../axiosConfig';
 
 const SimpleQuizCreation = ({ userRole = 'admin', onClose, onSuccess, preselectedCourseId = null }) => {
@@ -259,3 +259,4 @@ const SimpleQuizCreation = ({ userRole = 'admin', onClose, onSuccess, preselecte
 };
 
 export default SimpleQuizCreation;
+
