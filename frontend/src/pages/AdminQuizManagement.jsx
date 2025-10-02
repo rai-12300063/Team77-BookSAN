@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 
 import SimpleQuizCreation from '../components/SimpleQuizCreation';
@@ -8,7 +7,6 @@ import SimpleQuizCreation from '../components/SimpleQuizCreation';
 const AdminQuizManagement = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
   const [quizzes, setQuizzes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -127,36 +125,30 @@ const AdminQuizManagement = () => {
                   </div>
                   <div className="flex gap-2">
                     {quiz ? (
-                      // Only show Edit and Delete buttons for admin and instructor roles, not for students
-                      user?.role !== 'student' && (
-                        <>
-                          <button
-                            onClick={() => navigate(`/admin/quiz/edit/${quiz.id}`)}
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                          >
-                            Edit Quiz
-                          </button>
-                          <button
-                            onClick={() => handleDeleteQuiz(quiz.id)}
-                            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                          >
-                            Delete Quiz
-                          </button>
-                        </>
-                      )
-                    ) : (
-                      // Only show Add Quiz button for admin and instructor roles, not for students
-                      user?.role !== 'student' && (
+                      <>
                         <button
-                          onClick={() => {
-                            setSelectedCourse(course._id);
-                            setShowCreateModal(true);
-                          }}
-                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                          onClick={() => navigate(`/admin/quiz/edit/${quiz.id}`)}
+                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                         >
-                          Add Quiz
+                          Edit Quiz
                         </button>
-                      )
+                        <button
+                          onClick={() => handleDeleteQuiz(quiz.id)}
+                          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                        >
+                          Delete Quiz
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setSelectedCourse(course._id);
+                          setShowCreateModal(true);
+                        }}
+                        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                        style={{backgroundColor: '#FA1E1C'}}>
+                        Add Quiz
+                      </button>
                     )}
                   </div>
                 </div>
@@ -171,11 +163,11 @@ const AdminQuizManagement = () => {
         </div>
       )}
 
-      {/* Create Quiz Modal - Only for admin and instructor, not for students */}
-      {showCreateModal && user?.role !== 'student' && (
+      {/* Create Quiz Modal */}
+      {showCreateModal && (
 
         <SimpleQuizCreation
-          userRole={user?.role || "admin"}
+          userRole="admin"
           preselectedCourseId={selectedCourse || location.state?.selectedCourseId}
           onClose={() => {
             setShowCreateModal(false);
