@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
+import SimpleQuizCreation from '../components/SimpleQuizCreation';
+
 
 const InstructorQuizManagement = () => {
   const navigate = useNavigate();
@@ -53,9 +55,15 @@ const InstructorQuizManagement = () => {
   };
 
 
-  const filteredQuizzes = selectedCourse
-    ? quizzes.filter(quiz => quiz.course?._id === selectedCourse)
-    : quizzes;
+  // Group quizzes by course
+  const courseQuizMap = {};
+  quizzes.forEach(quiz => {
+    const courseId = quiz.course?._id;
+    if (courseId) {
+      courseQuizMap[courseId] = quiz;
+    }
+  });
+
 
   if (loading) {
     return (
@@ -73,44 +81,10 @@ const InstructorQuizManagement = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">My Course Quizzes</h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          disabled={courses.length === 0}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          Create New Quiz
-        </button>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Quiz Management</h1>
+        <p className="text-gray-600">Manage quizzes for your assigned courses</p>
       </div>
-
-      {/* No courses assigned message */}
-      {courses.length === 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mb-4">
-          <p className="text-yellow-800 font-medium">No Courses Assigned</p>
-          <p className="text-yellow-700 text-sm mt-1">
-            You need to be assigned to courses before you can create quizzes.
-          </p>
-        </div>
-      )}
-
-      {/* Filter */}
-      {courses.length > 0 && (
-        <div className="mb-4">
-          <select
-            value={selectedCourse}
-            onChange={(e) => setSelectedCourse(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2"
-          >
-            <option value="">All My Courses</option>
-            {courses.map(course => (
-              <option key={course._id} value={course._id}>
-                {course.title}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
 
       {/* Error Display */}
       {error && (
@@ -119,56 +93,76 @@ const InstructorQuizManagement = () => {
         </div>
       )}
 
-      {/* Quizzes List */}
-      {filteredQuizzes.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">No quizzes found</p>
-          {courses.length > 0 && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="text-blue-600 hover:text-blue-800"
-            >
-              Create your first quiz
-            </button>
-          )}
+      {courses.length === 0 ? (
+        <div className="bg-amber-50 border border-amber-200 rounded p-4">
+          <p className="text-amber-800">
+            ⚠️ No courses assigned. Please contact an administrator.
+          </p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {filteredQuizzes.map((quiz) => (
-            <div key={quiz.id} className="bg-white border rounded p-4 flex items-center justify-between hover:bg-gray-50">
-              <div>
-                <div className="font-medium">{quiz.title}</div>
-                <div className="text-sm text-gray-600">
-                  {quiz.course?.title} • {quiz.questionsCount} questions • {quiz.totalPoints} points
+        <div className="space-y-3">
+          {courses.map(course => {
+            const quiz = courseQuizMap[course._id];
+            return (
+              <div key={course._id} className="bg-white border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">{course.title}</h3>
+                    <p className="text-sm text-gray-600">{course.category} • {course.difficulty}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {quiz ? (
+                      <>
+                        <button
+                          onClick={() => navigate(`/instructor/quiz/edit/${quiz.id}`)}
+                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        >
+                          Edit Quiz
+                        </button>
+                        <button
+                          onClick={() => handleDeleteQuiz(quiz.id)}
+                          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                        >
+                          Delete Quiz
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setSelectedCourse(course._id);
+                          setShowCreateModal(true);
+                        }}
+                        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                      >
+                        Add Quiz
+                        </button>
+                    )}
+                  </div>
                 </div>
+                {quiz && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    Quiz: {quiz.questionsCount} questions • {quiz.totalPoints} points
+                  </div>
+                )}
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => navigate(`/instructor/quiz/edit/${quiz.id}`)}
-                  className="text-blue-600 hover:text-blue-800 px-3 py-1"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteQuiz(quiz.id)}
-                  className="text-red-600 hover:text-red-800 px-3 py-1"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {/* Create Quiz Modal */}
       {showCreateModal && (
-        <CreateInstructorQuizModal
-          courses={courses}
-          preSelectedCourseId={location.state?.selectedCourseId}
-          onClose={() => setShowCreateModal(false)}
+        
+        <SimpleQuizCreation
+          userRole="instructor"
+          preselectedCourseId={selectedCourse || location.state?.selectedCourseId}
+          onClose={() => {
+            setShowCreateModal(false);
+            setSelectedCourse('');
+          }}
           onSuccess={() => {
             setShowCreateModal(false);
+            setSelectedCourse('');
             fetchQuizzes();
           }}
         />
@@ -180,6 +174,10 @@ const InstructorQuizManagement = () => {
 // Create Instructor Quiz Modal Component
 const CreateInstructorQuizModal = ({ courses, preSelectedCourseId, onClose, onSuccess }) => {
   const navigate = useNavigate();
+
+  console.log('CreateInstructorQuizModal - courses:', courses);
+  console.log('CreateInstructorQuizModal - preSelectedCourseId:', preSelectedCourseId);
+
 
   // Auto-generate quiz title when course is selected
   const getQuizTitle = (courseId) => {
@@ -195,6 +193,16 @@ const CreateInstructorQuizModal = ({ courses, preSelectedCourseId, onClose, onSu
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Update title when courses are loaded and preSelectedCourseId is set
+  useEffect(() => {
+    if (preSelectedCourseId && courses.length > 0 && !formData.title) {
+      setFormData(prev => ({
+        ...prev,
+        title: getQuizTitle(preSelectedCourseId)
+      }));
+    }
+  }, [courses, preSelectedCourseId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -242,18 +250,27 @@ const CreateInstructorQuizModal = ({ courses, preSelectedCourseId, onClose, onSu
                 value={formData.courseId}
                 onChange={(e) => {
                   const courseId = e.target.value;
+                  console.log('Course selected:', courseId);
+
                   setFormData({...formData, courseId: courseId, title: getQuizTitle(courseId)});
                 }}
                 required
                 className="w-full border rounded px-3 py-2"
               >
                 <option value="">Select a course</option>
-                {courses.map(course => (
-                  <option key={course._id} value={course._id}>
-                    {course.title}
-                  </option>
-                ))}
+                {courses && courses.length > 0 ? (
+                  courses.map(course => (
+                    <option key={course._id} value={course._id}>
+                      {course.title}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>No courses available</option>
+                )}
               </select>
+              <div className="text-xs text-gray-500 mt-1">
+                {courses && courses.length > 0 ? `${courses.length} courses available` : 'Loading courses...'}
+              </div>
             </div>
 
             <div>

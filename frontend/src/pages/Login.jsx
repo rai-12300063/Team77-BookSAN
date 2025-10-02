@@ -81,29 +81,18 @@ const Login = () => {
           {loading ? 'Logging in...' : 'Login'}
         </button>
 
-        {/* Forgot Password Link */}
+        
         <div className="mt-4 text-center">
-          <Link
-            to="/forgot-password"
-            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+          <Link 
+            to="/forgot-password" 
+            className="text-blue-600 hover:text-blue-800 text-sm"
           >
             Forgot your password?
           </Link>
         </div>
-
-        {/* Register Link */}
-        <div className="mt-2 text-center">
-          <span className="text-sm text-gray-600">Don't have an account? </span>
-          <Link
-            to="/register"
-            className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
-          >
-            Sign up here
-          </Link>
-        </div>
-
-        <div className="mt-6 text-center text-sm text-gray-600 bg-gray-50 p-3 rounded">
-          <p className="font-medium mb-1">Test credentials:</p>
+        
+        <div className="mt-4 text-center text-sm text-gray-600">
+          <p>Test credentials:</p>
           <p><strong>Email:</strong> test@example.com</p>
           <p><strong>Password:</strong> password123</p>
         </div>

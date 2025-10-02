@@ -186,40 +186,6 @@ router.post('/:moduleId/start', auth, async (req, res) => {
             message: 'Internal server error', 
             error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
         });
-
-        });
-
-        if (moduleProgress) {
-            return res.json({ 
-                message: 'Module already started', 
-                moduleProgress 
-            });
-        }
-
-        // Create new module progress
-        moduleProgress = new ModuleProgress({
-            userId: req.user.id,
-            courseId: module.courseId,
-            moduleId: req.params.moduleId,
-            startedAt: new Date(),
-            totalContentCount: module.contents.length,
-            totalRequiredContentCount: module.contents.filter(c => c.isRequired).length,
-            contentProgress: module.contents.map(content => ({
-                contentId: content.contentId,
-                contentType: content.type,
-                status: 'not_started'
-            }))
-        });
-
-        await moduleProgress.save();
-
-        res.json({ 
-            message: 'Module started successfully', 
-            moduleProgress 
-        });
-    } catch (error) {
-        console.error('Error starting module:', error);
-        res.status(500).json({ message: 'Server error' });
     }
 });
 

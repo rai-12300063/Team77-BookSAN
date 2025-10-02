@@ -12,12 +12,14 @@ import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import ModulesPage from './pages/ModulesPage';
 import TestModules from './pages/TestModules';
-import QuizPage from './pages/QuizPage';
-import AdminQuizManagement from './pages/AdminQuizManagement';
-import AdminQuizEditor from './pages/AdminQuizEditor';
-import InstructorQuizManagement from './pages/InstructorQuizManagement';
-import InstructorQuizEditor from './pages/InstructorQuizEditor';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
+import UserManagement from './pages/admin/UserManagement';
+import AdminQuizManagement from './pages/AdminQuizManagement';
+import InstructorQuizManagement from './pages/InstructorQuizManagement';
+import AdminQuizEditor from './pages/AdminQuizEditor';
+import InstructorQuizEditor from './pages/InstructorQuizEditor';
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
+          
+
           {/* Protected routes */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -42,12 +46,10 @@ function App() {
           <Route path="/courses/:courseId/quiz/:quizId" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
           <Route path="/test-modules" element={<ProtectedRoute><TestModules /></ProtectedRoute>} />
 
-          {/* Admin Quiz routes */}
-          <Route path="/admin/quiz" element={<ProtectedRoute><AdminQuizManagement /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+          <Route path="/admin/quizzes" element={<ProtectedRoute><AdminQuizManagement /></ProtectedRoute>} />
           <Route path="/admin/quiz/edit/:quizId" element={<ProtectedRoute><AdminQuizEditor /></ProtectedRoute>} />
-
-          {/* Instructor Quiz routes */}
-          <Route path="/instructor/quiz" element={<ProtectedRoute><InstructorQuizManagement /></ProtectedRoute>} />
+          <Route path="/instructor/quizzes" element={<ProtectedRoute><InstructorQuizManagement /></ProtectedRoute>} />
           <Route path="/instructor/quiz/edit/:quizId" element={<ProtectedRoute><InstructorQuizEditor /></ProtectedRoute>} />
         </Routes>
       </Router>
