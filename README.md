@@ -1,7 +1,6 @@
+﻿# BookSAN Learning Progress Tracker
 
-# QUT-MIT Learning Progress Tracker
-
-A comprehensive learning management system for tracking educational progress and achievements.
+A comprehensive learning management system for tracking educational progress and achievements with clean, intuitive interfaces for students, instructors, and administrators.
 
 ## 🚀 Quick Start Guide
 
@@ -14,13 +13,18 @@ A comprehensive learning management system for tracking educational progress and
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/rai-12300063/Online-Learning-Progress-Tracker.git
-   cd Online-Learning-Progress-Tracker
+   git clone https://github.com/rai-12300063/Team77-BookSAN.git
+   cd Team77-BookSAN
    ```
 
 2. **Install dependencies**
    ```bash
+   # Install all dependencies (backend and frontend)
    npm run install-all
+   
+   # Or install separately
+   cd backend && npm install
+   cd frontend && npm install
    ```
 
 3. **Configure environment**
@@ -30,106 +34,119 @@ A comprehensive learning management system for tracking educational progress and
    # Edit backend/.env with your MongoDB URI and JWT secret
    ```
 
-4. **Start the development servers**
+4. **Start development servers**
    ```bash
-   npm run dev
+   # Start both frontend and backend
+   npm start
+   
+   # Start only backend
+   npm run dev:server
+   
+   # Start only frontend
+   npm run dev:client
    ```
-   This will start:
-   - Backend server on `http://localhost:5001`
-   - Frontend React app on `http://localhost:3000`
 
-5. **Project URL**
-   ```bash
-   [Online Learning Progress Tracker](http://54.66.53.65/)
-   ```
-   Access:
-   - Username: `test@example.com`
-   - Password `password123`
+5. **Access the application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5001
 
-### API Endpoints
-- **Authentication**: `/api/auth/*`
-- **Tasks**: `/api/tasks/*`
-- **Courses**: `/api/courses/*`
+## 🔑 Default Login Credentials
 
-### Testing
-```bash
-cd backend && npm test
+| Role       | Email                  | Password      |
+|------------|------------------------|--------------|
+| Admin      | admin@example.com      | Admin123!    |
+| Student    | student@example.com    | Student123!  |
+| Instructor | instructor@example.com | Instructor123!|
+| Test User  | test@example.com       | Test123!     |
+
+## 📚 Features
+
+### For Students
+- Track progress through courses and modules
+- Take quizzes and view performance metrics
+- View personalized learning insights and recommendations
+- Set and track learning goals
+- Access study materials and resources
+
+### For Instructors
+- Create and manage courses and modules
+- Design quizzes and assessments
+- Monitor student progress and performance
+- Provide feedback and support
+
+### For Administrators
+- Manage users and permissions
+- Generate reports and analytics
+- Configure system settings
+- Oversee platform content
+
+## 🛠️ Technology Stack
+
+- **Frontend**: React with Material-UI and Tailwind CSS
+- **Backend**: Node.js with Express
+- **Database**: MongoDB with Mongoose
+- **Authentication**: JSON Web Tokens (JWT)
+- **Testing**: Mocha and Chai
+
+## 📂 Project Structure
+
 ```
----
-Assignment Objective:
-To simulate the real-world software development lifecycle by collaboratively designing, developing, and deploying an object-oriented application using advanced OOP concepts, popular design patterns, software testing, and GitHub for version control. The project will also involve creating a Software Requirements Specification (SRS) documentation and UI/UX prototyping
-using Figma.
+project/
+├── backend/           # Express server
+│   ├── config/        # Configuration files
+│   ├── controllers/   # Request handlers
+│   ├── middleware/    # Express middleware
+│   ├── models/        # Database models
+│   ├── routes/        # API routes
+│   └── test/          # Backend tests
+├── frontend/          # React application
+│   ├── public/        # Static files
+│   └── src/           # React components
+│       ├── components/  # Reusable components
+│       ├── context/     # React contexts
+│       ├── pages/       # Page components
+│       └── utils/       # Utility functions
+```
 
-Task Overview:
-![alt text](image.png)
+## 🧪 Testing
 
-Task 1: Software Requirements Specification (SRS)
-Write a Software Requirements Specification (SRS) document that includes:
-o Purpose – Why the system is being developed.
-o Problem Statement
-o Scope – Overview of the product, its goals, and benefits.
-o User Characteristics – Target users and their needs.
-o Constraints – Limitations like regulatory, hardware, or technology
-restrictions.
-o Functional Requirements – Detailed description of system functions (e.g.,
-“The system shall allow users to log in with email and password”).
-o Non-Functional Requirements (NFRs) – Performance, reliability, security,
-usability, scalability.
-o User interface mockups/wireframes (Low Fidelity Design)
-o Complete System Diagram
-o Safety Considerations.
-o Risk Management
+Run tests using:
 
-Task 2: UI/UX Design and Prototyping Using Figma - 8
-• Based on the SRS and Low Fidelity Design, design the User Interface (UI) in Figma.
-• Share the link with your peers and collaborate (we will check individual contributions).
-• Do prototyping on your design and share the production level URL in the report
-• Share the link to the Figma project in report.
+```bash
+# Run all tests
+npm test
 
-Task 3: Implementation (Coding) Using Design Pattern and OOP Principles Using the following Matrix. (You must extend two more epics in your group project)
-![alt text](image-1.png)
-![alt text](image-2.png)
-![alt text](image-3.png)
-You Must include:
-• At least 5 interacting classes with the implementation of OOP principles (inherence,
-polymorphism, encapsulation, abstraction). Each class should implement at least one
-OOP principals.
-• Use of at least 7 design patterns
-• In report, you must explain the following:
-OOP Explanation:
-o -Why you defined each class
-o -Where inheritance is used
-o -How encapsulation is applied
-o -Where polymorphism appears
-Design Pattern Explanation:
-o Which 7 patterns were used
-o Where they are used in your code
-o Why each pattern fits your problem
+# Test authentication
+cd backend && node basicLoginTest.js
+```
 
-Task 4: Team Collaboration via GitHub
-• Create a new GitHub repository for the project
-• Share your project to your team members
-• Use branches for feature development
-• Use pulls requests and code reviews for other members of your project
-• Practice merging conflicts and mention it in the report (Minimum 2)
-• Maintain a README.md with setup instructions
-• We will check all commits which are initiated by different team members.
+## 📊 API Endpoints
 
-Task 5: Functional Testing (only unit testing)
-• Test each of your backend functionality (such as create task, update task, etc.) using unit
-testing
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
 
-Task 6: API Testing using Postman
-• Test the endpoint of your backends functionality using Postman
-• Screenshots of Postman test cases or Swagger documentation (If we cover)
-Example Endpoints to Test (It must be based on your project):
-• POST /login
-• GET /users
-• POST /notifications
-• PUT /settings/{id}
-• DELETE /account/{id}
-• And other functionality as well
+### Users
+- `GET /api/users` - Get all users (admin only)
+- `GET /api/users/:id` - Get user by ID
+- `PUT /api/users/:id` - Update user
 
-Task 7: CI/CD Pipeline
+### Courses
+- `GET /api/courses` - Get all courses
+- `POST /api/courses` - Create course (instructor/admin)
+- `GET /api/courses/:id` - Get course by ID
+- `PUT /api/courses/:id` - Update course (instructor/admin)
+- `DELETE /api/courses/:id` - Delete course (admin)
+- `POST /api/courses/:id/enroll` - Enroll in course
 
+### Learning Progress
+- `GET /api/progress` - Get user's learning progress
+- `PUT /api/progress/:moduleId` - Update module progress
 
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 👥 Contributors
+
+- Team 77 - QUT MIT

@@ -146,7 +146,7 @@ router.post('/update-modules-enhanced', async (req, res) => {
         console.log('🚀 Starting enhanced module content update...');
         
         // Import and run the enhanced update function
-        const { updateModulesAndSync } = require('../databasePopulate/enhancedModuleUpdate');
+        const { updateModulesAndSync } = require('../../../OLPTBackupOnly/_archive/backend/databasePopulate/enhancedModuleUpdate');
         
         await updateModulesAndSync();
         
@@ -195,7 +195,7 @@ router.post('/update-and-sync-all', async (req, res) => {
         console.log('🚀 Starting comprehensive update and sync...');
         
         // Update modules with enhanced content
-        const { updateModulesWithSimpleContent } = require('../databasePopulate/simpleModuleUpdate');
+        const { updateModulesWithSimpleContent } = require('../../../OLPTBackupOnly/_archive/backend/databasePopulate/simpleModuleUpdate');
         await updateModulesWithSimpleContent();
         
         // Seed enhanced quizzes
@@ -284,7 +284,7 @@ router.post('/populate-complete-database', async (req, res) => {
         
         // Step 2: Populate modules with content
         console.log('📝 Step 2: Populating modules with content...');
-        const { updateModulesWithSimpleContent } = require('../databasePopulate/simpleModuleUpdate');
+        const { updateModulesWithSimpleContent } = require('../../../OLPTBackupOnly/_archive/backend/databasePopulate/simpleModuleUpdate');
         // Only update if modules don't have content
         const modulesWithoutContent = await Module.find({
             $or: [

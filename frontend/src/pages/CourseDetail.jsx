@@ -2,12 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
-<<<<<<< Updated upstream
 import QuizCard from '../components/QuizCard';
-=======
 import ModuleStatusSummary from '../components/modules/ModuleStatusSummary';
 import ModuleCompletionStatus from '../components/modules/ModuleCompletionStatus';
->>>>>>> Stashed changes
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -45,7 +42,6 @@ const CourseDetail = () => {
         console.log('📚 Course data:', courseRes.data);
         console.log('📋 Modules data:', modulesRes.data);
         console.log('📈 Progress data:', progressRes.data);
-<<<<<<< Updated upstream
 
         setCourse(courseRes.data);
         setModules(modulesRes.data || []);
@@ -59,25 +55,6 @@ const CourseDetail = () => {
         }
 
         console.log('✅ Data fetch complete. isEnrolled:', enrolled, 'modules:', modulesRes.data?.length);
-=======
-        console.log('📊 Module progress data:', moduleProgressRes.data);
-        
-        setCourse(courseRes.data);
-        setModules(modulesRes.data || []);
-        setProgress(progressRes.data);
-        setIsEnrolled(!!progressRes.data); // User is enrolled if progress exists
-        
-        // Create module progress map
-        const progressMap = {};
-        if (moduleProgressRes.data.moduleProgresses) {
-          moduleProgressRes.data.moduleProgresses.forEach(progress => {
-            progressMap[progress.moduleId] = progress;
-          });
-        }
-        setModuleProgresses(progressMap);
-        
-        console.log('✅ Data fetch complete. isEnrolled:', !!progressRes.data, 'modules:', modulesRes.data?.length);
->>>>>>> Stashed changes
       } catch (error) {
         console.error('❌ Error fetching course data:', error);
         if (error.response?.status === 404) {
@@ -116,7 +93,6 @@ const CourseDetail = () => {
       setCourse(courseRes.data);
       setModules(modulesRes.data || []);
       setProgress(progressRes.data);
-<<<<<<< Updated upstream
       const enrolled = !!progressRes.data;
       setIsEnrolled(enrolled);
 
@@ -124,18 +100,6 @@ const CourseDetail = () => {
       if (enrolled && user?.role === 'student') {
         fetchQuizzes();
       }
-=======
-      setIsEnrolled(!!progressRes.data);
-      
-      // Create module progress map
-      const progressMap = {};
-      if (moduleProgressRes.data.moduleProgresses) {
-        moduleProgressRes.data.moduleProgresses.forEach(progress => {
-          progressMap[progress.moduleId] = progress;
-        });
-      }
-      setModuleProgresses(progressMap);
->>>>>>> Stashed changes
     } catch (error) {
       console.error('Error fetching course data:', error);
     }

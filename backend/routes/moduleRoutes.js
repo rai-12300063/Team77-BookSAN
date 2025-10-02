@@ -244,9 +244,11 @@ router.delete('/:moduleId/progress/:userId', async (req, res, next) => {
             return res.status(404).json({ message: 'Module progress not found' });
         }
         
-        // Notify observers about progress reset
-        const { LearningProgressTracker } = require('../patterns/observer');
-        const progressTracker = new LearningProgressTracker();
+        // Notify observers about progress reset (simplified implementation)
+        // Remove reference to external archive
+        const progressTracker = {
+            notify: (data) => console.log('Progress notification:', data)
+        };
         
         progressTracker.notify({
             type: 'MODULE_PROGRESS_RESET',

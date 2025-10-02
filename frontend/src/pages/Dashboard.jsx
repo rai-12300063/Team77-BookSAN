@@ -2,7 +2,6 @@
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 import { Link } from 'react-router-dom';
-import LearningGoalsAnalytics from '../components/dashboard/LearningGoalsAnalytics';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -309,7 +308,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-<<<<<<< Updated upstream
         {/* Learning Goals & Analytics Combined */}
         <div className="space-y-6">
           {/* Combined Learning Goals & Analytics */}
@@ -411,11 +409,6 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-=======
-        {/* Learning Goals & Analytics - Combined Functional Component */}
-        <div className="space-y-6">
-          <LearningGoalsAnalytics />
->>>>>>> Stashed changes
 
           {/* Quick Actions */}
           <div className="bg-white p-6 rounded-lg shadow-md">

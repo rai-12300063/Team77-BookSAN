@@ -55,7 +55,7 @@ router.get('/compare', enhancedPatternsController.comparePatterns);
  */
 router.get('/test/factory', async (req, res) => {
     try {
-        const { demonstrateFactory } = require('../patterns/factory');
+        const { demonstrateFactory } = require('../../../OLPTBackupOnly/_archive/backend/patterns/factory');
         
         // Capture output
         const originalLog = console.log;
@@ -93,7 +93,7 @@ router.get('/test/factory', async (req, res) => {
  */
 router.get('/test/observer', async (req, res) => {
     try {
-        const { demonstrateObserver } = require('../patterns/observer');
+        const { demonstrateObserver } = require('../../../OLPTBackupOnly/_archive/backend/patterns/observer');
         
         // Capture output
         const originalLog = console.log;
@@ -131,7 +131,7 @@ router.get('/test/observer', async (req, res) => {
  */
 router.get('/test/decorator', async (req, res) => {
     try {
-        const { demonstrateDecorator } = require('../patterns/decorator');
+        const { demonstrateDecorator } = require('../../../OLPTBackupOnly/_archive/backend/patterns/decorator');
         
         // Capture output  
         const originalLog = console.log;
@@ -169,7 +169,7 @@ router.get('/test/decorator', async (req, res) => {
  */
 router.get('/test/singleton', async (req, res) => {
     try {
-        const { demonstrateSingleton } = require('../patterns/singleton');
+        const { demonstrateSingleton } = require('../../../OLPTBackupOnly/_archive/backend/patterns/singleton');
         
         // Capture output
         const originalLog = console.log;
@@ -207,7 +207,7 @@ router.get('/test/singleton', async (req, res) => {
  */
 router.get('/test/strategy', async (req, res) => {
     try {
-        const { demonstrateStrategy } = require('../patterns/strategy');
+        const { demonstrateStrategy } = require('../../../OLPTBackupOnly/_archive/backend/patterns/strategy');
         
         // Capture output
         const originalLog = console.log;
