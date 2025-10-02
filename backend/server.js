@@ -2,6 +2,8 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const instructorsRoutes = require('./routes/instructorsRoutes');
+const studentRoutes = require('./routes/studentsRoutes');
 
 dotenv.config();
 
@@ -20,6 +22,8 @@ app.use('/api/oop', require('./routes/oopRoutes'));
 app.use('/api/patterns', require('./routes/enhancedPatternsRoutes'));
 app.use('/api/test', require('./routes/testRoutes'));
 app.use('/api/populate', require('./routes/populateRoutes'));
+app.use('/api/instructors', instructorsRoutes);
+app.use('/api/students', studentRoutes);
 
 const startServer = async () => {
   try {
