@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
     longestStreak: { type: Number, default: 0 },
     lastLearningDate: { type: Date },
     joinDate: { type: Date, default: Date.now },
+
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date }
 }, { timestamps: true });
@@ -29,6 +30,7 @@ userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+    next(); // new
 });
 
 module.exports = mongoose.model('User', userSchema);
