@@ -9,6 +9,7 @@
     "test:verbose": "mocha test/functionality.test.js --timeout 15000 --reporter spec",
     "test:comprehensive": "mocha test/comprehensive.test.js --timeout 15000 --reporter spec",
     "test:modules": "mocha test/module.unit.test.js --timeout 15000 --reporter spec",
+    "test:admin-modules": "mocha test/adminModulesFunctionality.test.js --timeout 15000 --reporter spec",
     "test:functionality": "mocha test/functionality.test.js --timeout 15000 --reporter spec",
     "start": "node server.js",
     "dev": "nodemon server.js",
@@ -34,9 +35,10 @@
   },
   "devDependencies": {
     "esm": "^3.2.25",
-    "mocha": "^11.0.1",
+    "mocha": "^11.7.4",
     "nodemon": "^2.0.15",
-    "sinon": "^19.0.5"
+    "sinon": "^19.0.5",
+    "supertest": "^7.1.4"
   },
   "author": "Task Manager Team",
   "license": "ISC"

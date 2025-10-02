@@ -540,6 +540,10 @@ const Courses = () => {
                   </div>
 
                   {/* Quiz Button - Add Quiz for Admin/Instructors, Take Quiz for Students */}
+                  {(() => {
+                    console.log(`Course ${course.title}: User role = ${user?.role}, Enrolled = ${isEnrolledInCourse(course._id)}, CanCreate = ${canCreateQuizForCourse(course._id)}`);
+                    return null;
+                  })()}
                   {user?.role === 'student' ? (
                     // Show Take Quiz button only for enrolled students
                     isEnrolledInCourse(course._id) ? (
