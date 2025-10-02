@@ -1,3 +1,4 @@
+
 const Instructor = require('../models/Instructor');
 const Course = require('../models/Course');
 
