@@ -3,9 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 import QuizCard from '../components/QuizCard';
-import Quiz from '../components/Quiz';
 import ModuleStatusSummary from '../components/modules/ModuleStatusSummary';
 import ModuleCompletionStatus from '../components/modules/ModuleCompletionStatus';
+import Quiz from '../components/Quiz'; // new
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -18,8 +18,8 @@ const CourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [activeModule, setActiveModule] = useState(0);
   const [isEnrolled, setIsEnrolled] = useState(false);
-  const [quizzes, setQuizzes] = useState([]);
   const [quizzesLoading, setQuizzesLoading] = useState(false);
+  const [quizzes, setQuizzes] = useState([]);
 
   const [showQuiz, setShowQuiz] = useState(false);
 
@@ -42,16 +42,14 @@ const CourseDetail = () => {
           axiosInstance.get(`/api/module-progress/course/${courseId}`).catch((error) => {
             console.log('⚠️ Module progress fetch failed:', error.response?.status);
             return { data: { moduleProgresses: [] } };
-          }),
-          axiosInstance.get(`/api/quizzes/course/${courseId}`).catch((error) => {
-            console.log('⚠️ Quizzes fetch failed:', error.response?.status);
-            return { data: [] };
           })
         ]);
         console.log('📚 Course data:', courseRes.data);
         console.log('📋 Modules data:', modulesRes.data);
         console.log('📈 Progress data:', progressRes.data);
         console.log('📝 Quizzes data:', quizzesRes.data);
+        // console.log('📊 Module Progress data:', moduleProgressRes.data);
+
 
 
         setCourse(courseRes.data);
