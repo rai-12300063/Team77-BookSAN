@@ -13,6 +13,10 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "prod": "node server.js",
+    "setup": "node setup-database.js",
+    "setup-db": "node setup-database.js",
+    "fix-db": "node fix-database.js",
+    "test-connection": "node databasePopulate/testConnection.js",
     "seed": "node seedDatabase.js",
     "load-data": "node loadDatabaseData.js",
     "export-data": "node exportDatabaseData.js"
