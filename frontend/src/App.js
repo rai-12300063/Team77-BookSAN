@@ -17,6 +17,7 @@ import AdminQuizManagement from './pages/AdminQuizManagement';
 import InstructorQuizManagement from './pages/InstructorQuizManagement';
 import AdminQuizEditor from './pages/AdminQuizEditor';
 import InstructorQuizEditor from './pages/InstructorQuizEditor';
+import ProtectedRoute from './components/ProtectedRoute'; //new
 
 function App() {
   return (
