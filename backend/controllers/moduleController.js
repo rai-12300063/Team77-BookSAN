@@ -4,7 +4,7 @@ const Course = require('../models/Course');
 const LearningProgress = require('../models/LearningProgress');
 
 // Remove references to external archive
-// const ProgressSyncService = require('../../../OLPTBackupOnly/_archive/backend/services/progressSyncService');
+// External progress sync service removed for standalone operation
 
 // Placeholder for design patterns (removed external references)
 // Simple mock implementations to prevent errors
@@ -573,15 +573,15 @@ const calculateModuleGrade = async (req, res) => {
             scores.finalExam = moduleProgress.moduleAssessment.bestScorePercentage;
         }
 
-        // Apply grading strategy
+        // Apply grading strategy (simplified for standalone operation)
         let gradingStrategyInstance;
         switch (gradingStrategy) {
             case 'pass-fail':
-                const { PassFailStrategy } = require('../../../OLPTBackupOnly/_archive/backend/patterns/strategy');
-                gradingStrategyInstance = new PassFailStrategy(70);
+                // Simple pass-fail implementation
+                gradingStrategyInstance = { passThreshold: 70 };
                 break;
             case 'competency':
-                const { CompetencyBasedStrategy } = require('../../../OLPTBackupOnly/_archive/backend/patterns/strategy');
+                // Simple competency-based implementation
                 // Define competencies based on learning objectives
                 const competencies = moduleProgress.moduleId.learningObjectives.map((obj, index) => ({
                     id: `competency_${index}`,
