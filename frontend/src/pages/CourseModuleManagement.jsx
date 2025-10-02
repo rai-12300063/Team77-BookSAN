@@ -16,7 +16,7 @@ const CourseModuleManagement = () => {
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingModule, setEditingModule] = useState(null);
     const [submitting, setSubmitting] = useState(false);
-    const [generatingContent, setGeneratingContent] = useState(null); // Store moduleId being processed
+    const [generatingContent, setGeneratingContent] = useState(null)
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -395,7 +395,7 @@ const CourseModuleManagement = () => {
                     <select
                         value={selectedCourse}
                         onChange={(e) => setSelectedCourse(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-gray-100"
                     >
                         <option value="">Select a course...</option>
                         {courses.map((course) => (
@@ -601,6 +601,7 @@ const CourseModuleManagement = () => {
                             <button
                                 onClick={() => setShowAddForm(true)}
                                 className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+                                style={{backgroundColor: '#FA1E1C'}}
                             >
                                 Add First Module
                             </button>

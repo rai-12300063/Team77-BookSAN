@@ -87,7 +87,7 @@ const Profile = () => {
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-white">
+          <div className="bg-gradient-to-r from-blue-800 to-blue-700 px-6 py-8 text-white">
             <div className="flex items-center">
               <div className="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-2xl font-bold mr-6">
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
@@ -214,7 +214,7 @@ const Profile = () => {
                   type="submit"
                   disabled={loading}
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
-                >
+                  style={{backgroundColor: '#FA1E1C'}}>
                   {loading ? (
                     <div className="flex items-center justify-center">
                       <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
