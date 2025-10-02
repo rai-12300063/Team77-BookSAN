@@ -8,6 +8,7 @@ const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [streaks, setStreaks] = useState(null);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [learningGoals, setLearningGoals] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,21 +17,61 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [analyticsRes, streaksRes, enrolledRes] = await Promise.all([
-        axiosInstance.get('/api/progress/analytics'),
-        axiosInstance.get('/api/progress/streaks'),
-        axiosInstance.get('/api/courses/enrolled/my')
+      const [analyticsRes, streaksRes, enrolledRes, goalsRes] = await Promise.all([
+        axiosInstance.get('/api/progress/analytics').catch(() => ({ data: null })),
+        axiosInstance.get('/api/progress/streaks').catch(() => ({ data: null })),
+        axiosInstance.get('/api/courses/enrolled/my').catch(() => ({ data: [] })),
+        axiosInstance.get('/api/progress/learning-goals').catch(() => ({ data: null }))
       ]);
-      setAnalytics(analyticsRes.data);
-      setStreaks(streaksRes.data);
-      setEnrolledCourses(enrolledRes.data);
+      
+      setAnalytics(analyticsRes.data || {
+        totalCourses: enrolledRes.data?.length || 0,
+        completedCourses: 0,
+        totalTimeSpent: 0,
+        averageScore: 0,
+        bestSubject: 'Not available'
+      });
+      
+      setStreaks(streaksRes.data || {
+        currentStreak: 0,
+        longestStreak: 0,
+        weeklyStreak: 0
+      });
+      
+      setEnrolledCourses(enrolledRes.data || []);
+      
+      setLearningGoals(goalsRes.data || {
+        daily: { target: 30, completed: 0, percentage: 0 },
+        weekly: { target: 300, completed: 0, percentage: 0 },
+        monthly: { target: 1200, completed: 0, percentage: 0 }
+      });
+      
       console.log('📊 Dashboard data loaded:', {
         analytics: analyticsRes.data,
         streaks: streaksRes.data,
-        enrolled: enrolledRes.data
+        enrolled: enrolledRes.data,
+        goals: goalsRes.data
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      // Set default values on error
+      setAnalytics({
+        totalCourses: 0,
+        completedCourses: 0,
+        totalTimeSpent: 0,
+        averageScore: 0,
+        bestSubject: 'Not available'
+      });
+      setStreaks({
+        currentStreak: 0,
+        longestStreak: 0,
+        weeklyStreak: 0
+      });
+      setLearningGoals({
+        daily: { target: 30, completed: 0, percentage: 0 },
+        weekly: { target: 300, completed: 0, percentage: 0 },
+        monthly: { target: 1200, completed: 0, percentage: 0 }
+      });
     } finally {
       setLoading(false);
     }
@@ -285,76 +326,104 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Learning Goals & Achievements */}
+        {/* Learning Goals & Analytics Combined */}
         <div className="space-y-6">
-          {/* Learning Goals */}
+          {/* Combined Learning Goals & Analytics */}
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Learning Goals</h2>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Daily Goal</span>
-                  <span>30 min</span>
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">Learning Goals & Analytics</h2>
+            
+            {/* Learning Goals Section */}
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-gray-700 mb-4">Progress Goals</h3>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm text-gray-600 mb-1">
+                    <span>Daily Goal</span>
+                    <span>{learningGoals?.daily?.target || 30} min</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${Math.min(learningGoals?.daily?.percentage || 0, 100)}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-green-600 mt-1">
+                    {learningGoals?.daily?.completed || 0} min completed today
+                  </p>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full transition-all duration-300" style={{ width: '70%' }}></div>
+                <div>
+                  <div className="flex justify-between text-sm text-gray-600 mb-1">
+                    <span>Weekly Goal</span>
+                    <span>{Math.round((learningGoals?.weekly?.target || 300) / 60)} hours</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${Math.min(learningGoals?.weekly?.percentage || 0, 100)}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-1">
+                    {Math.round((learningGoals?.weekly?.completed || 0) / 60 * 100) / 100} hours completed this week
+                  </p>
                 </div>
-                <p className="text-xs text-green-600 mt-1">21 min completed today</p>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Weekly Goal</span>
-                  <span>5 hours</span>
+                <div>
+                  <div className="flex justify-between text-sm text-gray-600 mb-1">
+                    <span>Monthly Goal</span>
+                    <span>{Math.round((learningGoals?.monthly?.target || 1200) / 60)} hours</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-purple-500 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${Math.min(learningGoals?.monthly?.percentage || 0, 100)}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-purple-600 mt-1">
+                    {Math.round((learningGoals?.monthly?.completed || 0) / 60 * 100) / 100} hours completed this month
+                  </p>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: '45%' }}></div>
-                </div>
-                <p className="text-xs text-blue-600 mt-1">2.25 hours completed this week</p>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Monthly Goal</span>
-                  <span>20 hours</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-purple-500 h-2 rounded-full transition-all duration-300" style={{ width: '35%' }}></div>
-                </div>
-                <p className="text-xs text-purple-600 mt-1">7 hours completed this month</p>
               </div>
             </div>
-          </div>
 
-          {/* Learning Analytics */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Learning Analytics</h2>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                  <span className="text-sm font-medium">Avg. Session Time</span>
+            {/* Analytics Section */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-700 mb-4">Performance Analytics</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                    <span className="text-xs font-medium">Avg. Session</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-800">
+                    {analytics?.averageSessionTime || 0} min
+                  </span>
                 </div>
-                <span className="text-sm font-bold text-gray-800">25 min</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                  <span className="text-sm font-medium">Best Subject</span>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                    <span className="text-xs font-medium">Best Subject</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-800">
+                    {analytics?.bestSubject || 'N/A'}
+                  </span>
                 </div>
-                <span className="text-sm font-bold text-gray-800">JavaScript</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                  <span className="text-sm font-medium">Avg. Score</span>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                    <span className="text-xs font-medium">Avg. Score</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-800">
+                    {analytics?.averageScore || 0}%
+                  </span>
                 </div>
-                <span className="text-sm font-bold text-gray-800">87%</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                  <span className="text-sm font-medium">Weekly Streak</span>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                    <span className="text-xs font-medium">Weekly Streak</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-800">
+                    {streaks?.weeklyStreak || streaks?.currentStreak || 0} days
+                  </span>
                 </div>
-                <span className="text-sm font-bold text-gray-800">5 days</span>
               </div>
             </div>
           </div>
@@ -373,24 +442,6 @@ const Dashboard = () => {
                 Browse Courses
               </Link>
               <Link 
-                to="/tasks" 
-                className="flex items-center justify-center w-full bg-gradient-to-r from-gray-600 to-gray-700 text-white py-3 rounded-md hover:from-gray-700 hover:to-gray-800 transition duration-200 transform hover:scale-105 shadow-md"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-                Manage Tasks
-              </Link>
-              <Link 
-                to="/profile" 
-                className="flex items-center justify-center w-full border-2 border-gray-300 text-gray-700 py-3 rounded-md hover:bg-gray-50 hover:border-gray-400 transition duration-200 transform hover:scale-105"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                Update Profile
-              </Link>
-              <Link 
                 to="/test-modules"
                 className="flex items-center justify-center w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 rounded-md hover:from-purple-600 hover:to-purple-700 transition duration-200 transform hover:scale-105 shadow-md"
               >
@@ -399,15 +450,6 @@ const Dashboard = () => {
                 </svg>
                 Test Modules System
               </Link>
-              <button 
-                className="flex items-center justify-center w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-md hover:from-green-600 hover:to-green-700 transition duration-200 transform hover:scale-105 shadow-md"
-                onClick={() => alert('Start Learning Session feature coming soon!')}
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1M9 16h6m-7 4h8a2 2 0 002-2V6a2 2 0 00-2-2H8a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Start Learning Session
-              </button>
             </div>
           </div>
         </div>

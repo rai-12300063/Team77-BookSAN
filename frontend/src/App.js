@@ -10,6 +10,8 @@ import Profile from './pages/Profile';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import ModulesPage from './pages/ModulesPage';
+import ModuleDetailPage from './pages/ModuleDetailPage';
+import CourseModuleManagement from './pages/CourseModuleManagement';
 import TestModules from './pages/TestModules';
 import QuizPage from './pages/QuizPage';
 import AdminQuizManagement from './pages/AdminQuizManagement';
@@ -37,6 +39,8 @@ function App() {
           <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
           <Route path="/courses/:courseId" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
           <Route path="/courses/:courseId/modules" element={<ProtectedRoute><ModulesPage /></ProtectedRoute>} />
+          <Route path="/courses/:courseId/modules/:moduleId" element={<ProtectedRoute><ModuleDetailPage /></ProtectedRoute>} />
+          <Route path="/course-modules" element={<ProtectedRoute><CourseModuleManagement /></ProtectedRoute>} />
           <Route path="/courses/:courseId/quiz/:quizId" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
           <Route path="/test-modules" element={<ProtectedRoute><TestModules /></ProtectedRoute>} />
 
