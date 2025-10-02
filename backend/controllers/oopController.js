@@ -3,7 +3,29 @@
  * Provides RESTful API endpoints for the OOP learning management system
  */
 
-// Note: External OOP dependencies removed for standalone operation
+const { 
+    LearningManagementSystem,
+    User,
+    Student,
+    Instructor,
+    LearningModule,
+    Content,
+    VideoContent,
+    QuizContent
+} = require('../services/CoreClasses');
+
+const { 
+    ContentFactory, 
+    UserFactory, 
+    WeightedGradingStrategy,
+    PassFailGradingStrategy,
+    ProgressTracker
+} = require('../services/DesignPatterns');
+
+const { 
+    AssessmentSystem,
+    ReportingSystem
+} = require('../services/AdditionalClasses');
 // External service dependencies removed for standalone operation
 
 /**

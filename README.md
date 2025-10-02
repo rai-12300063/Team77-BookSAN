@@ -137,8 +137,7 @@ If you're getting database connection errors after pulling from main:
 
 1. **Missing .env file:**
    ```bash
-   cd backend
-   node setup-database.js  # Interactive setup
+   cd backend && node setup-database.js  # Interactive setup
    # OR
    cp .env.example .env     # Manual setup
    ```
