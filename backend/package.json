@@ -8,6 +8,7 @@
     "test:watch": "mocha test/comprehensive.test.js --timeout 15000 --watch --reporter spec",
     "test:verbose": "mocha test/comprehensive.test.js --timeout 15000 --reporter spec",
     "test:comprehensive": "mocha test/comprehensive.test.js --timeout 15000 --reporter spec",
+    "test:modules": "mocha test/module.unit.test.js --timeout 15000 --reporter spec",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "prod": "node server.js",

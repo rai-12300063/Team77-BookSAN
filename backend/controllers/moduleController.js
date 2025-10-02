@@ -283,6 +283,120 @@ const getModule = async (req, res) => {
     }
 };
 
+// Update an existing module
+const updateModule = async (req, res) => {
+    try {
+        const { moduleId } = req.params;
+        const { contents = [], ...moduleData } = req.body;
+        const userId = req.user.id;
+
+        // Find the module and verify permissions
+        const module = await Module.findById(moduleId).populate('courseId');
+        if (!module) {
+            return res.status(404).json({ message: 'Module not found' });
+        }
+
+        // Check if user is authorized to update this module
+        if (module.courseId && module.courseId.instructor && module.courseId.instructor.id.toString() !== userId && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized to update this module' });
+        }
+
+        // Process updated contents using Factory Pattern
+        const processedContents = [];
+        for (const contentData of contents) {
+            try {
+                const content = ContentFactory.createContent(contentData.type, {
+                    title: contentData.title,
+                    duration: contentData.duration,
+                    ...contentData.contentData
+                });
+
+                processedContents.push({
+                    type: contentData.type,
+                    title: contentData.title,
+                    duration: contentData.duration,
+                    contentData: content.getData(),
+                    url: content.getUrl ? content.getUrl() : null,
+                    isCompleted: contentData.isCompleted || false,
+                    completedAt: contentData.completedAt || null
+                });
+            } catch (contentError) {
+                console.warn(`Failed to process content: ${contentData.title}`, contentError);
+                // Include the original content data if factory fails
+                processedContents.push(contentData);
+            }
+        }
+
+        // Update module data
+        const updatedModule = await Module.findByIdAndUpdate(
+            moduleId,
+            {
+                ...moduleData,
+                contents: processedContents,
+                lastModified: new Date()
+            },
+            { new: true, runValidators: true }
+        ).populate('courseId', 'title description');
+
+        res.json({
+            message: 'Module updated successfully',
+            module: updatedModule
+        });
+
+    } catch (error) {
+        console.error('Error updating module:', error);
+        res.status(500).json({ 
+            message: 'Failed to update module', 
+            error: error.message 
+        });
+    }
+};
+
+// Delete a module
+const deleteModule = async (req, res) => {
+    try {
+        const { moduleId } = req.params;
+        const userId = req.user.id;
+
+        // Find the module and verify permissions
+        const module = await Module.findById(moduleId).populate('courseId');
+        if (!module) {
+            return res.status(404).json({ message: 'Module not found' });
+        }
+
+        // Check if user is authorized to delete this module
+        if (module.courseId && module.courseId.instructor && module.courseId.instructor.id.toString() !== userId && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized to delete this module' });
+        }
+
+        // Delete associated progress records
+        await ModuleProgress.deleteMany({ moduleId });
+
+        // Remove module from course's modules array
+        if (module.courseId && module.courseId._id) {
+            await Course.findByIdAndUpdate(
+                module.courseId._id,
+                { $pull: { modules: moduleId } }
+            );
+        }
+
+        // Delete the module
+        await Module.findByIdAndDelete(moduleId);
+
+        res.json({
+            message: 'Module deleted successfully',
+            deletedModuleId: moduleId
+        });
+
+    } catch (error) {
+        console.error('Error deleting module:', error);
+        res.status(500).json({ 
+            message: 'Failed to delete module', 
+            error: error.message 
+        });
+    }
+};
+
 // Update module progress using Observer Pattern
 const updateModuleProgress = async (req, res) => {
     try {
@@ -789,12 +903,12 @@ module.exports = {
     createModule,
     getCourseModules,
     getModule,
+    updateModule,
+    deleteModule,
     updateModuleProgress,
     calculateModuleGrade,
     getModuleAnalytics,
     completeModule,
     getProgressSyncReport,
-    syncAllUsersInCourse,
-    getModuleAnalytics
-
+    syncAllUsersInCourse
 };

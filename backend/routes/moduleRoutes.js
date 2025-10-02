@@ -4,6 +4,8 @@ const {
     createModule,
     getCourseModules,
     getModule,
+    updateModule,
+    deleteModule,
     updateModuleProgress,
     calculateModuleGrade,
     getModuleAnalytics,
@@ -62,6 +64,22 @@ router.get('/:moduleId/analytics', authMiddleware, async (req, res, next) => {
     }
     next();
 }, getModuleAnalytics);
+
+// Update module (instructors and admins only)
+router.put('/:moduleId', authMiddleware, async (req, res, next) => {
+    if (req.user.role !== 'instructor' && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied. Instructor or admin role required.' });
+    }
+    next();
+}, updateModule);
+
+// Delete module (instructors and admins only)
+router.delete('/:moduleId', authMiddleware, async (req, res, next) => {
+    if (req.user.role !== 'instructor' && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied. Instructor or admin role required.' });
+    }
+    next();
+}, deleteModule);
 
 // Update specific content progress within a module
 
