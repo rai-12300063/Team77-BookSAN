@@ -4,15 +4,19 @@
   "description": "Backend for QUT-MIT Learning Progress Tracker",
   "main": "server.js",
   "scripts": {
-    "test": "mocha test/functionality.test.js --timeout 15000 --reporter spec",
-    "test:watch": "mocha test/functionality.test.js --timeout 15000 --watch --reporter spec",
-    "test:verbose": "mocha test/functionality.test.js --timeout 15000 --reporter spec",
-    "test:comprehensive": "mocha test/comprehensive.test.js --timeout 15000 --reporter spec",
-    "test:modules": "mocha test/module.unit.test.js --timeout 15000 --reporter spec",
-    "test:functionality": "mocha test/functionality.test.js --timeout 15000 --reporter spec",
+    "test": "mocha test/olptFinal.test.js --timeout 8000 --reporter spec",
+    "test:watch": "mocha test/olptFinal.test.js --timeout 8000 --watch --reporter spec",
+    "test:verbose": "mocha test/olptFinal.test.js --timeout 8000 --reporter spec",
+    "test:basic": "mocha test/basicOLPTTest.test.js --timeout 5000 --reporter spec",
+    "test:modules": "mocha test/olptFinal.test.js --timeout 8000 --reporter spec",
+    "test:olpt": "mocha test/olptFinal.test.js --timeout 8000 --reporter spec",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "prod": "node server.js",
+    "setup": "node setup-database.js",
+    "setup-db": "node setup-database.js",
+    "fix-db": "node fix-database.js",
+    "test-connection": "node databasePopulate/testConnection.js",
     "seed": "node seedDatabase.js",
     "load-data": "node loadDatabaseData.js",
     "export-data": "node exportDatabaseData.js"
@@ -34,9 +38,10 @@
   },
   "devDependencies": {
     "esm": "^3.2.25",
-    "mocha": "^11.0.1",
+    "mocha": "^11.7.4",
     "nodemon": "^2.0.15",
-    "sinon": "^19.0.5"
+    "sinon": "^19.0.5",
+    "supertest": "^7.1.4"
   },
   "author": "Task Manager Team",
   "license": "ISC"

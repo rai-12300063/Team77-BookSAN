@@ -27,11 +27,17 @@ A comprehensive learning management system for tracking educational progress and
    cd frontend && npm install
    ```
 
-3. **Configure environment**
+3. **Configure database connection**
    ```bash
-   # Copy .env.example to .env in backend folder
+   # Option 1: Quick setup with interactive script
+   cd backend && node setup-database.js
+   
+   # Option 2: Manual setup
    cp backend/.env.example backend/.env
    # Edit backend/.env with your MongoDB URI and JWT secret
+   
+   # Option 3: Test database connection
+   cd backend && node databasePopulate/testConnection.js
    ```
 
 4. **Start development servers**
@@ -118,7 +124,49 @@ npm test
 
 # Test authentication
 cd backend && node basicLoginTest.js
+
+# Test database connection
+cd backend && node databasePopulate/testConnection.js
 ```
+
+## 🔧 Troubleshooting
+
+### Database Connection Issues
+
+If you're getting database connection errors after pulling from main:
+
+1. **Missing .env file:**
+   ```bash
+   cd backend && node setup-database.js  # Interactive setup
+   # OR
+   cp .env.example .env     # Manual setup
+   ```
+
+2. **MongoDB Atlas Issues:**
+   - Verify your IP address is whitelisted
+   - Check username/password in connection string
+   - Ensure cluster is running
+
+3. **Local MongoDB Issues:**
+   ```bash
+   # Start MongoDB service (macOS with Homebrew)
+   brew services start mongodb-community
+   
+   # Or check if MongoDB is running
+   mongosh --eval "db.runCommand({connectionStatus: 1})"
+   ```
+
+4. **Test connection:**
+   ```bash
+   cd backend && node databasePopulate/testConnection.js
+   ```
+
+### Common Error Messages
+
+- **"MongooseError: Operation failed"** → Check internet connection and MongoDB URI
+- **"Authentication failed"** → Verify username/password in connection string
+- **"Network timeout"** → Check firewall settings and IP whitelist
+- **"Cannot find module '.env'"** → Run `node setup-database.js` to create .env file
 
 ## 📊 API Endpoints
 

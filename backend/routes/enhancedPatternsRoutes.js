@@ -55,7 +55,8 @@ router.get('/compare', enhancedPatternsController.comparePatterns);
  */
 router.get('/test/factory', async (req, res) => {
     try {
-        const { demonstrateFactory } = require('../../../OLPTBackupOnly/_archive/backend/patterns/factory');
+        // Factory pattern demonstration removed for standalone operation
+        const demonstrateFactory = () => console.log('Factory pattern demo not available in standalone mode');
         
         // Capture output
         const originalLog = console.log;
@@ -93,7 +94,8 @@ router.get('/test/factory', async (req, res) => {
  */
 router.get('/test/observer', async (req, res) => {
     try {
-        const { demonstrateObserver } = require('../../../OLPTBackupOnly/_archive/backend/patterns/observer');
+        // Observer pattern demonstration removed for standalone operation
+        const demonstrateObserver = () => console.log('Observer pattern demo not available in standalone mode');
         
         // Capture output
         const originalLog = console.log;
@@ -131,7 +133,8 @@ router.get('/test/observer', async (req, res) => {
  */
 router.get('/test/decorator', async (req, res) => {
     try {
-        const { demonstrateDecorator } = require('../../../OLPTBackupOnly/_archive/backend/patterns/decorator');
+        // Decorator pattern demonstration removed for standalone operation
+        const demonstrateDecorator = () => console.log('Decorator pattern demo not available in standalone mode');
         
         // Capture output  
         const originalLog = console.log;
@@ -169,7 +172,8 @@ router.get('/test/decorator', async (req, res) => {
  */
 router.get('/test/singleton', async (req, res) => {
     try {
-        const { demonstrateSingleton } = require('../../../OLPTBackupOnly/_archive/backend/patterns/singleton');
+        // Singleton pattern demonstration removed for standalone operation
+        const demonstrateSingleton = () => console.log('Singleton pattern demo not available in standalone mode');
         
         // Capture output
         const originalLog = console.log;
@@ -207,7 +211,8 @@ router.get('/test/singleton', async (req, res) => {
  */
 router.get('/test/strategy', async (req, res) => {
     try {
-        const { demonstrateStrategy } = require('../../../OLPTBackupOnly/_archive/backend/patterns/strategy');
+        // Strategy pattern demonstration removed for standalone operation
+        const demonstrateStrategy = () => console.log('Strategy pattern demo not available in standalone mode');
         
         // Capture output
         const originalLog = console.log;

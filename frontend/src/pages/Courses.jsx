@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../axiosConfig';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import ModulesCompletedSidebar from '../components/modules/ModulesCompletedSidebar';
 
 
@@ -13,6 +14,7 @@ const Courses = () => {
   const [category, setCategory] = useState('all');
   const [loading, setLoading] = useState(true);
   const [instructorCourses, setInstructorCourses] = useState([]);
+  const [courseQuizzes, setCourseQuizzes] = useState({}); // Store quizzes for each course
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -36,6 +38,15 @@ const Courses = () => {
       fetchInstructorCourses();
     }
   }, [isInstructor]);
+
+  // Fetch quizzes for enrolled courses when enrolledCourses changes
+  useEffect(() => {
+    if (enrolledCourses.length > 0) {
+      enrolledCourses.forEach(course => {
+        fetchCourseQuizzes(course._id);
+      });
+    }
+  }, [enrolledCourses]);
 
   const fetchCourses = async () => {
     try {
@@ -83,13 +94,34 @@ const Courses = () => {
     }
   };
 
-  const fetchInstructorCourses = async () => {
+    const fetchInstructorCourses = async () => {
     try {
+      console.log('🔄 Fetching instructor courses...');
       const response = await axiosInstance.get('/api/quiz/instructor/courses');
+      console.log('✅ Instructor courses fetched:', response.data);
       setInstructorCourses(response.data || []);
     } catch (error) {
       console.error('❌ Error fetching instructor courses:', error);
-      setInstructorCourses([]);
+    }
+  };
+
+  const fetchCourseQuizzes = async (courseId) => {
+    try {
+      console.log('🔄 Fetching quizzes for course:', courseId);
+      const response = await axiosInstance.get(`/api/quizzes/course/${courseId}`);
+      console.log('✅ Course quizzes fetched:', response.data);
+      setCourseQuizzes(prev => ({
+        ...prev,
+        [courseId]: response.data || []
+      }));
+      return response.data || [];
+    } catch (error) {
+      console.error('❌ Error fetching course quizzes:', error);
+      setCourseQuizzes(prev => ({
+        ...prev,
+        [courseId]: []
+      }));
+      return [];
     }
   };
 
@@ -101,11 +133,64 @@ const Courses = () => {
     return false;
   };
 
+  const isEnrolledInCourse = (courseId) => {
+    return enrolledCourses.some(course => course._id === courseId);
+  };
+
   const handleAddQuiz = (courseId) => {
     if (isAdmin) {
       navigate('/admin/quizzes', { state: { selectedCourseId: courseId } });
     } else if (isInstructor) {
       navigate('/instructor/quizzes', { state: { selectedCourseId: courseId } });
+    }
+  };
+
+  const handleTakeQuiz = async (courseId) => {
+    try {
+      console.log('🔄 Getting available quizzes for course:', courseId);
+      let quizzes = courseQuizzes[courseId];
+      
+      // If quizzes not loaded yet, fetch them
+      if (!quizzes) {
+        quizzes = await fetchCourseQuizzes(courseId);
+      }
+
+      if (quizzes && quizzes.length > 0) {
+        // Filter out quizzes that are not published or not available
+        const availableQuizzes = quizzes.filter(quiz => 
+          quiz.isPublished !== false && 
+          (!quiz.availableFrom || new Date(quiz.availableFrom) <= new Date()) &&
+          (!quiz.availableUntil || new Date(quiz.availableUntil) >= new Date())
+        );
+
+        if (availableQuizzes.length > 0) {
+          // If there's only one available quiz, navigate directly to it
+          if (availableQuizzes.length === 1) {
+            navigate(`/courses/${courseId}/quiz/${availableQuizzes[0]._id}`);
+          } else {
+            // If multiple quizzes, show selection dialog
+            const quizTitles = availableQuizzes.map((quiz, index) => 
+              `${index + 1}. ${quiz.title} (${quiz.questions?.length || 0} questions)`
+            ).join('\n');
+            
+            const selection = prompt(
+              `Multiple quizzes available:\n\n${quizTitles}\n\nEnter the number of the quiz you want to take (1-${availableQuizzes.length}):`
+            );
+            
+            const selectedIndex = parseInt(selection) - 1;
+            if (selectedIndex >= 0 && selectedIndex < availableQuizzes.length) {
+              navigate(`/courses/${courseId}/quiz/${availableQuizzes[selectedIndex]._id}`);
+            }
+          }
+        } else {
+          alert('No quizzes are currently available for this course. Please check back later.');
+        }
+      } else {
+        alert('No quizzes have been created for this course yet.');
+      }
+    } catch (error) {
+      console.error('❌ Error handling take quiz:', error);
+      alert('Failed to load quizzes. Please try again.');
     }
   };
 
@@ -454,17 +539,42 @@ const Courses = () => {
                     </div>
                   </div>
 
-                  {/* Add Quiz Button for Admin and Instructors */}
-                  {canCreateQuizForCourse(course._id) && (
-                    <button
-                      onClick={() => handleAddQuiz(course._id)}
-                      className="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition duration-200 flex items-center justify-center text-sm"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                      </svg>
-                      Add Quiz
-                    </button>
+                  {/* Quiz Button - Add Quiz for Admin/Instructors, Take Quiz for Students */}
+                  {(() => {
+                    console.log(`Course ${course.title}: User role = ${user?.role}, Enrolled = ${isEnrolledInCourse(course._id)}, CanCreate = ${canCreateQuizForCourse(course._id)}`);
+                    return null;
+                  })()}
+                  {user?.role === 'student' ? (
+                    // Show Take Quiz button only for enrolled students
+                    isEnrolledInCourse(course._id) ? (
+                      <button
+                        onClick={() => handleTakeQuiz(course._id)}
+                        className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200 flex items-center justify-center text-sm"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Take Quiz
+                        {courseQuizzes[course._id]?.length > 0 && (
+                          <span className="ml-1 text-xs bg-green-800 px-1 rounded">
+                            {courseQuizzes[course._id].length}
+                          </span>
+                        )}
+                      </button>
+                    ) : null
+                  ) : (
+                    // Show Add Quiz button for admin/instructors who can create quizzes
+                    canCreateQuizForCourse(course._id) ? (
+                      <button
+                        onClick={() => handleAddQuiz(course._id)}
+                        className="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition duration-200 flex items-center justify-center text-sm"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        Add Quiz
+                      </button>
+                    ) : null
                   )}
                 </div>
 
@@ -502,6 +612,213 @@ const Courses = () => {
           <ModulesCompletedSidebar />
         </div>
       </div>
+
+      {/* Create Course Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">Create New Course</h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCourse} className="space-y-4">
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Course Title *
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter course title"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description *
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  required
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter course description"
+                />
+              </div>
+
+              {/* Category and Difficulty */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Programming">Programming</option>
+                    <option value="Data Science">Data Science</option>
+                    <option value="Web Development">Web Development</option>
+                    <option value="Mobile Development">Mobile Development</option>
+                    <option value="DevOps">DevOps</option>
+                    <option value="Design">Design</option>
+                    <option value="Business">Business</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Difficulty
+                  </label>
+                  <select
+                    name="difficulty"
+                    value={formData.difficulty}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Duration */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Duration
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Weeks</label>
+                    <input
+                      type="number"
+                      name="duration.weeks"
+                      value={formData.duration.weeks}
+                      onChange={handleInputChange}
+                      min="1"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Hours per Week</label>
+                    <input
+                      type="number"
+                      name="duration.hoursPerWeek"
+                      value={formData.duration.hoursPerWeek}
+                      onChange={handleInputChange}
+                      min="1"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Estimated Completion Time */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Estimated Completion Time (hours)
+                </label>
+                <input
+                  type="number"
+                  name="estimatedCompletionTime"
+                  value={formData.estimatedCompletionTime}
+                  onChange={handleInputChange}
+                  min="1"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Prerequisites */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Prerequisites
+                </label>
+                <input
+                  type="text"
+                  name="prerequisites"
+                  value={formData.prerequisites}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter prerequisites (comma-separated)"
+                />
+                <p className="text-xs text-gray-500 mt-1">Separate multiple prerequisites with commas</p>
+              </div>
+
+              {/* Learning Objectives */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Learning Objectives
+                </label>
+                <textarea
+                  name="learningObjectives"
+                  value={formData.learningObjectives}
+                  onChange={handleInputChange}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter learning objectives (comma-separated)"
+                />
+                <p className="text-xs text-gray-500 mt-1">Separate multiple objectives with commas</p>
+              </div>
+
+              {/* Syllabus */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Syllabus
+                </label>
+                <textarea
+                  name="syllabus"
+                  value={formData.syllabus}
+                  onChange={handleInputChange}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter syllabus (one module per line, format: Module Title:Topic1,Topic2:Hours)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Format: "Module Title:Topic1,Topic2:3" (one per line)
+                </p>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creating ? 'Creating...' : 'Create Course'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

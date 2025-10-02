@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CourseModuleManagement.jsx - Course Module Management Interface
  * Allows instructors and admins to add, edit, and manage course modules
  */

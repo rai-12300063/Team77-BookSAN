@@ -3,37 +3,30 @@
  * Provides RESTful API endpoints for the OOP learning management system
  */
 
-const { LearningSystemDemo } = require('../../../OLPTBackupOnly/_archive/backend/services/IntegrationDemo');
+const { 
+    LearningManagementSystem,
+    User,
+    Student,
+    Instructor,
+    LearningModule,
+    Content,
+    VideoContent,
+    QuizContent
+} = require('../services/CoreClasses');
+
 const { 
     ContentFactory, 
     UserFactory, 
     WeightedGradingStrategy,
     PassFailGradingStrategy,
-    ProgressTracker,
-    NotificationObserver,
-    TimeLimitDecorator,
-    AdaptiveDecorator,
-    ContentProxy,
-    EnrollCommand,
-    CompleteContentCommand 
-} = require('../../../OLPTBackupOnly/_archive/backend/services/DesignPatterns');
+    ProgressTracker
+} = require('../services/DesignPatterns');
 
-const {
-    LearningManagementSystem,
-    Content,
-    VideoContent,
-    QuizContent,
-    User,
-    Student,
-    Instructor
-} = require('../../../OLPTBackupOnly/_archive/backend/services/CoreClasses');
-
-const {
-    TextContent,
-    AdminUser,
+const { 
     AssessmentSystem,
     ReportingSystem
-} = require('../../../OLPTBackupOnly/_archive/backend/services/AdditionalClasses');
+} = require('../services/AdditionalClasses');
+// External service dependencies removed for standalone operation
 
 /**
  * OOP Learning Management Controller
