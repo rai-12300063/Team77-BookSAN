@@ -11,6 +11,12 @@ const Login = () => {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  // Function to fill form with test credentials
+  const fillTestCredentials = (email, password) => {
+    setFormData({ email, password });
+    setError(''); // Clear any existing errors
+  };
+
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated()) {
@@ -103,6 +109,42 @@ const Login = () => {
           </Link>
         </div>
         
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 text-center">🔑 Test Credentials</h3>
+          <div className="space-y-2 text-xs">
+            <div 
+              className="flex justify-between items-center p-2 rounded hover:bg-blue-50 cursor-pointer transition-colors"
+              onClick={() => fillTestCredentials('admin@example.com', 'Admin123!')}
+            >
+              <span className="font-medium text-blue-600">Admin:</span>
+              <span className="text-gray-600">admin@example.com / Admin123!</span>
+            </div>
+            <div 
+              className="flex justify-between items-center p-2 rounded hover:bg-green-50 cursor-pointer transition-colors"
+              onClick={() => fillTestCredentials('instructor@example.com', 'Instructor123!')}
+            >
+              <span className="font-medium text-green-600">Instructor:</span>
+              <span className="text-gray-600">instructor@example.com / Instructor123!</span>
+            </div>
+            <div 
+              className="flex justify-between items-center p-2 rounded hover:bg-purple-50 cursor-pointer transition-colors"
+              onClick={() => fillTestCredentials('student@example.com', 'Student123!')}
+            >
+              <span className="font-medium text-purple-600">Student:</span>
+              <span className="text-gray-600">student@example.com / Student123!</span>
+            </div>
+            <div 
+              className="flex justify-between items-center p-2 rounded hover:bg-orange-50 cursor-pointer transition-colors"
+              onClick={() => fillTestCredentials('test@example.com', 'Test123!')}
+            >
+              <span className="font-medium text-orange-600">Test User:</span>
+              <span className="text-gray-600">test@example.com / Test123!</span>
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-gray-200">
+            <p className="text-xs text-gray-500 text-center">Click on any credential to quick-fill the form</p>
+          </div>
+        </div>
       </form>
     </div>
   );

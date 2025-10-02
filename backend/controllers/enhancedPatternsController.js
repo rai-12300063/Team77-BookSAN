@@ -3,7 +3,7 @@
  * Provides demonstrations for 10+ design patterns
  */
 
-const { demonstrateAllPatterns, demoSpecificPattern } = require('../patterns/index');
+// Note: External pattern dependencies removed for standalone operation
 
 /**
  * Enhanced Patterns Controller

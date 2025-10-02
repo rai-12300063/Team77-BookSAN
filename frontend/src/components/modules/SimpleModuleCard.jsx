@@ -1,8 +1,9 @@
-﻿/**
+/**
  * SimpleModuleCard.jsx - Simplified module display component with enhanced error handling
  */
 
 import React from 'react';
+import ModuleCompletionStatus from './ModuleCompletionStatus';
 
 const SimpleModuleCard = ({ 
     module, 
@@ -71,7 +72,8 @@ const SimpleModuleCard = ({
             return (
                 <button 
                     onClick={() => onStartModule && onStartModule(module._id)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    disabled={!onStartModule}
                 >
                     Start Module
                 </button>
@@ -131,14 +133,19 @@ const SimpleModuleCard = ({
         <div className={`bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow ${className}`}>
             <div className="flex items-start justify-between">
                 <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                        {getStatusIcon()}
+                    <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-2">
                             <span className="text-sm font-medium text-gray-500">Module {moduleNumber}</span>
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${getDifficultyColor(difficulty)}`}>
                                 {difficulty}
                             </span>
                         </div>
+                        <ModuleCompletionStatus 
+                            moduleProgress={moduleProgress}
+                            isLocked={isLocked}
+                            showDetails={false}
+                            size="small"
+                        />
                     </div>
                     
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -164,19 +171,15 @@ const SimpleModuleCard = ({
                         </div>
                     </div>
 
-                    {/* Progress Bar */}
-                    {moduleProgress && (
+                    {/* Enhanced Progress Display */}
+                    {!isLocked && (moduleProgress || (!moduleProgress && !isLocked)) && (
                         <div className="mb-4">
-                            <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                <span>Progress</span>
-                                <span>{moduleProgress.completionPercentage || 0}%</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div 
-                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                    style={{ width: `${moduleProgress.completionPercentage || 0}%` }}
-                                ></div>
-                            </div>
+                            <ModuleCompletionStatus 
+                                moduleProgress={moduleProgress}
+                                isLocked={isLocked}
+                                showDetails={true}
+                                size="medium"
+                            />
                         </div>
                     )}
 

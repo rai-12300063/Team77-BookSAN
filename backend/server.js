@@ -1,7 +1,10 @@
+
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const instructorsRoutes = require('./routes/instructorsRoutes');
+const studentRoutes = require('./routes/studentsRoutes');
 
 dotenv.config();
 
@@ -20,9 +23,8 @@ app.use('/api/module-progress', require('./routes/moduleProgressRoutes'));
 // app.use('/api/patterns', require('./routes/enhancedPatternsRoutes'));
 app.use('/api/test', require('./routes/testRoutes'));
 app.use('/api/populate', require('./routes/populateRoutes'));
-app.use('/api/quiz', require('./routes/quizRoutes'));
-
-// app.use('/api/tasks', require('./routes/taskRoutes'));
+app.use('/api/instructors', instructorsRoutes);
+app.use('/api/students', studentRoutes);
 
 const startServer = async () => {
   try {

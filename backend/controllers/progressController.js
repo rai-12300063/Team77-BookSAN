@@ -1,7 +1,7 @@
 const LearningProgress = require('../models/LearningProgress');
 const Course = require('../models/Course');
 const User = require('../models/User');
-const ProgressSyncService = require('../services/progressSyncService');
+// Removed problematic import
 
 // Get user's learning analytics
 const getLearningAnalytics = async (req, res) => {
@@ -232,12 +232,17 @@ const syncProgress = async (req, res) => {
     const { courseId } = req.params;
     const userId = req.user.id;
 
-    const updatedProgress = await ProgressSyncService.syncModuleWithCourse(userId, courseId);
+    // Retrieve the learning progress
+    const progress = await LearningProgress.findOne({ userId, courseId });
+    
+    if (!progress) {
+      return res.status(404).json({ message: 'Progress record not found' });
+    }
 
     res.json({
-      message: 'Progress synchronized successfully',
-      progress: updatedProgress,
-      completionPercentage: updatedProgress.completionPercentage,
+      message: 'Progress retrieved successfully',
+      progress: progress,
+      completionPercentage: progress.completionPercentage,
       moduleProgress: updatedProgress.moduleProgress
     });
 
@@ -256,7 +261,22 @@ const getDetailedProgressReport = async (req, res) => {
     const { courseId } = req.params;
     const userId = req.user.id;
 
-    const report = await ProgressSyncService.getProgressSyncReport(userId, courseId);
+    // Get the progress record and populate related data
+    const progress = await LearningProgress.findOne({ userId, courseId })
+      .populate('courseId', 'title modules')
+      .populate('modulesCompleted.moduleId');
+
+    if (!progress) {
+      return res.status(404).json({ message: 'Progress record not found' });
+    }
+
+    // Create a simplified report
+    const report = {
+      completionPercentage: progress.completionPercentage,
+      enrollmentDate: progress.enrollmentDate,
+      lastAccessed: progress.lastAccessed,
+      modulesCompleted: progress.modulesCompleted
+    };
 
     res.json({
       message: 'Progress report generated successfully',

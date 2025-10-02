@@ -34,6 +34,42 @@ router.get('/course/:courseId', getCourseProgress);
 // @access  Private
 router.get('/streaks', getLearningStreaks);
 
+// @route   GET /api/progress/learning-goals
+// @desc    Get learning goals progress
+// @access  Private
+router.get('/learning-goals', (req, res) => {
+  // Calculate learning goals based on user progress
+  const today = new Date();
+  const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const weekStart = new Date(dayStart.getTime() - (dayStart.getDay() * 24 * 60 * 60 * 1000));
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  
+  // Mock data for now - in production, this would calculate from actual user progress
+  const dailyCompleted = Math.floor(Math.random() * 25) + 5; // 5-30 min
+  const weeklyCompleted = Math.floor(Math.random() * 180) + 60; // 60-240 min
+  const monthlyCompleted = Math.floor(Math.random() * 600) + 200; // 200-800 min
+  
+  const learningGoals = {
+    daily: {
+      target: 30,
+      completed: dailyCompleted,
+      percentage: Math.round((dailyCompleted / 30) * 100)
+    },
+    weekly: {
+      target: 300,
+      completed: weeklyCompleted,
+      percentage: Math.round((weeklyCompleted / 300) * 100)
+    },
+    monthly: {
+      target: 1200,
+      completed: monthlyCompleted,
+      percentage: Math.round((monthlyCompleted / 1200) * 100)
+    }
+  };
+  
+  res.json(learningGoals);
+});
+
 // @route   PUT /api/progress/goals
 // @desc    Update learning goals
 // @access  Private

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ModulesPage.jsx - Main page for viewing course modules
  * Integrates with the new module system
  */
@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ModuleList from '../components/modules/ModuleList';
+import ModuleStatusSummary from '../components/modules/ModuleStatusSummary';
 import axios from '../axiosConfig';
 
 const ModulesPage = () => {
@@ -147,6 +148,12 @@ const ModulesPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Module Status Summary */}
+            <ModuleStatusSummary 
+                courseId={courseId}
+                className="mb-8"
+            />
 
             {/* Module List */}
             <ModuleList 

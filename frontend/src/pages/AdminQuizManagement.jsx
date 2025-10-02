@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
+
+import SimpleQuizCreation from '../components/SimpleQuizCreation';
 
 const AdminQuizManagement = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [quizzes, setQuizzes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,9 +37,20 @@ const AdminQuizManagement = () => {
     try {
       // Admin can fetch ALL courses (no restrictions)
       const response = await axiosInstance.get('/api/quiz/admin/courses');
+
+      console.log('Courses fetched:', response.data);
       setCourses(response.data);
     } catch (error) {
       console.error('Error fetching courses:', error);
+      // Fallback: try getting courses from the main courses endpoint
+      try {
+        const fallbackResponse = await axiosInstance.get('/api/courses');
+        console.log('Fallback courses:', fallbackResponse.data);
+        const coursesData = fallbackResponse.data?.courses || fallbackResponse.data || [];
+        setCourses(coursesData);
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+      }
     }
   };
 
@@ -54,9 +69,15 @@ const AdminQuizManagement = () => {
   };
 
 
-  const filteredQuizzes = selectedCourse
-    ? quizzes.filter(quiz => quiz.course?._id === selectedCourse)
-    : quizzes;
+
+  // Group quizzes by course
+  const courseQuizMap = {};
+  quizzes.forEach(quiz => {
+    const courseId = quiz.course?._id;
+    if (courseId) {
+      courseQuizMap[courseId] = quiz;
+    }
+  });
 
   if (loading) {
     return (
@@ -74,30 +95,10 @@ const AdminQuizManagement = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Quiz Management</h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Create New Quiz
-        </button>
-      </div>
 
-      {/* Filter */}
-      <div className="mb-4">
-        <select
-          value={selectedCourse}
-          onChange={(e) => setSelectedCourse(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2"
-        >
-          <option value="">All Courses</option>
-          {courses.map(course => (
-            <option key={course._id} value={course._id}>
-              {course.title}
-            </option>
-          ))}
-        </select>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Quiz Management</h1>
+        <p className="text-gray-600">Manage quizzes for all courses</p>
       </div>
 
       {/* Error Display */}
@@ -107,54 +108,82 @@ const AdminQuizManagement = () => {
         </div>
       )}
 
-      {/* Quizzes List */}
-      {filteredQuizzes.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">No quizzes found</p>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="text-blue-600 hover:text-blue-800"
-          >
-            Create your first quiz
-          </button>
+      {courses.length === 0 ? (
+        <div className="bg-amber-50 border border-amber-200 rounded p-4">
+          <p className="text-amber-800">
+            ⚠️ No courses found. Please create a course first before creating quizzes.
+          </p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {filteredQuizzes.map((quiz) => (
-            <div key={quiz.id} className="bg-white border rounded p-4 flex items-center justify-between hover:bg-gray-50">
-              <div>
-                <div className="font-medium">{quiz.title}</div>
-                <div className="text-sm text-gray-600">
-                  {quiz.course?.title} • {quiz.questionsCount} questions • {quiz.totalPoints} points
+        <div className="space-y-3">
+          {courses.map(course => {
+            const quiz = courseQuizMap[course._id];
+            return (
+              <div key={course._id} className="bg-white border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">{course.title}</h3>
+                    <p className="text-sm text-gray-600">{course.category} • {course.difficulty}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {quiz ? (
+                      // Only show Edit and Delete buttons for admin and instructor roles, not for students
+                      user?.role !== 'student' && (
+                        <>
+                          <button
+                            onClick={() => navigate(`/admin/quiz/edit/${quiz.id}`)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                          >
+                            Edit Quiz
+                          </button>
+                          <button
+                            onClick={() => handleDeleteQuiz(quiz.id)}
+                            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                          >
+                            Delete Quiz
+                          </button>
+                        </>
+                      )
+                    ) : (
+                      // Only show Add Quiz button for admin and instructor roles, not for students
+                      user?.role !== 'student' && (
+                        <button
+                          onClick={() => {
+                            setSelectedCourse(course._id);
+                            setShowCreateModal(true);
+                          }}
+                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                        >
+                          Add Quiz
+                        </button>
+                      )
+                    )}
+                  </div>
                 </div>
+                {quiz && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    Quiz: {quiz.questionsCount} questions • {quiz.totalPoints} points
+                  </div>
+                )}
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => navigate(`/admin/quiz/edit/${quiz.id}`)}
-                  className="text-blue-600 hover:text-blue-800 px-3 py-1"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteQuiz(quiz.id)}
-                  className="text-red-600 hover:text-red-800 px-3 py-1"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Create Quiz Modal */}
-      {showCreateModal && (
-        <CreateQuizModal
-          courses={courses}
-          preSelectedCourseId={location.state?.selectedCourseId}
-          onClose={() => setShowCreateModal(false)}
+      {/* Create Quiz Modal - Only for admin and instructor, not for students */}
+      {showCreateModal && user?.role !== 'student' && (
+
+        <SimpleQuizCreation
+          userRole={user?.role || "admin"}
+          preselectedCourseId={selectedCourse || location.state?.selectedCourseId}
+          onClose={() => {
+            setShowCreateModal(false);
+            setSelectedCourse('');
+          }}
           onSuccess={() => {
             setShowCreateModal(false);
+            setSelectedCourse('');
             fetchQuizzes();
           }}
         />
@@ -166,6 +195,10 @@ const AdminQuizManagement = () => {
 // Create Quiz Modal Component
 const CreateQuizModal = ({ courses, preSelectedCourseId, onClose, onSuccess }) => {
   const navigate = useNavigate();
+
+
+  console.log('CreateQuizModal - courses:', courses);
+  console.log('CreateQuizModal - preSelectedCourseId:', preSelectedCourseId);
 
   // Auto-generate quiz title when course is selected
   const getQuizTitle = (courseId) => {
@@ -181,6 +214,16 @@ const CreateQuizModal = ({ courses, preSelectedCourseId, onClose, onSuccess }) =
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Update title when courses are loaded and preSelectedCourseId is set
+  useEffect(() => {
+    if (preSelectedCourseId && courses.length > 0 && !formData.title) {
+      setFormData(prev => ({
+        ...prev,
+        title: getQuizTitle(preSelectedCourseId)
+      }));
+    }
+  }, [courses, preSelectedCourseId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -228,6 +271,8 @@ const CreateQuizModal = ({ courses, preSelectedCourseId, onClose, onSuccess }) =
                 value={formData.courseId}
                 onChange={(e) => {
                   const courseId = e.target.value;
+                  console.log('Course selected:', courseId);
+
                   setFormData({
                     ...formData,
                     courseId: courseId,
@@ -238,12 +283,19 @@ const CreateQuizModal = ({ courses, preSelectedCourseId, onClose, onSuccess }) =
                 className="w-full border rounded px-3 py-2"
               >
                 <option value="">Select a course</option>
-                {courses.map(course => (
-                  <option key={course._id} value={course._id}>
-                    {course.title}
-                  </option>
-                ))}
+                {courses && courses.length > 0 ? (
+                  courses.map(course => (
+                    <option key={course._id} value={course._id}>
+                      {course.title}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>No courses available</option>
+                )}
               </select>
+              <div className="text-xs text-gray-500 mt-1">
+                {courses && courses.length > 0 ? `${courses.length} courses available` : 'Loading courses...'}
+              </div>
             </div>
 
             <div>

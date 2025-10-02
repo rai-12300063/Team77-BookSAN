@@ -1,4 +1,5 @@
 const express = require('express');
+
 const logApiAccess = require('../middleware/logApiAccess');
 const { registerUser, loginUser, updateUserProfile, getProfile, requestPasswordReset, resetPassword } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');

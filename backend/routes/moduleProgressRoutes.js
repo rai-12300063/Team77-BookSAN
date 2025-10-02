@@ -186,40 +186,6 @@ router.post('/:moduleId/start', auth, async (req, res) => {
             message: 'Internal server error', 
             error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
         });
-
-        });
-
-        if (moduleProgress) {
-            return res.json({ 
-                message: 'Module already started', 
-                moduleProgress 
-            });
-        }
-
-        // Create new module progress
-        moduleProgress = new ModuleProgress({
-            userId: req.user.id,
-            courseId: module.courseId,
-            moduleId: req.params.moduleId,
-            startedAt: new Date(),
-            totalContentCount: module.contents.length,
-            totalRequiredContentCount: module.contents.filter(c => c.isRequired).length,
-            contentProgress: module.contents.map(content => ({
-                contentId: content.contentId,
-                contentType: content.type,
-                status: 'not_started'
-            }))
-        });
-
-        await moduleProgress.save();
-
-        res.json({ 
-            message: 'Module started successfully', 
-            moduleProgress 
-        });
-    } catch (error) {
-        console.error('Error starting module:', error);
-        res.status(500).json({ message: 'Server error' });
     }
 });
 
@@ -230,7 +196,7 @@ router.post('/:moduleId/start', auth, async (req, res) => {
  */
 router.put('/:moduleId/content/:contentId', auth, async (req, res) => {
     try {
-        const { status, timeSpent, score } = req.body;
+        const { status, timeSpent, score, response, submittedAt, ...otherData } = req.body;
 
         const moduleProgress = await ModuleProgress.findOne({
             userId: req.user.id,
@@ -241,11 +207,23 @@ router.put('/:moduleId/content/:contentId', auth, async (req, res) => {
             return res.status(404).json({ message: 'Module progress not found' });
         }
 
-        await moduleProgress.updateContentProgress(req.params.contentId, {
+        // Prepare progress data with all fields
+        const progressData = {
             status,
             timeSpent,
-            score
-        });
+            score,
+            ...otherData
+        };
+
+        // Add assignment-specific fields if provided
+        if (response !== undefined) {
+            progressData.response = response;
+        }
+        if (submittedAt !== undefined) {
+            progressData.submittedAt = submittedAt;
+        }
+
+        await moduleProgress.updateContentProgress(req.params.contentId, progressData);
 
         res.json({ 
             message: 'Content progress updated', 

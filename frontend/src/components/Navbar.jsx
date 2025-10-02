@@ -22,6 +22,7 @@ const Navbar = () => {
             <Link to="/" className="mr-4 hover:text-yellow-300">Dashboard</Link>
             <Link to="/courses" className="mr-4 hover:text-yellow-300">Courses</Link>
             <Link to="/course-modules" className="mr-4 hover:text-yellow-300">Manage Modules</Link>
+
             {(user.role === 'admin' || user.role === 'instructor') && (
               <Link
                 to={user.role === 'admin' ? "/admin/quiz" : "/instructor/quiz"}

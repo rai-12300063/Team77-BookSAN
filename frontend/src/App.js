@@ -1,23 +1,28 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
-import Tasks from './pages/Tasks';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import ModulesPage from './pages/ModulesPage';
-import TestModules from './pages/TestModules';
+import ModuleDetailPage from './pages/ModuleDetailPage';
+import CourseModuleManagement from './pages/CourseModuleManagement';
 import QuizPage from './pages/QuizPage';
 import AdminQuizManagement from './pages/AdminQuizManagement';
-import AdminQuizEditor from './pages/AdminQuizEditor';
 import InstructorQuizManagement from './pages/InstructorQuizManagement';
+import AdminQuizEditor from './pages/AdminQuizEditor';
 import InstructorQuizEditor from './pages/InstructorQuizEditor';
-import ProtectedRoute from './components/ProtectedRoute';
+
+
+import InstructorsPage from './pages/InstructorsPage';
+import StudentsPage from './pages/StudentsPage';
 
 function App() {
   return (
@@ -35,20 +40,37 @@ function App() {
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
           <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
           <Route path="/courses/:courseId" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
           <Route path="/courses/:courseId/modules" element={<ProtectedRoute><ModulesPage /></ProtectedRoute>} />
+          <Route path="/courses/:courseId/modules/:moduleId" element={<ProtectedRoute><ModuleDetailPage /></ProtectedRoute>} />
+          <Route path="/course-modules" element={<ProtectedRoute><CourseModuleManagement /></ProtectedRoute>} />
           <Route path="/courses/:courseId/quiz/:quizId" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
-          <Route path="/test-modules" element={<ProtectedRoute><TestModules /></ProtectedRoute>} />
 
           {/* Admin Quiz routes */}
           <Route path="/admin/quiz" element={<ProtectedRoute><AdminQuizManagement /></ProtectedRoute>} />
+          <Route path="/admin/quizzes" element={<ProtectedRoute><AdminQuizManagement /></ProtectedRoute>} />
           <Route path="/admin/quiz/edit/:quizId" element={<ProtectedRoute><AdminQuizEditor /></ProtectedRoute>} />
-
-          {/* Instructor Quiz routes */}
-          <Route path="/instructor/quiz" element={<ProtectedRoute><InstructorQuizManagement /></ProtectedRoute>} />
+          <Route path="/instructor/quizzes" element={<ProtectedRoute><InstructorQuizManagement /></ProtectedRoute>} />
           <Route path="/instructor/quiz/edit/:quizId" element={<ProtectedRoute><InstructorQuizEditor /></ProtectedRoute>} />
+
+          {/* ADD THESE NEW ROUTES FOR INSTRUCTORS & STUDENTS */}
+          <Route 
+            path="/instructors" 
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <InstructorsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/students" 
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <StudentsPage />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </Router>
     </AuthProvider>
