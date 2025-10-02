@@ -99,7 +99,7 @@ router.get('/patterns', oopController.getPatterns);
  */
 router.get('/test/factory', async (req, res) => {
     try {
-        const { ContentFactory, UserFactory } = require('../services/DesignPatterns');
+        const { ContentFactory, UserFactory } = require('../../../OLPTBackupOnly/_archive/backend/services/DesignPatterns');
         
         const contentFactory = new ContentFactory();
         const userFactory = new UserFactory();
@@ -150,7 +150,7 @@ router.get('/test/factory', async (req, res) => {
  */
 router.get('/test/decorator', async (req, res) => {
     try {
-        const { ContentFactory, TimeLimitDecorator, AdaptiveDecorator } = require('../services/DesignPatterns');
+        const { ContentFactory, TimeLimitDecorator, AdaptiveDecorator } = require('../../../OLPTBackupOnly/_archive/backend/services/DesignPatterns');
         
         const contentFactory = new ContentFactory();
         
@@ -200,8 +200,8 @@ router.get('/test/decorator', async (req, res) => {
  */
 router.get('/test/observer', async (req, res) => {
     try {
-        const { ProgressTracker, NotificationObserver } = require('../services/DesignPatterns');
-        const { LearningModule, WeightedGradingStrategy } = require('../services/CoreClasses');
+        const { ProgressTracker, NotificationObserver } = require('../../../OLPTBackupOnly/_archive/backend/services/DesignPatterns');
+        const { LearningModule, WeightedGradingStrategy } = require('../../../OLPTBackupOnly/_archive/backend/services/CoreClasses');
         
         const module = new LearningModule('test_module', 'Test Module', new WeightedGradingStrategy());
         const progressTracker = new ProgressTracker();

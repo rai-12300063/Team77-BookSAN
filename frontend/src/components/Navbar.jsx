@@ -18,16 +18,14 @@ const Navbar = () => {
           <>
             <Link to="/" className="mr-4 hover:text-blue-200">Dashboard</Link>
             <Link to="/courses" className="mr-4 hover:text-blue-200">Courses</Link>
-            <Link to="/test-modules" className="mr-4 hover:text-blue-200">Test Modules</Link>
-            <Link to="/tasks" className="mr-4 hover:text-blue-200">Tasks</Link>
-            {user.role === 'admin' && (
-              <>
-                <Link to="/admin/users" className="mr-4 hover:text-blue-200">User Management</Link>
-                <Link to="/admin/quizzes" className="mr-4 hover:text-blue-200">Quiz Management</Link>
-              </>
-            )}
-            {user.role === 'instructor' && (
-              <Link to="/instructor/quizzes" className="mr-4 hover:text-blue-200">Quiz Management</Link>
+            <Link to="/course-modules" className="mr-4 hover:text-blue-200">Manage Modules</Link>
+            {(user.role === 'admin' || user.role === 'instructor') && (
+              <Link
+                to={user.role === 'admin' ? "/admin/quiz" : "/instructor/quiz"}
+                className="mr-4 hover:text-blue-200"
+              >
+                Quiz Management
+              </Link>
             )}
             <Link to="/profile" className="mr-4 hover:text-blue-200">Profile</Link>
             <button

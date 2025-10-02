@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../axiosConfig';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
+import ModulesCompletedSidebar from '../components/modules/ModulesCompletedSidebar';
+
 
 const Courses = () => {
   const navigate = useNavigate();
@@ -335,9 +336,11 @@ const Courses = () => {
         </div>
       </div>
 
-
-      {/* Filters */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-3">
+          {/* Filters */}
+          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <div className="flex flex-wrap gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Show</label>
@@ -373,8 +376,8 @@ const Courses = () => {
           {courses.length} courses available {filteredCourses.length !== courses.length && `(${filteredCourses.length} shown)`}
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCourses.map(course => {
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Array.isArray(filteredCourses) && filteredCourses.map(course => {
           const enrolled = isEnrolled(course._id);
           const progress = getProgressForCourse(course._id);
           
@@ -471,153 +474,34 @@ const Courses = () => {
                       <strong>Prerequisites:</strong> {course.prerequisites.join(', ')}
                     </p>
                   </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {filteredCourses.length === 0 && (
-        <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No courses found</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            {filter === 'enrolled'
-              ? "You haven't enrolled in any courses yet."
-              : "No courses match your current filters."
-            }
-          </p>
-        </div>
-      )}
-
-      {/* Create Course Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Create New Course</h2>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <form onSubmit={handleCreateCourse} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    required
-                    rows={3}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-                    <select
-                      name="category"
-                      value={formData.category}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full border border-gray-300 rounded-md px-3 py-2"
-                    >
-                      <option value="Programming">Programming</option>
-                      <option value="Web Development">Web Development</option>
-                      <option value="Data Science">Data Science</option>
-                      <option value="Business">Business</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty *</label>
-                    <select
-                      name="difficulty"
-                      value={formData.difficulty}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full border border-gray-300 rounded-md px-3 py-2"
-                    >
-                      <option value="Beginner">Beginner</option>
-                      <option value="Intermediate">Intermediate</option>
-                      <option value="Advanced">Advanced</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Duration (Weeks) *</label>
-                    <input
-                      type="number"
-                      name="duration.weeks"
-                      value={formData.duration.weeks}
-                      onChange={handleInputChange}
-                      required
-                      min="1"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Hours *</label>
-                    <input
-                      type="number"
-                      name="estimatedCompletionTime"
-                      value={formData.estimatedCompletionTime}
-                      onChange={handleInputChange}
-                      required
-                      min="1"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={creating}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {creating ? 'Creating...' : 'Create Course'}
-                  </button>
-                </div>
-              </form>
-            </div>
+            );
+          })}
           </div>
+
+          {filteredCourses.length === 0 && (
+            <div className="text-center py-12">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No courses found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {filter === 'enrolled' 
+                  ? "You haven't enrolled in any courses yet."
+                  : "No courses match your current filters."
+                }
+              </p>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Sidebar */}
+        <div className="lg:col-span-1">
+          <ModulesCompletedSidebar />
+        </div>
+      </div>
     </div>
   );
 };

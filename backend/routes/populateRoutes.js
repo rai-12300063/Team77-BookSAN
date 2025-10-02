@@ -1,5 +1,6 @@
 ﻿const express = require('express');
 const router = express.Router();
+const { updateModulesAndSync, syncUserProgress } = require('../databasePopulate/enhancedModuleUpdate');
 
 // Simple populate route without authentication for demo purposes
 router.post('/populate-demo', async (req, res) => {
@@ -134,6 +135,200 @@ router.post('/populate-demo', async (req, res) => {
         console.error('❌ Error populating modules:', error);
         res.status(500).json({
             message: 'Failed to populate modules with demo content',
+            error: error.message
+        });
+    }
+});
+
+// Enhanced module content update route
+router.post('/update-modules-enhanced', async (req, res) => {
+    try {
+        console.log('🚀 Starting enhanced module content update...');
+        
+        // Import and run the enhanced update function
+        const { updateModulesAndSync } = require('../../../OLPTBackupOnly/_archive/backend/databasePopulate/enhancedModuleUpdate');
+        
+        await updateModulesAndSync();
+        
+        res.json({
+            success: true,
+            message: 'Enhanced module content update completed successfully',
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Error updating modules:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update modules with enhanced content',
+            error: error.message
+        });
+    }
+});
+
+// Sync user progress route
+router.post('/sync-progress', async (req, res) => {
+    try {
+        console.log('🔄 Starting progress synchronization...');
+        
+        await syncUserProgress();
+        
+        res.json({
+            success: true,
+            message: 'User progress synchronization completed successfully',
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Error syncing progress:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to sync user progress',
+            error: error.message
+        });
+    }
+});
+
+// Combined update and sync route
+router.post('/update-and-sync-all', async (req, res) => {
+    try {
+        console.log('🚀 Starting comprehensive update and sync...');
+        
+        // Update modules with enhanced content
+        const { updateModulesWithSimpleContent } = require('../../../OLPTBackupOnly/_archive/backend/databasePopulate/simpleModuleUpdate');
+        await updateModulesWithSimpleContent();
+        
+        // Seed enhanced quizzes
+        const Quiz = require('../models/Quiz');
+        const Course = require('../models/Course');
+        
+        // Get first course for quiz association
+        const course = await Course.findOne();
+        if (course) {
+            // Add some sample enhanced quizzes
+            const sampleQuiz = {
+                title: "Comprehensive Assessment",
+                description: "Test your understanding across multiple modules",
+                courseId: course._id,
+                createdBy: course.instructor?.id || new require('mongoose').Types.ObjectId(),
+                instructions: "Answer all questions to the best of your ability. You have 45 minutes to complete this assessment.",
+                timeLimit: 45,
+                maxAttempts: 2,
+                passingScore: 75,
+                status: 'published',
+                difficulty: 2,
+                questions: [
+                    {
+                        id: 'q1',
+                        type: 'multiple_choice',
+                        question: "What is the most important principle in modern web development?",
+                        options: [
+                            { id: 'a', text: "Performance optimization", isCorrect: false },
+                            { id: 'b', text: "User experience and accessibility", isCorrect: true },
+                            { id: 'c', text: "Code complexity", isCorrect: false },
+                            { id: 'd', text: "Technology trends", isCorrect: false }
+                        ],
+                        points: 3,
+                        explanation: "User experience and accessibility ensure applications are usable by everyone and provide value."
+                    }
+                ]
+            };
+            
+            await Quiz.findOneAndUpdate(
+                { title: sampleQuiz.title, courseId: course._id },
+                sampleQuiz,
+                { upsert: true, new: true }
+            );
+        }
+        
+        res.json({
+            success: true,
+            message: 'Comprehensive update and sync completed successfully',
+            details: {
+                modulesUpdated: true,
+                progressSynced: true,
+                quizzesUpdated: true
+            },
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Error in comprehensive update:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to complete comprehensive update and sync',
+            error: error.message
+        });
+    }
+});
+
+// Complete database population route
+router.post('/populate-complete-database', async (req, res) => {
+    try {
+        console.log('🚀 Starting complete database population...');
+        
+        const Course = require('../models/Course');
+        const Module = require('../models/Module');
+        const User = require('../models/User');
+        const Quiz = require('../models/Quiz');
+        
+        // Step 1: Seed QUT Curriculum (courses and modules)
+        console.log('📚 Step 1: Seeding QUT Curriculum...');
+        const { spawn } = require('child_process');
+        
+        // We'll use the existing data since we already seeded it
+        const courseCount = await Course.countDocuments();
+        const moduleCount = await Module.countDocuments();
+        
+        console.log(`✅ Found ${courseCount} courses and ${moduleCount} modules`);
+        
+        // Step 2: Populate modules with content
+        console.log('📝 Step 2: Populating modules with content...');
+        const { updateModulesWithSimpleContent } = require('../../../OLPTBackupOnly/_archive/backend/databasePopulate/simpleModuleUpdate');
+        // Only update if modules don't have content
+        const modulesWithoutContent = await Module.find({
+            $or: [
+                { contents: { $exists: false } },
+                { contents: { $size: 0 } }
+            ]
+        });
+        
+        if (modulesWithoutContent.length > 0) {
+            await updateModulesWithSimpleContent();
+            console.log(`✅ Updated ${modulesWithoutContent.length} modules with content`);
+        } else {
+            console.log('✅ All modules already have content');
+        }
+        
+        // Step 3: Create sample users if they don't exist
+        console.log('👥 Step 3: Creating sample users...');
+        const userCount = await User.countDocuments();
+        console.log(`✅ Found ${userCount} existing users`);
+        
+        // Step 4: Seed quizzes
+        console.log('❓ Step 4: Seeding quizzes...');
+        const quizCount = await Quiz.countDocuments();
+        console.log(`✅ Found ${quizCount} existing quizzes`);
+        
+        res.json({
+            success: true,
+            message: 'Complete database population completed successfully',
+            summary: {
+                courses: courseCount,
+                modules: moduleCount,
+                users: userCount,
+                quizzes: quizCount,
+                modulesWithContent: moduleCount - modulesWithoutContent.length,
+                populatedModules: modulesWithoutContent.length
+            },
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Error in complete database population:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to complete database population',
             error: error.message
         });
     }

@@ -3,7 +3,7 @@
  * Provides demonstrations for 10+ design patterns
  */
 
-const { demonstrateAllPatterns, demoSpecificPattern } = require('../patterns/index');
+const { demonstrateAllPatterns, demoSpecificPattern } = require('../../../OLPTBackupOnly/_archive/backend/patterns/index');
 
 /**
  * Enhanced Patterns Controller

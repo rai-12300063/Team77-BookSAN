@@ -16,7 +16,13 @@ router.get('/health', (req, res) => {
 // Get comprehensive test results
 router.get('/results', testController.getTestResults);
 
-// Run comprehensive tests
+// Get current test status and health check
+router.get('/status', testController.getTestStatus);
+
+// Run tests dynamically
+router.post('/run-live', testController.runTests);
+
+// Run comprehensive tests (legacy)
 router.post('/run', testController.runComprehensiveTests);
 
 // Get specific test module details
