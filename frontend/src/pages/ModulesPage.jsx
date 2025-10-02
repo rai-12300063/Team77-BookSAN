@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ModulesPage.jsx - Main page for viewing course modules
  * Integrates with the new module system
  */

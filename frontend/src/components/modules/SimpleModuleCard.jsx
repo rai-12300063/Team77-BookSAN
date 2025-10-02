@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SimpleModuleCard.jsx - Simplified module display component with enhanced error handling
  */
 

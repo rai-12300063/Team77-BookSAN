@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ModuleList.jsx - List view for course modules
  * Displays all modules in a course with filtering and sorting capabilities
  */
