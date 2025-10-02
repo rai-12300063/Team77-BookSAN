@@ -14,6 +14,7 @@ const Courses = () => {
   const [category, setCategory] = useState('all');
   const [loading, setLoading] = useState(true);
   const [instructorCourses, setInstructorCourses] = useState([]);
+  const [courseQuizzes, setCourseQuizzes] = useState({}); // Store quizzes for each course
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -37,6 +38,15 @@ const Courses = () => {
       fetchInstructorCourses();
     }
   }, [isInstructor]);
+
+  // Fetch quizzes for enrolled courses when enrolledCourses changes
+  useEffect(() => {
+    if (enrolledCourses.length > 0) {
+      enrolledCourses.forEach(course => {
+        fetchCourseQuizzes(course._id);
+      });
+    }
+  }, [enrolledCourses]);
 
   const fetchCourses = async () => {
     try {
@@ -84,13 +94,34 @@ const Courses = () => {
     }
   };
 
-  const fetchInstructorCourses = async () => {
+    const fetchInstructorCourses = async () => {
     try {
+      console.log('🔄 Fetching instructor courses...');
       const response = await axiosInstance.get('/api/quiz/instructor/courses');
+      console.log('✅ Instructor courses fetched:', response.data);
       setInstructorCourses(response.data || []);
     } catch (error) {
       console.error('❌ Error fetching instructor courses:', error);
-      setInstructorCourses([]);
+    }
+  };
+
+  const fetchCourseQuizzes = async (courseId) => {
+    try {
+      console.log('🔄 Fetching quizzes for course:', courseId);
+      const response = await axiosInstance.get(`/api/quizzes/course/${courseId}`);
+      console.log('✅ Course quizzes fetched:', response.data);
+      setCourseQuizzes(prev => ({
+        ...prev,
+        [courseId]: response.data || []
+      }));
+      return response.data || [];
+    } catch (error) {
+      console.error('❌ Error fetching course quizzes:', error);
+      setCourseQuizzes(prev => ({
+        ...prev,
+        [courseId]: []
+      }));
+      return [];
     }
   };
 
@@ -102,11 +133,43 @@ const Courses = () => {
     return false;
   };
 
+  const isEnrolledInCourse = (courseId) => {
+    return enrolledCourses.some(course => course._id === courseId);
+  };
+
   const handleAddQuiz = (courseId) => {
     if (isAdmin) {
       navigate('/admin/quizzes', { state: { selectedCourseId: courseId } });
     } else if (isInstructor) {
       navigate('/instructor/quizzes', { state: { selectedCourseId: courseId } });
+    }
+  };
+
+  const handleTakeQuiz = async (courseId) => {
+    try {
+      console.log('🔄 Getting available quizzes for course:', courseId);
+      let quizzes = courseQuizzes[courseId];
+      
+      // If quizzes not loaded yet, fetch them
+      if (!quizzes) {
+        quizzes = await fetchCourseQuizzes(courseId);
+      }
+
+      if (quizzes && quizzes.length > 0) {
+        // If there's only one quiz, navigate directly to it
+        if (quizzes.length === 1) {
+          navigate(`/courses/${courseId}/quiz/${quizzes[0]._id}`);
+        } else {
+          // If multiple quizzes, you could navigate to a quiz selection page
+          // For now, let's just take the first available quiz
+          navigate(`/courses/${courseId}/quiz/${quizzes[0]._id}`);
+        }
+      } else {
+        alert('No quizzes are currently available for this course.');
+      }
+    } catch (error) {
+      console.error('❌ Error handling take quiz:', error);
+      alert('Failed to load quizzes. Please try again.');
     }
   };
 
@@ -455,8 +518,8 @@ const Courses = () => {
                     </div>
                   </div>
 
-                  {/* Add Quiz Button for Admin and Instructors */}
-                  {canCreateQuizForCourse(course._id) && (
+                  {/* Quiz Button - Add Quiz for Admin/Instructors, Take Quiz for Students */}
+                  {canCreateQuizForCourse(course._id) ? (
                     <button
                       onClick={() => handleAddQuiz(course._id)}
                       className="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition duration-200 flex items-center justify-center text-sm"
@@ -466,7 +529,17 @@ const Courses = () => {
                       </svg>
                       Add Quiz
                     </button>
-                  )}
+                  ) : isEnrolledInCourse(course._id) && user?.role === 'student' ? (
+                    <button
+                      onClick={() => handleTakeQuiz(course._id)}
+                      className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200 flex items-center justify-center text-sm"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Take Quiz
+                    </button>
+                  ) : null}
                 </div>
 
                 {course.prerequisites?.length > 0 && (
