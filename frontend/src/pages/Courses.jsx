@@ -156,16 +156,37 @@ const Courses = () => {
       }
 
       if (quizzes && quizzes.length > 0) {
-        // If there's only one quiz, navigate directly to it
-        if (quizzes.length === 1) {
-          navigate(`/courses/${courseId}/quiz/${quizzes[0]._id}`);
+        // Filter out quizzes that are not published or not available
+        const availableQuizzes = quizzes.filter(quiz => 
+          quiz.isPublished !== false && 
+          (!quiz.availableFrom || new Date(quiz.availableFrom) <= new Date()) &&
+          (!quiz.availableUntil || new Date(quiz.availableUntil) >= new Date())
+        );
+
+        if (availableQuizzes.length > 0) {
+          // If there's only one available quiz, navigate directly to it
+          if (availableQuizzes.length === 1) {
+            navigate(`/courses/${courseId}/quiz/${availableQuizzes[0]._id}`);
+          } else {
+            // If multiple quizzes, show selection dialog
+            const quizTitles = availableQuizzes.map((quiz, index) => 
+              `${index + 1}. ${quiz.title} (${quiz.questions?.length || 0} questions)`
+            ).join('\n');
+            
+            const selection = prompt(
+              `Multiple quizzes available:\n\n${quizTitles}\n\nEnter the number of the quiz you want to take (1-${availableQuizzes.length}):`
+            );
+            
+            const selectedIndex = parseInt(selection) - 1;
+            if (selectedIndex >= 0 && selectedIndex < availableQuizzes.length) {
+              navigate(`/courses/${courseId}/quiz/${availableQuizzes[selectedIndex]._id}`);
+            }
+          }
         } else {
-          // If multiple quizzes, you could navigate to a quiz selection page
-          // For now, let's just take the first available quiz
-          navigate(`/courses/${courseId}/quiz/${quizzes[0]._id}`);
+          alert('No quizzes are currently available for this course. Please check back later.');
         }
       } else {
-        alert('No quizzes are currently available for this course.');
+        alert('No quizzes have been created for this course yet.');
       }
     } catch (error) {
       console.error('❌ Error handling take quiz:', error);
@@ -538,6 +559,11 @@ const Courses = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       Take Quiz
+                      {courseQuizzes[course._id]?.length > 0 && (
+                        <span className="ml-1 text-xs bg-green-800 px-1 rounded">
+                          {courseQuizzes[course._id].length}
+                        </span>
+                      )}
                     </button>
                   ) : null}
                 </div>
