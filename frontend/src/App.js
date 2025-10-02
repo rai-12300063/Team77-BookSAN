@@ -18,7 +18,10 @@ import AdminQuizManagement from './pages/AdminQuizManagement';
 import InstructorQuizManagement from './pages/InstructorQuizManagement';
 import AdminQuizEditor from './pages/AdminQuizEditor';
 import InstructorQuizEditor from './pages/InstructorQuizEditor';
-import ProtectedRoute from './components/ProtectedRoute'; //new
+
+
+import InstructorsPage from './pages/InstructorsPage';
+import StudentsPage from './pages/StudentsPage';
 
 function App() {
   return (
@@ -31,8 +34,6 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
-
-          
 
           {/* Protected routes */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -51,6 +52,24 @@ function App() {
           <Route path="/admin/quiz/edit/:quizId" element={<ProtectedRoute><AdminQuizEditor /></ProtectedRoute>} />
           <Route path="/instructor/quizzes" element={<ProtectedRoute><InstructorQuizManagement /></ProtectedRoute>} />
           <Route path="/instructor/quiz/edit/:quizId" element={<ProtectedRoute><InstructorQuizEditor /></ProtectedRoute>} />
+
+          {/* ADD THESE NEW ROUTES FOR INSTRUCTORS & STUDENTS */}
+          <Route 
+            path="/instructors" 
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <InstructorsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/students" 
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <StudentsPage />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </Router>
     </AuthProvider>
