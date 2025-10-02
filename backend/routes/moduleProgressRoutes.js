@@ -196,7 +196,7 @@ router.post('/:moduleId/start', auth, async (req, res) => {
  */
 router.put('/:moduleId/content/:contentId', auth, async (req, res) => {
     try {
-        const { status, timeSpent, score } = req.body;
+        const { status, timeSpent, score, response, submittedAt, ...otherData } = req.body;
 
         const moduleProgress = await ModuleProgress.findOne({
             userId: req.user.id,
@@ -207,11 +207,23 @@ router.put('/:moduleId/content/:contentId', auth, async (req, res) => {
             return res.status(404).json({ message: 'Module progress not found' });
         }
 
-        await moduleProgress.updateContentProgress(req.params.contentId, {
+        // Prepare progress data with all fields
+        const progressData = {
             status,
             timeSpent,
-            score
-        });
+            score,
+            ...otherData
+        };
+
+        // Add assignment-specific fields if provided
+        if (response !== undefined) {
+            progressData.response = response;
+        }
+        if (submittedAt !== undefined) {
+            progressData.submittedAt = submittedAt;
+        }
+
+        await moduleProgress.updateContentProgress(req.params.contentId, progressData);
 
         res.json({ 
             message: 'Content progress updated', 

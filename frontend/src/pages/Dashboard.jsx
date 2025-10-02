@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 import { Link } from 'react-router-dom';
+import LearningGoalsAnalytics from '../components/dashboard/LearningGoalsAnalytics';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -110,24 +111,6 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Debug Panel */}
-{/* 
-      <div className="bg-gray-100 border rounded-lg p-4 mb-6 text-sm">
-        <strong>Dashboard Debug Info:</strong> 
-        User: {user?.name || 'Not logged in'} | 
-        Analytics: {analytics ? 'Loaded' : 'Loading'} | 
-        Enrolled Courses: {enrolledCourses?.length || 0} | 
-        Token: {localStorage.getItem('token') ? 'Present' : 'Missing'} | 
-        Loading: {loading.toString()}
-        {analytics && (
-          <div className="mt-1">
-            Total Courses: {analytics.totalCourses} | 
-            Completed: {analytics.completedCourses} | 
-            Time Spent: {analytics.totalTimeSpent}h
-          </div>
-        )}
-      </div> */}
-
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">
           Welcome back, {user?.name}!
@@ -326,6 +309,7 @@ const Dashboard = () => {
           </div>
         </div>
 
+<<<<<<< Updated upstream
         {/* Learning Goals & Analytics Combined */}
         <div className="space-y-6">
           {/* Combined Learning Goals & Analytics */}
@@ -427,6 +411,11 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+=======
+        {/* Learning Goals & Analytics - Combined Functional Component */}
+        <div className="space-y-6">
+          <LearningGoalsAnalytics />
+>>>>>>> Stashed changes
 
           {/* Quick Actions */}
           <div className="bg-white p-6 rounded-lg shadow-md">

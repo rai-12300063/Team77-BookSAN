@@ -11,7 +11,10 @@ import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import ModulesPage from './pages/ModulesPage';
 import ModuleDetailPage from './pages/ModuleDetailPage';
+<<<<<<< Updated upstream
 import CourseModuleManagement from './pages/CourseModuleManagement';
+=======
+>>>>>>> Stashed changes
 import TestModules from './pages/TestModules';
 import QuizPage from './pages/QuizPage';
 import AdminQuizManagement from './pages/AdminQuizManagement';
@@ -40,8 +43,11 @@ function App() {
           <Route path="/courses/:courseId" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
           <Route path="/courses/:courseId/modules" element={<ProtectedRoute><ModulesPage /></ProtectedRoute>} />
           <Route path="/courses/:courseId/modules/:moduleId" element={<ProtectedRoute><ModuleDetailPage /></ProtectedRoute>} />
+<<<<<<< Updated upstream
           <Route path="/course-modules" element={<ProtectedRoute><CourseModuleManagement /></ProtectedRoute>} />
           <Route path="/courses/:courseId/quiz/:quizId" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
+=======
+>>>>>>> Stashed changes
           <Route path="/test-modules" element={<ProtectedRoute><TestModules /></ProtectedRoute>} />
 
           {/* Admin Quiz routes */}

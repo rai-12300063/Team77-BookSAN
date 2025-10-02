@@ -89,6 +89,7 @@ Task 2: UI/UX Design and Prototyping Using Figma - 8
 Task 3: Implementation (Coding) Using Design Pattern and OOP Principles Using the following Matrix. (You must extend two more epics in your group project)
 ![alt text](image-1.png)
 ![alt text](image-2.png)
+![alt text](image-3.png)
 You Must include:
 • At least 5 interacting classes with the implementation of OOP principles (inherence,
 polymorphism, encapsulation, abstraction). Each class should implement at least one

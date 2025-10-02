@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
+<<<<<<< Updated upstream
 import QuizCard from '../components/QuizCard';
+=======
+import ModuleStatusSummary from '../components/modules/ModuleStatusSummary';
+import ModuleCompletionStatus from '../components/modules/ModuleCompletionStatus';
+>>>>>>> Stashed changes
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -11,6 +16,7 @@ const CourseDetail = () => {
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
   const [progress, setProgress] = useState(null);
+  const [moduleProgresses, setModuleProgresses] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeModule, setActiveModule] = useState(0);
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -21,7 +27,7 @@ const CourseDetail = () => {
     const fetchCourseData = async () => {
       try {
         console.log('🔄 Fetching course data for courseId:', courseId);
-        const [courseRes, modulesRes, progressRes] = await Promise.all([
+        const [courseRes, modulesRes, progressRes, moduleProgressRes] = await Promise.all([
           axiosInstance.get(`/api/courses/${courseId}`),
           axiosInstance.get(`/api/modules/course/${courseId}`).catch((error) => {
             console.log('⚠️ Modules fetch failed:', error.response?.status);
@@ -30,11 +36,16 @@ const CourseDetail = () => {
           axiosInstance.get(`/api/progress/course/${courseId}`).catch((error) => {
             console.log('⚠️ Progress fetch failed (user might not be enrolled):', error.response?.status);
             return { data: null };
+          }),
+          axiosInstance.get(`/api/module-progress/course/${courseId}`).catch((error) => {
+            console.log('⚠️ Module progress fetch failed:', error.response?.status);
+            return { data: { moduleProgresses: [] } };
           })
         ]);
         console.log('📚 Course data:', courseRes.data);
         console.log('📋 Modules data:', modulesRes.data);
         console.log('📈 Progress data:', progressRes.data);
+<<<<<<< Updated upstream
 
         setCourse(courseRes.data);
         setModules(modulesRes.data || []);
@@ -48,6 +59,25 @@ const CourseDetail = () => {
         }
 
         console.log('✅ Data fetch complete. isEnrolled:', enrolled, 'modules:', modulesRes.data?.length);
+=======
+        console.log('📊 Module progress data:', moduleProgressRes.data);
+        
+        setCourse(courseRes.data);
+        setModules(modulesRes.data || []);
+        setProgress(progressRes.data);
+        setIsEnrolled(!!progressRes.data); // User is enrolled if progress exists
+        
+        // Create module progress map
+        const progressMap = {};
+        if (moduleProgressRes.data.moduleProgresses) {
+          moduleProgressRes.data.moduleProgresses.forEach(progress => {
+            progressMap[progress.moduleId] = progress;
+          });
+        }
+        setModuleProgresses(progressMap);
+        
+        console.log('✅ Data fetch complete. isEnrolled:', !!progressRes.data, 'modules:', modulesRes.data?.length);
+>>>>>>> Stashed changes
       } catch (error) {
         console.error('❌ Error fetching course data:', error);
         if (error.response?.status === 404) {
@@ -77,14 +107,16 @@ const CourseDetail = () => {
 
   const refetchData = async () => {
     try {
-      const [courseRes, modulesRes, progressRes] = await Promise.all([
+      const [courseRes, modulesRes, progressRes, moduleProgressRes] = await Promise.all([
         axiosInstance.get(`/api/courses/${courseId}`),
         axiosInstance.get(`/api/modules/course/${courseId}`).catch(() => ({ data: [] })),
-        axiosInstance.get(`/api/progress/course/${courseId}`).catch(() => ({ data: null }))
+        axiosInstance.get(`/api/progress/course/${courseId}`).catch(() => ({ data: null })),
+        axiosInstance.get(`/api/module-progress/course/${courseId}`).catch(() => ({ data: { moduleProgresses: [] } }))
       ]);
       setCourse(courseRes.data);
       setModules(modulesRes.data || []);
       setProgress(progressRes.data);
+<<<<<<< Updated upstream
       const enrolled = !!progressRes.data;
       setIsEnrolled(enrolled);
 
@@ -92,6 +124,18 @@ const CourseDetail = () => {
       if (enrolled && user?.role === 'student') {
         fetchQuizzes();
       }
+=======
+      setIsEnrolled(!!progressRes.data);
+      
+      // Create module progress map
+      const progressMap = {};
+      if (moduleProgressRes.data.moduleProgresses) {
+        moduleProgressRes.data.moduleProgresses.forEach(progress => {
+          progressMap[progress.moduleId] = progress;
+        });
+      }
+      setModuleProgresses(progressMap);
+>>>>>>> Stashed changes
     } catch (error) {
       console.error('Error fetching course data:', error);
     }
@@ -285,6 +329,14 @@ const CourseDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Course Content */}
         <div className="lg:col-span-2">
+          {/* Module Status Summary */}
+          {isEnrolled && (
+            <ModuleStatusSummary 
+              courseId={courseId}
+              className="mb-6"
+            />
+          )}
+
           <div className="bg-white rounded-lg shadow-md p-6">
             {isEnrolled ? (
               <>
@@ -301,29 +353,31 @@ const CourseDetail = () => {
                 {modules && modules.length > 0 ? (
                   <div className="space-y-4">
                     {modules.map((module, index) => {
+                      const moduleProgress = moduleProgresses[module._id];
                       const completed = isModuleCompleted(module._id);
                       
                       return (
-                        <div key={module._id || index} className="border border-gray-200 rounded-lg p-4">
+                        <div key={module._id || index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                           <div 
                             className="flex items-center justify-between cursor-pointer"
                             onClick={() => setActiveModule(activeModule === index ? -1 : index)}
                           >
-                            <div className="flex items-center">
-                              <div className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${
-                                completed ? 'bg-green-500' : 'bg-gray-300'
-                              }`}>
-                                {completed ? (
-                                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                ) : (
-                                  <span className="text-xs text-gray-600">{module.moduleNumber || index + 1}</span>
-                                )}
+                            <div className="flex items-center flex-1">
+                              <div className="mr-4">
+                                <span className="text-sm font-medium text-gray-500">
+                                  Module {module.moduleNumber || index + 1}
+                                </span>
                               </div>
-                              <h3 className="text-lg font-medium text-gray-800">
-                                {module.title || `Module ${index + 1}`}
-                              </h3>
+                              <div className="flex-1">
+                                <h3 className="text-lg font-medium text-gray-800 mb-2">
+                                  {module.title || `Module ${index + 1}`}
+                                </h3>
+                                <ModuleCompletionStatus 
+                                  moduleProgress={moduleProgress}
+                                  showDetails={false}
+                                  size="small"
+                                />
+                              </div>
                             </div>
                             <svg 
                               className={`w-5 h-5 text-gray-400 transform transition-transform ${
@@ -339,6 +393,15 @@ const CourseDetail = () => {
                           
                           {activeModule === index && (
                             <div className="mt-4 pt-4 border-t border-gray-200">
+                              {/* Enhanced Progress Display */}
+                              <div className="mb-4">
+                                <ModuleCompletionStatus 
+                                  moduleProgress={moduleProgress}
+                                  showDetails={true}
+                                  size="medium"
+                                />
+                              </div>
+                              
                               <div className="text-sm text-gray-600 mb-4">
                                 <p><strong>Description:</strong> {module.description}</p>
                                 {module.learningObjectives && module.learningObjectives.length > 0 && (

@@ -12,6 +12,7 @@ const ModuleList = ({ courseId, onModuleSelect, className = "" }) => {
     const [moduleProgresses, setModuleProgresses] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
     const [filter, setFilter] = useState('all'); // all, not_started, in_progress, completed
     const [sortBy, setSortBy] = useState('order'); // order, title, progress, difficulty
     const [searchTerm, setSearchTerm] = useState('');
@@ -89,15 +90,77 @@ const ModuleList = ({ courseId, onModuleSelect, className = "" }) => {
 
     const handleStartModule = async (moduleId) => {
         try {
-            await axios.post(`/api/module-progress/${moduleId}/start`);
+            // Clear any existing messages
+            setError(null);
+            setSuccessMessage(null);
+            
+            // Find the module to validate prerequisites
+            const module = modules.find(m => m._id === moduleId);
+            if (!module) {
+                throw new Error('Module not found');
+            }
+            
+            // Check if module is locked due to prerequisites
+            if (isModuleLocked(module)) {
+                throw new Error('This module is locked. Please complete the prerequisite modules first.');
+            }
+            
+            console.log('Starting module:', moduleId);
+            
+            // Start the module
+            const response = await axios.post(`/api/module-progress/${moduleId}/start`);
+            console.log('Module start response:', response.data);
+            
+            // Refresh module progress data
             await fetchModuleProgresses();
             
+            // Navigate to the module if callback provided
             if (onModuleSelect) {
                 onModuleSelect(moduleId);
             }
+            
+            // Show success message
+            const moduleTitle = module.title || 'Module';
+            if (response.data.alreadyStarted) {
+                setSuccessMessage(`${moduleTitle} was already started. Continuing where you left off.`);
+            } else {
+                setSuccessMessage(`${moduleTitle} started successfully! You can now begin learning.`);
+            }
+            
+            // Auto-hide success message after 5 seconds
+            setTimeout(() => setSuccessMessage(null), 5000);
+            
         } catch (error) {
             console.error('Error starting module:', error);
-            setError('Failed to start module');
+            
+            // Handle different types of errors
+            let errorMessage = 'Failed to start module';
+            
+            if (error.response) {
+                // Server responded with error status
+                const status = error.response.status;
+                const data = error.response.data;
+                
+                if (status === 404) {
+                    errorMessage = 'Module not found';
+                } else if (status === 403) {
+                    errorMessage = 'You do not have permission to access this module';
+                } else if (status === 400) {
+                    errorMessage = data.message || 'Invalid request';
+                } else if (status === 401) {
+                    errorMessage = 'Please log in to start modules';
+                } else {
+                    errorMessage = data.message || `Server error (${status})`;
+                }
+            } else if (error.request) {
+                // Network error
+                errorMessage = 'Network error. Please check your connection and try again.';
+            } else if (error.message) {
+                // Custom error message
+                errorMessage = error.message;
+            }
+            
+            setError(errorMessage);
         }
     };
 
@@ -260,6 +323,26 @@ const ModuleList = ({ courseId, onModuleSelect, className = "" }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Success Message */}
+            {successMessage && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-center">
+                        <svg className="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <p className="text-green-800 font-medium">{successMessage}</p>
+                        <button
+                            onClick={() => setSuccessMessage(null)}
+                            className="ml-auto text-green-400 hover:text-green-600"
+                        >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Controls */}
             <div className="mb-6 space-y-4">
