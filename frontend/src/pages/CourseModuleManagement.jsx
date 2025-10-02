@@ -16,7 +16,7 @@ const CourseModuleManagement = () => {
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingModule, setEditingModule] = useState(null);
     const [submitting, setSubmitting] = useState(false);
-    const [generatingContent, setGeneratingContent] = useState(null); // Store moduleId being processed
+    const [generatingContent, setGeneratingContent] = useState(null)
     const [formData, setFormData] = useState({
         title: '',
         description: '',
