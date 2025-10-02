@@ -11,14 +11,18 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-green-600 text-white p-4 flex justify-between items-center">
-      <Link to="/" className="text-2xl font-bold">QUT-MIT Learning Progress Tracker</Link>
+    <nav className="bg-gradient-to-r from-blue-950 to-blue-700 text-white p-4 flex justify-between items-center">
+      <Link to="/" className="flex items-center text-2xl font-bold">
+        <img src="/BOOKSAN.png" alt="Booksan Logo"className="w-12 h-12 object-contain"/>
+        <span>BookSAN Learning Progress Tracker</span>
+      </Link>
       <div>
         {user ? (
           <>
-            <Link to="/" className="mr-4 hover:text-blue-200">Dashboard</Link>
-            <Link to="/courses" className="mr-4 hover:text-blue-200">Courses</Link>
-            <Link to="/course-modules" className="mr-4 hover:text-blue-200">Manage Modules</Link>
+            <Link to="/" className="mr-4 hover:text-yellow-300">Dashboard</Link>
+            <Link to="/courses" className="mr-4 hover:text-yellow-300">Courses</Link>
+            <Link to="/course-modules" className="mr-4 hover:text-yellow-300">Manage Modules</Link>
+
             {(user.role === 'admin' || user.role === 'instructor') && (
               <Link
                 to={user.role === 'admin' ? "/admin/quiz" : "/instructor/quiz"}
@@ -27,23 +31,18 @@ const Navbar = () => {
                 Quiz Management
               </Link>
             )}
-            <Link to="/profile" className="mr-4 hover:text-blue-200">Profile</Link>
+            <Link to="/profile" className="mr-4 hover:text-yellow-300">Profile</Link>
             <button
               onClick={handleLogout}
-              className="bg-red-500 px-4 py-2 rounded hover:bg-red-700"
+              className="px-4 py-2 rounded hover:font-bold" style={{backgroundColor: '#FA1E1C'}}
             >
               Logout
             </button>
           </>
         ) : (
           <>
-            <Link to="/login" className="mr-4">Login</Link>
-            <Link
-              to="/register"
-              className="bg-green-500 px-4 py-2 rounded hover:bg-green-700"
-            >
-              Register
-            </Link>
+            <Link to="/login" className="hover:text-yellow-400 mr-4">Login</Link>
+            <Link to="/register"className="hover:text-yellow-400">Register</Link>
           </>
         )}
       </div>

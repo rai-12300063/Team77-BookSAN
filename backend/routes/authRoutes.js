@@ -1,21 +1,20 @@
-
 const express = require('express');
+
+const logApiAccess = require('../middleware/logApiAccess');
 const { registerUser, loginUser, updateUserProfile, getProfile, requestPasswordReset, resetPassword } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
+
 const router = express.Router();
 
 // Public routes
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.post('/forgot-password', requestPasswordReset);
-router.post('/reset-password/:token', resetPassword);
+router.post('/register', logApiAccess, registerUser);
+router.post('/login', logApiAccess, loginUser);
+// Add this if you want to use requestPasswordReset:
+router.post('/forgot-password', logApiAccess, requestPasswordReset);
+router.post('/reset-password/:token', logApiAccess, resetPassword);
 
 // Protected routes
-router.get('/profile', protect, getProfile);
-router.put('/profile', protect, updateUserProfile);
-
-// Password reset routes
-router.post('/forgot-password', requestPasswordReset);
-router.post('/reset-password', resetPassword);
+router.get('/profile', protect, logApiAccess, getProfile);
+router.put('/profile', protect, logApiAccess, updateUserProfile);
 
 module.exports = router;

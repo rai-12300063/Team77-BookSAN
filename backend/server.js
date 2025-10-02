@@ -19,8 +19,8 @@ app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/progress', require('./routes/progressRoutes'));
 app.use('/api/modules', require('./routes/moduleRoutes'));
 app.use('/api/module-progress', require('./routes/moduleProgressRoutes'));
-app.use('/api/oop', require('./routes/oopRoutes'));
-app.use('/api/patterns', require('./routes/enhancedPatternsRoutes'));
+// app.use('/api/oop', require('./routes/oopRoutes'));
+// app.use('/api/patterns', require('./routes/enhancedPatternsRoutes'));
 app.use('/api/test', require('./routes/testRoutes'));
 app.use('/api/populate', require('./routes/populateRoutes'));
 app.use('/api/instructors', instructorsRoutes);
@@ -31,7 +31,7 @@ const startServer = async () => {
     await connectDB();
     const PORT = process.env.PORT || 5001;
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`✅ QUT-MIT Learning Progress Tracker Server running on port ${PORT}`);
+      console.log(`✅ BookSAN Learning Progress Tracker Server running on port ${PORT}`);
     });
   } catch (err) {
     console.error('❌ Failed to start server:', err);
