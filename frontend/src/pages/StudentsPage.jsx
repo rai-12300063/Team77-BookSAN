@@ -24,7 +24,7 @@ const StudentsPage = () => {
   const fetchStudents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/students', {
+      const response = await axios.get('http://localhost:5001/api/students', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -96,7 +96,7 @@ const StudentsPage = () => {
 
       if (modalMode === 'add') {
         const response = await axios.post(
-          'http://localhost:3000/api/students',
+          'http://localhost:5001/api/students',
           submitData,
           config
         );
@@ -107,7 +107,7 @@ const StudentsPage = () => {
         }
       } else {
         const response = await axios.put(
-          `http://localhost:3000/api/students/${selectedStudent._id}`,
+          `http://localhost:5001/api/students/${selectedStudent._id}`,
           submitData,
           config
         );
@@ -130,7 +130,7 @@ const StudentsPage = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.delete(
-        `http://localhost:3000/api/students/${studentId}`,
+        `http://localhost:5001/api/students/${studentId}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
