@@ -1,8 +1,8 @@
-
 const jwt = require('jsonwebtoken');
 const Instructor = require('../models/Instructor');
 
 const protect = async (req, res, next) => {
+    console.log('PROTECT MIDDLEWARE CALLED');
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -15,6 +15,7 @@ const protect = async (req, res, next) => {
                 return res.status(401).json({ message: 'User not found' });
             }
             
+            console.log('USER AUTHENTICATED:', req.user.email, 'Role:', req.user.role);
             next();
         } catch (error) {
             return res.status(401).json({ message: 'Not authorized, token failed' });
@@ -25,9 +26,14 @@ const protect = async (req, res, next) => {
 };
 
 const adminOnly = (req, res, next) => {
-    if (req.user && req.user.role === 'admin') {
+    console.log('ADMIN CHECK - User role:', req.user?.role);
+    
+    // ALLOW INSTRUCTORS TO DELETE
+    if (req.user && (req.user.role === 'admin' || req.user.role === 'instructor')) {
+        console.log('ACCESS GRANTED');
         next();
     } else {
+        console.log('ACCESS DENIED');
         res.status(403).json({ message: 'Access denied. Admin only.' });
     }
 };

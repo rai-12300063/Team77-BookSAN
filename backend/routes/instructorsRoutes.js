@@ -1,10 +1,8 @@
-
-
 const express = require('express');
 const router = express.Router();
 const instructorController = require('../controllers/addinstructorController');
 const { protect, adminOnly } = require('../middleware/auth');
-console.log('🔥 INSTRUCTORS ROUTES LOADED'); // ADD THIS LINE
+console.log('🔥 INSTRUCTORS ROUTES LOADED'); 
 
 // Authentication required for all routes
 router.use(protect);
