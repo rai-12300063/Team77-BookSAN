@@ -90,19 +90,41 @@ const createCourse = async (req, res) => {
             estimatedCompletionTime,
             prerequisites,
             learningObjectives,
-            syllabus
+            syllabus,
+            instructorId  // Admin can specify instructor
         } = req.body;
+
+        let instructorData;
+
+        // If admin is creating the course, they can assign an instructor
+        if (req.user.role === 'admin' && instructorId) {
+            const instructor = await User.findById(instructorId);
+            if (!instructor) {
+                return res.status(404).json({ message: 'Instructor not found' });
+            }
+            if (instructor.role !== 'instructor' && instructor.role !== 'admin') {
+                return res.status(400).json({ message: 'Selected user is not an instructor' });
+            }
+            instructorData = {
+                id: instructor._id,
+                name: instructor.name,
+                email: instructor.email
+            };
+        } else {
+            // Instructor creating their own course
+            instructorData = {
+                id: req.user.id,
+                name: req.user.name,
+                email: req.user.email
+            };
+        }
 
         const course = await Course.create({
             title,
             description,
             category,
             difficulty,
-            instructor: {
-                id: req.user.id,
-                name: req.user.name,
-                email: req.user.email
-            },
+            instructor: instructorData,
             duration,
             estimatedCompletionTime,
             prerequisites: prerequisites || [],
@@ -120,7 +142,7 @@ const createCourse = async (req, res) => {
 const updateCourse = async (req, res) => {
     try {
         const course = await Course.findById(req.params.id);
-        
+
         if (!course) {
             return res.status(404).json({ message: 'Course not found' });
         }
@@ -140,7 +162,8 @@ const updateCourse = async (req, res) => {
             prerequisites,
             learningObjectives,
             syllabus,
-            isActive
+            isActive,
+            instructorId  // Admin can reassign instructor
         } = req.body;
 
         course.title = title || course.title;
@@ -153,6 +176,22 @@ const updateCourse = async (req, res) => {
         course.learningObjectives = learningObjectives || course.learningObjectives;
         course.syllabus = syllabus || course.syllabus;
         course.isActive = isActive !== undefined ? isActive : course.isActive;
+
+        // Admin can reassign instructor
+        if (req.user.role === 'admin' && instructorId) {
+            const instructor = await User.findById(instructorId);
+            if (!instructor) {
+                return res.status(404).json({ message: 'Instructor not found' });
+            }
+            if (instructor.role !== 'instructor' && instructor.role !== 'admin') {
+                return res.status(400).json({ message: 'Selected user is not an instructor' });
+            }
+            course.instructor = {
+                id: instructor._id,
+                name: instructor.name,
+                email: instructor.email
+            };
+        }
 
         const updatedCourse = await course.save();
         res.json(updatedCourse);

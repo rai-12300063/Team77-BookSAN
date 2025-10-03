@@ -9,9 +9,10 @@
     "test": "npm test --prefix backend"
   },
   "devDependencies": {
-    "chai": "^5.1.2",
+    "chai": "^5.3.3",
+    "chai-http": "^5.1.2",
     "concurrently": "^7.0.0",
-    "mocha": "^11.0.1",
+    "mocha": "^11.7.4",
     "sinon": "^21.0.0"
   },
   "author": "Task Manager Team",

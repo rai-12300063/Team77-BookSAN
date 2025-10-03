@@ -23,6 +23,7 @@ import InstructorQuizEditor from './pages/InstructorQuizEditor';
 import InstructorsPage from './pages/InstructorsPage';
 import StudentsPage from './pages/StudentsPage';
 import UserManagement from './pages/UserManagement';
+import CourseEnrollmentManagement from './pages/CourseEnrollmentManagement';
 
 function App() {
   return (
@@ -53,6 +54,9 @@ function App() {
           <Route path="/admin/quiz/edit/:quizId" element={<ProtectedRoute><AdminQuizEditor /></ProtectedRoute>} />
           <Route path="/instructor/quizzes" element={<ProtectedRoute><InstructorQuizManagement /></ProtectedRoute>} />
           <Route path="/instructor/quiz/edit/:quizId" element={<ProtectedRoute><InstructorQuizEditor /></ProtectedRoute>} />
+
+          {/* Course Enrollment Management - Admin and Instructor only */}
+          <Route path="/course-enrollment" element={<ProtectedRoute><CourseEnrollmentManagement /></ProtectedRoute>} />
 
           {/* User Management routes */}
           <Route

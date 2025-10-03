@@ -30,9 +30,6 @@
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -55,11 +52,6 @@
 
 .stat-card.student {
   border-left: 4px solid #f59e0b;
-}
-
-.stat-icon {
-  font-size: 2.5rem;
-  opacity: 0.8;
 }
 
 .stat-content h3 {
@@ -416,11 +408,6 @@
   padding: 3rem;
   color: #6b7280;
   font-size: 1.125rem;
-}
-
-/* Icon */
-.icon {
-  font-size: 1rem;
 }
 
 /* Responsive Design */

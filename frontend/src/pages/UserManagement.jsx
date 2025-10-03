@@ -11,7 +11,6 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [stats, setStats] = useState(null);
 
   // Filters
   const [roleFilter, setRoleFilter] = useState('all');
@@ -29,7 +28,6 @@ const UserManagement = () => {
 
   useEffect(() => {
     fetchUsers();
-    fetchStats();
   }, []);
 
   useEffect(() => {
@@ -51,21 +49,6 @@ const UserManagement = () => {
       console.error('Error fetching users:', error);
       setError('Failed to fetch users');
       setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/admin/stats`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (response.data.success) {
-        setStats(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
     }
   };
 
@@ -152,7 +135,6 @@ const UserManagement = () => {
         if (response.data.success) {
           setSuccess('User created successfully!');
           fetchUsers();
-          fetchStats();
           setTimeout(() => {
             closeModal();
           }, 1500);
@@ -168,7 +150,6 @@ const UserManagement = () => {
         if (response.data.success) {
           setSuccess('User updated successfully!');
           fetchUsers();
-          fetchStats();
           setTimeout(() => {
             closeModal();
           }, 1500);
@@ -197,7 +178,6 @@ const UserManagement = () => {
       if (response.data.success) {
         setSuccess('User deleted successfully!');
         fetchUsers();
-        fetchStats();
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (error) {
@@ -221,16 +201,7 @@ const UserManagement = () => {
   };
 
   const getRoleIcon = (role) => {
-    switch (role) {
-      case 'admin':
-        return '👑';
-      case 'instructor':
-        return '👨‍🏫';
-      case 'student':
-        return '👨‍🎓';
-      default:
-        return '👤';
-    }
+    return '';
   };
 
   if (loading) {
@@ -246,43 +217,9 @@ const UserManagement = () => {
       <div className="page-header">
         <h1>User Management</h1>
         <button className="btn btn-primary" onClick={openAddModal}>
-          <span className="icon">➕</span> Add User
+          Add User
         </button>
       </div>
-
-      {/* Statistics Cards */}
-      {stats && (
-        <div className="stats-grid">
-          <div className="stat-card total">
-            <div className="stat-icon">👥</div>
-            <div className="stat-content">
-              <h3>Total Users</h3>
-              <p className="stat-number">{stats.users.total}</p>
-            </div>
-          </div>
-          <div className="stat-card admin">
-            <div className="stat-icon">👑</div>
-            <div className="stat-content">
-              <h3>Admins</h3>
-              <p className="stat-number">{stats.users.byRole.admin || 0}</p>
-            </div>
-          </div>
-          <div className="stat-card instructor">
-            <div className="stat-icon">👨‍🏫</div>
-            <div className="stat-content">
-              <h3>Instructors</h3>
-              <p className="stat-number">{stats.users.byRole.instructor || 0}</p>
-            </div>
-          </div>
-          <div className="stat-card student">
-            <div className="stat-icon">👨‍🎓</div>
-            <div className="stat-content">
-              <h3>Students</h3>
-              <p className="stat-number">{stats.users.byRole.student || 0}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Filters */}
       <div className="filters-section">
@@ -306,19 +243,19 @@ const UserManagement = () => {
             className={`filter-btn ${roleFilter === 'admin' ? 'active' : ''}`}
             onClick={() => setRoleFilter('admin')}
           >
-            👑 Admins
+            Admins
           </button>
           <button
             className={`filter-btn ${roleFilter === 'instructor' ? 'active' : ''}`}
             onClick={() => setRoleFilter('instructor')}
           >
-            👨‍🏫 Instructors
+            Instructors
           </button>
           <button
             className={`filter-btn ${roleFilter === 'student' ? 'active' : ''}`}
             onClick={() => setRoleFilter('student')}
           >
-            👨‍🎓 Students
+            Students
           </button>
         </div>
       </div>
@@ -365,14 +302,14 @@ const UserManagement = () => {
                       onClick={() => openEditModal(user)}
                       title="Edit user role"
                     >
-                      ✏️ Edit
+                      Edit
                     </button>
                     <button
                       className="btn btn-delete"
                       onClick={() => handleDelete(user._id, user.name)}
                       title="Delete user"
                     >
-                      🗑️ Delete
+                      Delete
                     </button>
                   </td>
                 </tr>
@@ -389,7 +326,7 @@ const UserManagement = () => {
             <div className="modal-header">
               <h2>{modalMode === 'add' ? 'Add New User' : 'Edit User Role'}</h2>
               <button className="close-btn" onClick={closeModal}>
-                ✕
+                X
               </button>
             </div>
 
@@ -459,9 +396,9 @@ const UserManagement = () => {
                   onChange={handleInputChange}
                   required
                 >
-                  <option value="student">👨‍🎓 Student</option>
-                  <option value="instructor">👨‍🏫 Instructor</option>
-                  <option value="admin">👑 Admin</option>
+                  <option value="student">Student</option>
+                  <option value="instructor">Instructor</option>
+                  <option value="admin">Admin</option>
                 </select>
               </div>
 
