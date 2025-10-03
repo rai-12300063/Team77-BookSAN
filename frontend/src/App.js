@@ -22,6 +22,7 @@ import InstructorQuizEditor from './pages/InstructorQuizEditor';
 
 import InstructorsPage from './pages/InstructorsPage';
 import StudentsPage from './pages/StudentsPage';
+import UserManagement from './pages/UserManagement';
 
 function App() {
   return (
@@ -53,22 +54,30 @@ function App() {
           <Route path="/instructor/quizzes" element={<ProtectedRoute><InstructorQuizManagement /></ProtectedRoute>} />
           <Route path="/instructor/quiz/edit/:quizId" element={<ProtectedRoute><InstructorQuizEditor /></ProtectedRoute>} />
 
-          {/* ADD THESE NEW ROUTES FOR INSTRUCTORS & STUDENTS */}
-          <Route 
-            path="/instructors" 
+          {/* User Management routes */}
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/instructors"
             element={
               <ProtectedRoute adminOnly={true}>
                 <InstructorsPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/students" 
+          <Route
+            path="/students"
             element={
               <ProtectedRoute adminOnly={true}>
                 <StudentsPage />
               </ProtectedRoute>
-            } 
+            }
           />
         </Routes>
       </Router>
