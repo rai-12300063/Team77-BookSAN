@@ -34,6 +34,13 @@ const usePermissions = () => {
       delete: hasAnyRole(['admin', 'instructor']),
       submit: hasRole('student')
     },
+    quiz: {
+      read: hasAnyRole(['admin', 'instructor', 'student']),
+      write: hasAnyRole(['admin', 'instructor']),
+      delete: hasAnyRole(['admin', 'instructor']),
+      take: hasRole('student'),
+      manage: hasAnyRole(['admin', 'instructor'])
+    },
     analytics: {
       viewSystem: hasRole('admin'),
       viewCourse: hasAnyRole(['admin', 'instructor']),

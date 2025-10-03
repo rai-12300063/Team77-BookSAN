@@ -1,7 +1,6 @@
 
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { hasPermission, hasAnyPermission, USER_ROLES, validateRole } = require('../utils/rbac');
 
 const protect = async (req, res, next) => {
     let token;
@@ -22,56 +21,4 @@ const protect = async (req, res, next) => {
     }
 };
 
-const requireRole = (...allowedRoles) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({ message: 'Not authenticated' });
-        }
-
-        if (!allowedRoles.includes(req.user.role)) {
-            return res.status(403).json({
-                message: 'Access denied. Insufficient role permissions.',
-                requiredRoles: allowedRoles,
-                userRole: req.user.role
-            });
-        }
-
-        next();
-    };
-};
-
-const requirePermission = (...requiredPermissions) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({ message: 'Not authenticated' });
-        }
-
-        const userRole = req.user.role;
-        const hasRequiredPermission = hasAnyPermission(userRole, requiredPermissions);
-
-        if (!hasRequiredPermission) {
-            return res.status(403).json({
-                message: 'Access denied. Insufficient permissions.',
-                requiredPermissions,
-                userRole
-            });
-        }
-
-        next();
-    };
-};
-
-const requireAdmin = requireRole(USER_ROLES.ADMIN);
-
-const requireInstructorOrAdmin = requireRole(USER_ROLES.INSTRUCTOR, USER_ROLES.ADMIN);
-
-const requireAnyRole = requireRole(USER_ROLES.STUDENT, USER_ROLES.INSTRUCTOR, USER_ROLES.ADMIN);
-
-module.exports = {
-    protect,
-    requireRole,
-    requirePermission,
-    requireAdmin,
-    requireInstructorOrAdmin,
-    requireAnyRole
-};
+module.exports = { protect };

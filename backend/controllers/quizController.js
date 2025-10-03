@@ -445,7 +445,7 @@ const createInstructorQuiz = async (req, res) => {
       return res.status(403).json({ message: 'You can only create quizzes for your own courses' });
     }
 
-    // Check if course already has a quiz 
+    // Check if course already has a quiz (limit 1 quiz per course)
     const existingQuiz = await Quiz.findOne({ courseId });
     if (existingQuiz) {
       return res.status(400).json({

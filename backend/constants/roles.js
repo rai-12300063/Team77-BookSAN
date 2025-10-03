@@ -18,6 +18,11 @@ const ROLE_PERMISSIONS = {
         'progress:read',
         'progress:write',
         'progress:delete',
+        'quiz:read',
+        'quiz:write',
+        'quiz:delete',
+        'quiz:take',
+        'quiz:grade',
         'system:manage',
         'reports:view',
         'analytics:view'
@@ -31,6 +36,11 @@ const ROLE_PERMISSIONS = {
         'tasks:delete',
         'progress:read',
         'progress:write',
+        'quiz:read',
+        'quiz:write',
+        'quiz:delete',
+        'quiz:take',
+        'quiz:grade',
         'students:read',
         'students:progress:view',
         'reports:view',
@@ -41,6 +51,8 @@ const ROLE_PERMISSIONS = {
         'tasks:read',
         'progress:read',
         'progress:write',
+        'quiz:read',
+        'quiz:take',
         'profile:read',
         'profile:write'
     ]

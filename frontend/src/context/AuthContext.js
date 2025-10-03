@@ -64,6 +64,10 @@ export const AuthProvider = ({ children }) => {
     return user?.role === role;
   };
 
+  const hasAnyRole = (roles) => {
+    return roles.includes(user?.role);
+  };
+
   const isAdmin = () => {
     return user?.role === 'admin';
   };
@@ -76,10 +80,6 @@ export const AuthProvider = ({ children }) => {
     return user?.role === 'student';
   };
 
-  const hasAnyRole = (roles) => {
-    return roles.includes(user?.role);
-  };
-
   return (
     <AuthContext.Provider value={{
       user,
@@ -89,10 +89,10 @@ export const AuthProvider = ({ children }) => {
       logout,
       isAuthenticated,
       hasRole,
+      hasAnyRole,
       isAdmin,
       isInstructor,
-      isStudent,
-      hasAnyRole
+      isStudent
     }}>
       {children}
     </AuthContext.Provider>
