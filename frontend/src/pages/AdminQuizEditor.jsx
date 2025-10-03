@@ -21,6 +21,7 @@ const AdminQuizEditor = () => {
     try {
       // Use admin endpoint to bypass module completion checks
       const response = await axiosInstance.get(`/api/quiz/admin/${quizId}`);
+      console.log('Raw quiz data:', response.data);
       setQuiz(response.data);
 
       // If no questions exist, initialize with 10 empty questions
@@ -39,7 +40,69 @@ const AdminQuizEditor = () => {
         }));
         setQuestions(emptyQuestions);
       } else {
-        setQuestions(response.data.questions);
+        console.log('Existing questions:', response.data.questions);
+
+        // Process existing questions to ensure options have proper structure
+        const processedQuestions = response.data.questions.map((q, idx) => {
+          console.log(`Question ${idx} raw:`, q);
+
+          // Ensure options exist and have proper structure
+          let options = q.options;
+
+          if (!options || !Array.isArray(options) || options.length === 0) {
+            console.log(`Question ${idx} has no valid options, creating defaults`);
+            options = [
+              { id: 'a', text: '', isCorrect: false },
+              { id: 'b', text: '', isCorrect: false },
+              { id: 'c', text: '', isCorrect: false },
+              { id: 'd', text: '', isCorrect: false }
+            ];
+          } else {
+            // Ensure each option has isCorrect field and proper structure
+            options = options.map((opt, optIdx) => {
+              const processed = {
+                id: opt.id || String.fromCharCode(97 + optIdx), // a, b, c, d
+                text: opt.text || '',
+                isCorrect: opt.isCorrect !== undefined ? opt.isCorrect : false
+              };
+              console.log(`  Option ${optIdx}:`, opt, '-> processed:', processed);
+              return processed;
+            });
+          }
+
+          const processed = {
+            id: q.id || `q${idx + 1}`,
+            type: q.type || 'multiple_choice',
+            question: q.question || '',
+            options,
+            points: q.points || 1
+          };
+
+          console.log(`Question ${idx} processed:`, processed);
+          return processed;
+        });
+
+        console.log('All processed questions:', processedQuestions);
+
+        // Always ensure we have exactly 10 questions
+        const finalQuestions = [...processedQuestions];
+        while (finalQuestions.length < 10) {
+          finalQuestions.push({
+            id: `q${finalQuestions.length + 1}`,
+            type: 'multiple_choice',
+            question: '',
+            options: [
+              { id: 'a', text: '', isCorrect: false },
+              { id: 'b', text: '', isCorrect: false },
+              { id: 'c', text: '', isCorrect: false },
+              { id: 'd', text: '', isCorrect: false }
+            ],
+            points: 1
+          });
+        }
+
+        // Only keep first 10 questions if there are more
+        setQuestions(finalQuestions.slice(0, 10));
       }
     } catch (error) {
       console.error('Error fetching quiz:', error);
@@ -56,9 +119,27 @@ const AdminQuizEditor = () => {
     try {
       console.log('Saving quiz with questions:', questions);
 
+      // Filter out empty questions (questions without text or with all empty options)
+      const validQuestions = questions.filter(q => {
+        // Check if question has text
+        if (!q.question || q.question.trim() === '') return false;
+
+        // Check if at least one option has text
+        const hasValidOptions = q.options && q.options.some(opt => opt.text && opt.text.trim() !== '');
+        return hasValidOptions;
+      });
+
+      console.log('Valid questions to save:', validQuestions);
+
+      if (validQuestions.length === 0) {
+        setError('Please add at least one complete question with options');
+        setSaving(false);
+        return;
+      }
+
       // Admin uses admin endpoint
       const response = await axiosInstance.put(`/api/quiz/admin/${quizId}`, {
-        questions: questions
+        questions: validQuestions
       });
 
       console.log('Save response:', response.data);

@@ -15,6 +15,7 @@ const Courses = () => {
   const [category, setCategory] = useState('all');
   const [loading, setLoading] = useState(true);
   const [instructorCourses, setInstructorCourses] = useState([]);
+  const [quizzes, setQuizzes] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -37,7 +38,10 @@ const Courses = () => {
     if (isInstructor) {
       fetchInstructorCourses();
     }
-  }, [isInstructor]);
+    if (isAdmin || isInstructor) {
+      fetchQuizzes();
+    }
+  }, [isInstructor, isAdmin]);
 
   const fetchCourses = async () => {
     try {
@@ -95,6 +99,17 @@ const Courses = () => {
     }
   };
 
+  const fetchQuizzes = async () => {
+    try {
+      const endpoint = isAdmin ? '/api/quiz/admin/all' : '/api/quiz/instructor/my-quizzes';
+      const response = await axiosInstance.get(endpoint);
+      setQuizzes(response.data || []);
+    } catch (error) {
+      console.error('❌ Error fetching quizzes:', error);
+      setQuizzes([]);
+    }
+  };
+
   const canCreateQuizForCourse = (courseId) => {
     if (isAdmin) return true;
     if (isInstructor) {
@@ -103,11 +118,27 @@ const Courses = () => {
     return false;
   };
 
+  const getCourseQuiz = (courseId) => {
+    return quizzes.find(quiz => quiz.course?._id === courseId || quiz.courseId === courseId);
+  };
+
   const handleAddQuiz = (courseId) => {
-    if (isAdmin) {
-      navigate('/admin/quizzes', { state: { selectedCourseId: courseId } });
-    } else if (isInstructor) {
-      navigate('/instructor/quizzes', { state: { selectedCourseId: courseId } });
+    const existingQuiz = getCourseQuiz(courseId);
+
+    if (existingQuiz) {
+      // Navigate to edit page
+      if (isAdmin) {
+        navigate(`/admin/quiz/edit/${existingQuiz.id}`);
+      } else if (isInstructor) {
+        navigate(`/instructor/quiz/edit/${existingQuiz.id}`);
+      }
+    } else {
+      // Navigate to create page
+      if (isAdmin) {
+        navigate('/admin/quiz', { state: { selectedCourseId: courseId } });
+      } else if (isInstructor) {
+        navigate('/instructor/quiz', { state: { selectedCourseId: courseId } });
+      }
     }
   };
 
@@ -463,10 +494,21 @@ const Courses = () => {
                       onClick={() => handleAddQuiz(course._id)}
                       className="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition duration-200 flex items-center justify-center text-sm"
                     >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                      </svg>
-                      Add Quiz
+                      {getCourseQuiz(course._id) ? (
+                        <>
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Edit Quiz
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                          </svg>
+                          Add Quiz
+                        </>
+                      )}
                     </button>
                   )}
                 </div>

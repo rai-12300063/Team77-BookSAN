@@ -89,25 +89,25 @@ router.delete('/admin/:quizId',
 
 // ========== INSTRUCTOR ROUTES ==========
 
-// Get a specific quiz for editing (instructor - no module completion check)
-router.get('/instructor/:quizId',
-  
-  
-  getQuizForEdit
-);
-
 // Get instructor's courses for quiz creation
 router.get('/instructor/courses',
-  
-  
+
+
   getInstructorCourses
 );
 
 // Get quizzes for instructor's courses
 router.get('/instructor/my-quizzes',
-  
-  
+
+
   getInstructorQuizzes
+);
+
+// Get a specific quiz for editing (instructor - no module completion check)
+router.get('/instructor/:quizId',
+
+
+  getQuizForEdit
 );
 
 // Create new quiz in instructor's assigned course
