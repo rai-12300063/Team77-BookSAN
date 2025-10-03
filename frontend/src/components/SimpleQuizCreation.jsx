@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 
 const SimpleQuizCreation = ({ userRole = 'admin', onClose, onSuccess, preselectedCourseId = null }) => {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -115,7 +117,28 @@ const SimpleQuizCreation = ({ userRole = 'admin', onClose, onSuccess, preselecte
       onClose && onClose();
     } catch (error) {
       console.error('Error creating quiz:', error);
-      setError(error.response?.data?.message || 'Failed to create quiz');
+      const errorMessage = error.response?.data?.message || 'Failed to create quiz';
+
+      // If the error is about course already having a quiz, redirect to edit page
+      if (errorMessage.includes('already has a quiz')) {
+        const existingQuizId = error.response?.data?.existingQuizId;
+        if (existingQuizId) {
+          const editPath = userRole === 'admin'
+            ? `/admin/quiz/edit/${existingQuizId}`
+            : `/instructor/quiz/edit/${existingQuizId}`;
+
+          if (window.confirm('This course already has a quiz. Would you like to edit it instead?')) {
+            onClose && onClose();
+            navigate(editPath);
+          } else {
+            setError(errorMessage);
+          }
+        } else {
+          setError(errorMessage);
+        }
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

@@ -191,8 +191,12 @@ const createQuiz = async (req, res) => {
     const { courseId } = req.params;
     const {
       title,
+      description,
       instructions,
       questions,
+      timeLimit,
+      passingScore,
+      difficulty,
       status = 'draft'
     } = req.body;
     const userId = req.user.id;
@@ -219,16 +223,23 @@ const createQuiz = async (req, res) => {
 
     const totalPoints = questions.reduce((sum, question) => sum + (question.points || 1), 0);
 
+    // Convert 'active' to 'published' for status
+    const quizStatus = status === 'active' ? 'published' : status;
+
     const quiz = new Quiz({
       title,
+      description,
       instructions,
       courseId,
       createdBy: userId,
-      status,
+      status: quizStatus,
+      timeLimit,
+      passingScore: passingScore || 70,
+      difficulty: difficulty || 1,
       questions: questions.map((question, index) => ({
         id: question.id || `q${index + 1}`,
         question: question.question,
-        options: question.options || [],
+        options: (question.options || []).filter(opt => opt.text && opt.text.trim() !== ''),
         correctAnswer: question.correctAnswer,
         points: question.points || 1,
         explanation: question.explanation
@@ -279,7 +290,7 @@ const updateQuiz = async (req, res) => {
 
     // Update quiz
     Object.assign(quiz, updateData);
-    quiz.updatedBy = userId;
+    quiz.lastModifiedBy = userId;
     quiz.updatedAt = new Date();
 
     await quiz.save();
@@ -429,8 +440,12 @@ const createInstructorQuiz = async (req, res) => {
     const { courseId } = req.params;
     const {
       title,
+      description,
       instructions,
       questions,
+      timeLimit,
+      passingScore,
+      difficulty,
       status = 'draft'
     } = req.body;
     const userId = req.user.id;
@@ -461,16 +476,23 @@ const createInstructorQuiz = async (req, res) => {
 
     const totalPoints = questions.reduce((sum, question) => sum + (question.points || 1), 0);
 
+    // Convert 'active' to 'published' for status
+    const quizStatus = status === 'active' ? 'published' : status;
+
     const quiz = new Quiz({
       title,
+      description,
       instructions,
       courseId,
       createdBy: userId,
-      status,
+      status: quizStatus,
+      timeLimit,
+      passingScore: passingScore || 70,
+      difficulty: difficulty || 1,
       questions: questions.map((question, index) => ({
         id: question.id || `q${index + 1}`,
         question: question.question,
-        options: question.options || [],
+        options: (question.options || []).filter(opt => opt.text && opt.text.trim() !== ''),
         correctAnswer: question.correctAnswer,
         points: question.points || 1,
         explanation: question.explanation
