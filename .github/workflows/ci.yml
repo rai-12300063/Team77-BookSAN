@@ -1,4 +1,4 @@
-name: OLTP CI
+name: BOOKSAN CI/CD
 
 on:
   push:
