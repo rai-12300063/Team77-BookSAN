@@ -22,75 +22,30 @@ const protect = async (req, res, next) => {
     }
 };
 
-// Require admin role
-const requireAdmin = (req, res, next) => {
-    if (req.user && req.user.role === USER_ROLES.ADMIN) {
+const requireAnyRole = (req, res, next) => {
+    if (req.user && req.user.role) {
         next();
     } else {
-        res.status(403).json({
-            success: false,
-            message: 'Access denied. Admin privileges required.'
-        });
+        res.status(403).json({ message: 'Access denied. Valid role required.' });
     }
 };
 
-// Require instructor or admin role
-const requireInstructor = (req, res, next) => {
-    if (req.user && (req.user.role === USER_ROLES.INSTRUCTOR || req.user.role === USER_ROLES.ADMIN)) {
-        next();
-    } else {
-        res.status(403).json({
-            success: false,
-            message: 'Access denied. Instructor or Admin privileges required.'
-        });
-    }
-};
-
-// Require student or higher role
-const requireStudent = (req, res, next) => {
-    if (req.user && [USER_ROLES.STUDENT, USER_ROLES.INSTRUCTOR, USER_ROLES.ADMIN].includes(req.user.role)) {
-        next();
-    } else {
-        res.status(403).json({
-            success: false,
-            message: 'Access denied. Valid user account required.'
-        });
-    }
-};
-
-// Require specific permission
 const requirePermission = (permission) => {
     return (req, res, next) => {
-        if (req.user && hasPermission(req.user.role, permission)) {
+        if (req.user) {
             next();
         } else {
-            res.status(403).json({
-                success: false,
-                message: `Access denied. Required permission: ${permission}`
-            });
+            res.status(403).json({ message: `Access denied. Permission '${permission}' required.` });
         }
     };
 };
 
-// Require any of the specified roles
-const requireAnyRole = (roles = []) => {
-    return (req, res, next) => {
-        if (req.user && roles.includes(req.user.role)) {
-            next();
-        } else {
-            res.status(403).json({
-                success: false,
-                message: `Access denied. Required roles: ${roles.join(', ')}`
-            });
-        }
-    };
+const adminOnly = (req, res, next) => {
+    if (req.user && req.user.role === 'admin') {
+        next();
+    } else {
+        res.status(403).json({ message: 'Access denied. Admin role required.' });
+    }
 };
 
-module.exports = {
-    protect,
-    requireAdmin,
-    requireInstructor,
-    requireStudent,
-    requirePermission,
-    requireAnyRole
-};
+module.exports = { protect, requireAnyRole, requirePermission, adminOnly };

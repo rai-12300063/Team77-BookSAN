@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const instructorsRoutes = require('./routes/instructorsRoutes');
-const studentRoutes = require('./routes/studentsRoutes');
+const studentRoutes = require('./routes/studentRoutes');
 
 dotenv.config();
 

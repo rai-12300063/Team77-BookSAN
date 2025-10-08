@@ -18,7 +18,7 @@ import AdminQuizManagement from './pages/AdminQuizManagement';
 import InstructorQuizManagement from './pages/InstructorQuizManagement';
 import AdminQuizEditor from './pages/AdminQuizEditor';
 import InstructorQuizEditor from './pages/InstructorQuizEditor';
-
+import TestModules from './pages/TestModules';
 
 import InstructorsPage from './pages/InstructorsPage';
 import StudentsPage from './pages/StudentsPage';
@@ -48,12 +48,14 @@ function App() {
           <Route path="/course-modules" element={<ProtectedRoute><CourseModuleManagement /></ProtectedRoute>} />
           <Route path="/courses/:courseId/quiz/:quizId" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
 
-          {/* Admin Quiz routes */}
-          <Route path="/admin/quiz" element={<ProtectedRoute><AdminQuizManagement /></ProtectedRoute>} />
-          <Route path="/admin/quizzes" element={<ProtectedRoute><AdminQuizManagement /></ProtectedRoute>} />
-          <Route path="/admin/quiz/edit/:quizId" element={<ProtectedRoute><AdminQuizEditor /></ProtectedRoute>} />
-          <Route path="/instructor/quizzes" element={<ProtectedRoute><InstructorQuizManagement /></ProtectedRoute>} />
-          <Route path="/instructor/quiz/edit/:quizId" element={<ProtectedRoute><InstructorQuizEditor /></ProtectedRoute>} />
+          {/* Admin Quiz routes - Admin Only */}
+          <Route path="/admin/quiz" element={<ProtectedRoute adminOnly={true}><AdminQuizManagement /></ProtectedRoute>} />
+          <Route path="/admin/quizzes" element={<ProtectedRoute adminOnly={true}><AdminQuizManagement /></ProtectedRoute>} />
+          <Route path="/admin/quiz/edit/:quizId" element={<ProtectedRoute adminOnly={true}><AdminQuizEditor /></ProtectedRoute>} />
+          
+          {/* Instructor Quiz routes - Instructor Only */}
+          <Route path="/instructor/quizzes" element={<ProtectedRoute instructorOnly={true}><InstructorQuizManagement /></ProtectedRoute>} />
+          <Route path="/instructor/quiz/edit/:quizId" element={<ProtectedRoute instructorOnly={true}><InstructorQuizEditor /></ProtectedRoute>} />
 
           {/* Course Enrollment Management - Admin and Instructor only */}
           <Route path="/course-enrollment" element={<ProtectedRoute><CourseEnrollmentManagement /></ProtectedRoute>} />
@@ -82,6 +84,16 @@ function App() {
                 <StudentsPage />
               </ProtectedRoute>
             }
+          />
+          
+          {/* Test Modules Route - Admin Only */}
+          <Route 
+            path="/test-modules" 
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <TestModules />
+              </ProtectedRoute>
+            } 
           />
         </Routes>
       </Router>

@@ -10,7 +10,7 @@ import axios from '../axiosConfig';
 const ModuleDetailPage = () => {
     const { courseId, moduleId } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    // const { } = useAuth(); // Commented out unused auth hook
     
     const [module, setModule] = useState(null);
     const [moduleProgress, setModuleProgress] = useState(null);

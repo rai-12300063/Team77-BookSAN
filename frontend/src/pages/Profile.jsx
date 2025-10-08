@@ -48,7 +48,7 @@ const Profile = () => {
         name: `${formData.firstName} ${formData.lastName}`.trim()
       };
 
-      const response = await axiosInstance.put('/api/auth/profile', dataToSubmit);
+      await axiosInstance.put('/api/auth/profile', dataToSubmit);
 
       // Update the user context with new data
       const updatedUser = { ...user, ...dataToSubmit };

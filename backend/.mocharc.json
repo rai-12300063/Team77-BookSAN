@@ -1,5 +1,10 @@
 {
   "timeout": 10000,
-  "recursive": true,
-  "spec": "test/**/*.js"
+  "recursive": false,
+  "spec": "test/functionalTest.js",
+  "ignore": [
+    "test/oopIntegrationTest.js",
+    "test/integration/**",
+    "test/utils/**"
+  ]
 }

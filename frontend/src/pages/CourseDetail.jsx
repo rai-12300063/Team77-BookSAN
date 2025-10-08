@@ -14,7 +14,7 @@ const CourseDetail = () => {
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
   const [progress, setProgress] = useState(null);
-  const [moduleProgresses, setModuleProgresses] = useState({});
+  const [moduleProgresses] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeModule, setActiveModule] = useState(0);
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -27,7 +27,7 @@ const CourseDetail = () => {
     const fetchCourseData = async () => {
       try {
         console.log('🔄 Fetching course data for courseId:', courseId);
-        const [courseRes, modulesRes, progressRes, moduleProgressRes, quizzesRes] = await Promise.all([
+        const [courseRes, modulesRes, progressRes, , quizzesRes] = await Promise.all([
 
           axiosInstance.get(`/api/courses/${courseId}`),
           axiosInstance.get(`/api/modules/course/${courseId}?includeInactive=true`).catch((error) => {
@@ -92,11 +92,10 @@ const CourseDetail = () => {
 
   const refetchData = async () => {
     try {
-      const [courseRes, modulesRes, progressRes, moduleProgressRes] = await Promise.all([
+      const [courseRes, modulesRes, progressRes] = await Promise.all([
         axiosInstance.get(`/api/courses/${courseId}`),
-        axiosInstance.get(`/api/modules/course/${courseId}?includeInactive=true`).catch(() => ({ data: [] })),
-        axiosInstance.get(`/api/progress/course/${courseId}`).catch(() => ({ data: null })),
-        axiosInstance.get(`/api/module-progress/course/${courseId}`).catch(() => ({ data: { moduleProgresses: [] } }))
+        axiosInstance.get(`/api/modules/course/${courseId}`).catch(() => ({ data: [] })),
+        axiosInstance.get(`/api/progress/course/${courseId}`).catch(() => ({ data: null }))
       ]);
       setCourse(courseRes.data);
       setModules(modulesRes.data || []);
