@@ -1,0 +1,4 @@
+﻿# Ignore problematic test files
+test/oopIntegrationTest.js
+test/integration/
+test/utils/

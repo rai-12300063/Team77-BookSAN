@@ -1,6 +1,6 @@
 ﻿/**
  * Decorator Pattern - Enhances functionality of objects dynamically
- * Use case: Adding features to courses (certification, premium access, analytics)
+ * Use case: Adding features to courses (certification analytics)
  */
 
 // Base Course interface

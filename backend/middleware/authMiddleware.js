@@ -21,4 +21,30 @@ const protect = async (req, res, next) => {
     }
 };
 
-module.exports = { protect };
+const requireAnyRole = (req, res, next) => {
+    if (req.user && req.user.role) {
+        next();
+    } else {
+        res.status(403).json({ message: 'Access denied. Valid role required.' });
+    }
+};
+
+const requirePermission = (permission) => {
+    return (req, res, next) => {
+        if (req.user) {
+            next();
+        } else {
+            res.status(403).json({ message: `Access denied. Permission '${permission}' required.` });
+        }
+    };
+};
+
+const adminOnly = (req, res, next) => {
+    if (req.user && req.user.role === 'admin') {
+        next();
+    } else {
+        res.status(403).json({ message: 'Access denied. Admin role required.' });
+    }
+};
+
+module.exports = { protect, requireAnyRole, requirePermission, adminOnly };

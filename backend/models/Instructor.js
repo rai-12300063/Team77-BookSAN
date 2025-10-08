@@ -32,40 +32,11 @@ const instructorSchema = new mongoose.Schema({
   status: {
     type: String,
     default: 'active'
-  },
-  learningGoals: {
-    type: Array,
-    default: []
-  },
-  skillTags: {
-    type: Array,
-    default: []
-  },
-  learningPreferences: {
-    type: Object,
-    default: {}
-  },
-  totalLearningHours: {
-    type: Number,
-    default: 0
-  },
-  currentStreak: {
-    type: Number,
-    default: 0
-  },
-  longestStreak: {
-    type: Number,
-    default: 0
-  },
-  joinDate: {
-    type: Date,
-    default: Date.now
   }
 }, {
   timestamps: true
 });
 
-// Hash password before saving
 instructorSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
     return next();
@@ -80,12 +51,10 @@ instructorSchema.pre('save', async function(next) {
   }
 });
 
-// Method to compare password
 instructorSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// Remove password from JSON output
 instructorSchema.methods.toJSON = function() {
   const obj = this.toObject();
   delete obj.password;
