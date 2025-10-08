@@ -30,7 +30,7 @@ const CourseDetail = () => {
         const [courseRes, modulesRes, progressRes, , quizzesRes] = await Promise.all([
 
           axiosInstance.get(`/api/courses/${courseId}`),
-          axiosInstance.get(`/api/modules/course/${courseId}`).catch((error) => {
+          axiosInstance.get(`/api/modules/course/${courseId}?includeInactive=true`).catch((error) => {
             console.log('⚠️ Modules fetch failed:', error.response?.status);
             return { data: [] };
           }),
@@ -38,10 +38,14 @@ const CourseDetail = () => {
             console.log('⚠️ Progress fetch failed (user might not be enrolled):', error.response?.status);
             return { data: null };
           }),
-          
+
           axiosInstance.get(`/api/module-progress/course/${courseId}`).catch((error) => {
             console.log('⚠️ Module progress fetch failed:', error.response?.status);
             return { data: { moduleProgresses: [] } };
+          }),
+          axiosInstance.get(`/api/quiz/course/${courseId}`).catch((error) => {
+            console.log('⚠️ Quizzes fetch failed:', error.response?.status);
+            return { data: [] };
           })
         ]);
         console.log('📚 Course data:', courseRes.data);
@@ -192,11 +196,23 @@ const CourseDetail = () => {
   };
 
   const handleCreateQuiz = () => {
-    // Navigate to appropriate quiz creation page based on role
-    if (user?.role === 'admin') {
-      navigate(`/admin/quiz`, { state: { selectedCourseId: courseId } });
-    } else if (user?.role === 'instructor') {
-      navigate(`/instructor/quiz`, { state: { selectedCourseId: courseId } });
+    // If quiz exists, navigate to edit page; otherwise create new quiz
+    const existingQuiz = quizzes && quizzes.length > 0 ? quizzes[0] : null;
+
+    if (existingQuiz) {
+      // Navigate to edit page
+      if (user?.role === 'admin') {
+        navigate(`/admin/quiz/edit/${existingQuiz._id}`);
+      } else if (user?.role === 'instructor') {
+        navigate(`/instructor/quiz/edit/${existingQuiz._id}`);
+      }
+    } else {
+      // Navigate to create page
+      if (user?.role === 'admin') {
+        navigate(`/admin/quiz`, { state: { selectedCourseId: courseId } });
+      } else if (user?.role === 'instructor') {
+        navigate(`/instructor/quiz`, { state: { selectedCourseId: courseId } });
+      }
     }
   };
 
@@ -412,76 +428,7 @@ const CourseDetail = () => {
                       );
                     })}
                   </div>
-                ) : (
-                  <p className="text-gray-600">No modules available for this course.</p>
-                )}
-
-                {/* Quiz Section */}
-                {quizzes && quizzes.length > 0 && (
-                  <div className="mt-8">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Course Quiz</h2>
-                    {quizzes.map((quiz) => {
-                      const allModulesCompleted = progress?.completionPercentage === 100;
-                      const isQuizDisabled = !allModulesCompleted;
-
-                      return (
-                        <div
-                          key={quiz._id}
-                          className={`border rounded-lg p-6 ${
-                            isQuizDisabled
-                              ? 'bg-gray-100 border-gray-300 opacity-60'
-                              : 'bg-white border-blue-300'
-                          }`}
-                        >
-                          {showQuiz && !isQuizDisabled ? (
-                            <Quiz
-                              courseId={courseId}
-                              quizId={quiz._id}
-                              onComplete={() => {
-                                setShowQuiz(false);
-                                refetchData();
-                              }}
-                            />
-                          ) : (
-                            <>
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                                    {course?.title}
-                                  </h3>
-                                  <p className="text-gray-600 mb-4">{quiz.description}</p>
-                                  <div className="flex gap-4 text-sm text-gray-600">
-                                    <span>📝 {quiz.questions?.length || 0} Questions</span>
-                                    <span>⏱️ {quiz.duration} minutes</span>
-                                    <span>🎯 Passing Score: {quiz.passingScore}%</span>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => setShowQuiz(true)}
-                                  disabled={isQuizDisabled}
-                                  className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                                    isQuizDisabled
-                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                                  }`}
-                                >
-                                  {isQuizDisabled ? '🔒 Locked' : 'Start Quiz'}
-                                </button>
-                              </div>
-                              {isQuizDisabled && (
-                                <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                                  <p className="text-sm text-yellow-800">
-                                    ⚠️ Complete all modules to unlock the quiz
-                                  </p>
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                ) : null}
               </>
             ) : (
               <div className="text-center py-8">
@@ -593,10 +540,21 @@ const CourseDetail = () => {
                 onClick={handleCreateQuiz}
                 className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center"
               >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Create Quiz for this Course
+                {quizzes && quizzes.length > 0 ? (
+                  <>
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit Quiz
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create Quiz for this Course
+                  </>
+                )}
               </button>
             </div>
           )}

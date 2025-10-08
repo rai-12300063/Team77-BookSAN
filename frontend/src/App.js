@@ -22,6 +22,8 @@ import TestModules from './pages/TestModules';
 
 import InstructorsPage from './pages/InstructorsPage';
 import StudentsPage from './pages/StudentsPage';
+import UserManagement from './pages/UserManagement';
+import CourseEnrollmentManagement from './pages/CourseEnrollmentManagement';
 
 function App() {
   return (
@@ -55,22 +57,33 @@ function App() {
           <Route path="/instructor/quizzes" element={<ProtectedRoute instructorOnly={true}><InstructorQuizManagement /></ProtectedRoute>} />
           <Route path="/instructor/quiz/edit/:quizId" element={<ProtectedRoute instructorOnly={true}><InstructorQuizEditor /></ProtectedRoute>} />
 
-          {/* ADD THESE NEW ROUTES FOR INSTRUCTORS & STUDENTS */}
-          <Route 
-            path="/instructors" 
+          {/* Course Enrollment Management - Admin and Instructor only */}
+          <Route path="/course-enrollment" element={<ProtectedRoute><CourseEnrollmentManagement /></ProtectedRoute>} />
+
+          {/* User Management routes */}
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/instructors"
             element={
               <ProtectedRoute adminOnly={true}>
                 <InstructorsPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/students" 
+          <Route
+            path="/students"
             element={
               <ProtectedRoute adminOnly={true}>
                 <StudentsPage />
               </ProtectedRoute>
-            } 
+            }
           />
           
           {/* Test Modules Route - Admin Only */}

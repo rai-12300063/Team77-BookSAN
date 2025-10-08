@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const instructorSchema = new mongoose.Schema({
+const studentSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'Name is required'],
@@ -22,22 +22,19 @@ const instructorSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    default: 'instructor',
+    default: 'student',
     immutable: true
   },
   isActive: {
     type: Boolean,
     default: true
-  },
-  status: {
-    type: String,
-    default: 'active'
   }
 }, {
   timestamps: true
 });
 
-instructorSchema.pre('save', async function(next) {
+// Hash password before saving
+studentSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
     return next();
   }
@@ -51,16 +48,19 @@ instructorSchema.pre('save', async function(next) {
   }
 });
 
-instructorSchema.methods.comparePassword = async function(candidatePassword) {
+// Method to compare password
+studentSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-instructorSchema.methods.toJSON = function() {
+// Remove password from JSON output
+studentSchema.methods.toJSON = function() {
   const obj = this.toObject();
   delete obj.password;
   return obj;
 };
 
-const Instructor = mongoose.model('Instructor', instructorSchema, 'users');
+// ADD 'users' as the third parameter to use the same collection
+const Student = mongoose.model('Student', studentSchema, 'users');
 
-module.exports = Instructor;
+module.exports = Student;

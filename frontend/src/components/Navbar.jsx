@@ -33,6 +33,19 @@ const Navbar = () => {
                 Quiz Management
               </Link>
             )}
+            {(user.role === 'admin' || user.role === 'instructor') && (
+              <>
+                <Link to="/course-enrollment" className="mr-4 hover:text-yellow-300">
+                  Enrollment
+                </Link>
+                <Link
+                  to={user.role === 'admin' ? "/admin/quiz" : "/instructor/quiz"}
+                  className="mr-4 hover:text-blue-200"
+                >
+                  Quiz Management
+                </Link>
+              </>
+            )}
             <Link to="/profile" className="mr-4 hover:text-yellow-300">Profile</Link>
             <button
               onClick={handleLogout}
