@@ -235,4 +235,134 @@ router.put('/:moduleId/content/:contentId', auth, async (req, res) => {
     }
 });
 
+/**
+ * @route   POST /api/module-progress/:moduleId/content/:contentId
+ * @desc    Update content progress with actions (for frontend compatibility)
+ * @access  Private
+ */
+router.post('/:moduleId/content/:contentId', auth, async (req, res) => {
+    try {
+        const { action } = req.body;
+        const { moduleId, contentId } = req.params;
+        const userId = req.user.id;
+
+        console.log('🔄 Content progress action received:', { 
+            moduleId, 
+            contentId, 
+            action, 
+            userId,
+            userEmail: req.user.email,
+            timestamp: new Date().toISOString()
+        });
+
+        // Find or create module progress
+        let moduleProgress = await ModuleProgress.findOne({
+            userId,
+            moduleId
+        });
+
+        if (!moduleProgress) {
+            // Auto-start the module if it doesn't exist
+            const module = await Module.findById(moduleId);
+            if (!module) {
+                return res.status(404).json({ message: 'Module not found' });
+            }
+
+            const contents = module.contents || [];
+            const requiredContents = contents.filter(c => c.isRequired !== false);
+
+            moduleProgress = new ModuleProgress({
+                userId,
+                courseId: module.courseId,
+                moduleId,
+                startedAt: new Date(),
+                lastAccessedAt: new Date(),
+                status: 'in-progress',
+                totalContentCount: contents.length,
+                totalRequiredContentCount: requiredContents.length,
+                completionPercentage: 0,
+                contentProgress: contents.map(content => ({
+                    contentId: content.contentId,
+                    contentType: content.type || 'text',
+                    status: 'not-started',
+                    isMandatory: content.isRequired !== false,
+                    startedAt: null,
+                    timeSpent: 0
+                }))
+            });
+
+            await moduleProgress.save();
+            console.log('✅ Auto-created module progress for user:', userId);
+        }
+
+        // Map action to progress data
+        let progressData = {};
+        const currentTime = new Date();
+
+        switch (action) {
+            case 'start':
+                progressData = {
+                    status: 'in-progress',
+                    startedAt: currentTime,
+                    timeSpent: 0
+                };
+                break;
+            case 'complete':
+                progressData = {
+                    status: 'completed',
+                    completedAt: currentTime,
+                    isCompleted: true,
+                    completionPercentage: 100
+                };
+                break;
+            default:
+                return res.status(400).json({ 
+                    message: 'Invalid action. Use "start" or "complete"',
+                    supportedActions: ['start', 'complete']
+                });
+        }
+
+        // Update the content progress
+        try {
+            await moduleProgress.updateContentProgress(contentId, progressData);
+            console.log('✅ updateContentProgress completed successfully');
+        } catch (updateError) {
+            console.error('❌ Error in updateContentProgress:', updateError);
+            throw updateError;
+        }
+
+        // Refresh the module progress to get updated values
+        await moduleProgress.populate('moduleId');
+        
+        console.log('✅ Content progress updated successfully:', { 
+            contentId, 
+            action, 
+            newStatus: progressData.status,
+            moduleProgressId: moduleProgress._id,
+            currentCompletionPercentage: moduleProgress.completionPercentage,
+            currentStatus: moduleProgress.status,
+            contentProgressCount: moduleProgress.contentProgress.length
+        });
+
+        res.json({
+            message: `Content ${action}ed successfully`,
+            action,
+            contentId,
+            moduleProgress: {
+                _id: moduleProgress._id,
+                completionPercentage: moduleProgress.completionPercentage,
+                status: moduleProgress.status
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error updating content progress:', error);
+        res.status(500).json({ 
+            message: 'Failed to update content progress', 
+            error: error.message,
+            action: req.body.action
+        });
+    }
+});
+
 module.exports = router;

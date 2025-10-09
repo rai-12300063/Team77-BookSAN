@@ -1,23 +1,40 @@
 {
-  "name": "task-manager",
+  "name": "booksan-olpt-production",
   "version": "1.0.0",
-  "description": "Complete MERN Task Manager Application",
+  "description": "BookSAN Online Learning Progress Tracker - Production Ready",
+  "main": "server.js",
   "scripts": {
-    "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend",
-    "start": "concurrently \"npm run prod --prefix backend\" \"npm start --prefix frontend\"",
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix frontend\"",
-    "test": "npm test --prefix backend"
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm start",
+    "client": "cd frontend && npm start",
+    "build": "cd frontend && npm install && npm run build",
+    "install-all": "cd backend && npm install && cd ../frontend && npm install",
+    "install-dev": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "deploy": "npm run install-all && npm run build",
+    "postdeploy": "echo 'Deployment complete! Backend: Port 5001, Frontend: build/ folder ready for static hosting'"
   },
-  "devDependencies": {
-    "chai": "^5.3.3",
-    "chai-http": "^5.1.2",
-    "concurrently": "^7.0.0",
-    "mocha": "^11.7.4",
-    "sinon": "^21.0.0"
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
-  "author": "Task Manager Team",
-  "license": "ISC",
+  "keywords": [
+    "learning",
+    "education",
+    "progress-tracking",
+    "mern-stack",
+    "mongodb",
+    "express",
+    "react",
+    "nodejs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rai-12300063/Team77-BookSAN.git"
+  },
+  "author": "Team77 - BookSAN",
+  "license": "MIT",
   "dependencies": {
-    "mongodb": "^6.18.0"
+    "concurrently": "^9.2.1"
   }
 }

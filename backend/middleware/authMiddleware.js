@@ -22,12 +22,14 @@ const protect = async (req, res, next) => {
     }
 };
 
-const requireAnyRole = (req, res, next) => {
-    if (req.user && req.user.role) {
-        next();
-    } else {
-        res.status(403).json({ message: 'Access denied. Valid role required.' });
-    }
+const requireAnyRole = (roles) => {
+    return (req, res, next) => {
+        if (req.user && req.user.role && roles.includes(req.user.role)) {
+            next();
+        } else {
+            res.status(403).json({ message: `Access denied. Required roles: ${roles.join(', ')}` });
+        }
+    };
 };
 
 const requirePermission = (permission) => {

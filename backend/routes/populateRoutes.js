@@ -1,6 +1,6 @@
 ﻿const express = require('express');
 const router = express.Router();
-const { updateModulesAndSync, syncUserProgress } = require('../databasePopulate/enhancedModuleUpdate');
+// const { updateModulesAndSync, syncUserProgress } = require('../databasePopulate/enhancedModuleUpdate'); // Commented out - file removed for production
 
 // Simple populate route without authentication for demo purposes
 router.post('/populate-demo', async (req, res) => {
@@ -170,11 +170,12 @@ router.post('/sync-progress', async (req, res) => {
     try {
         console.log('🔄 Starting progress synchronization...');
         
-        await syncUserProgress();
+        // await syncUserProgress(); // Commented out - function removed for production
+        console.log('⚠️ Progress sync function disabled for production build');
         
         res.json({
             success: true,
-            message: 'User progress synchronization completed successfully',
+            message: 'User progress synchronization skipped (production build)',
             timestamp: new Date().toISOString()
         });
         

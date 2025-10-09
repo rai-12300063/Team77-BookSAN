@@ -17,10 +17,15 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [analyticsRes, streaksRes, enrolledRes, goalsRes] = await Promise.all([
+      // Load essential data first, then load additional data
+      const enrolledRes = await axiosInstance.get('/api/courses/enrolled/my').catch(() => ({ data: [] }));
+      setEnrolledCourses(enrolledRes.data || []);
+      setLoading(false); // Allow UI to render with basic data
+      
+      // Load additional data in background
+      const [analyticsRes, streaksRes, goalsRes] = await Promise.all([
         axiosInstance.get('/api/progress/analytics').catch(() => ({ data: null })),
         axiosInstance.get('/api/progress/streaks').catch(() => ({ data: null })),
-        axiosInstance.get('/api/courses/enrolled/my').catch(() => ({ data: [] })),
         axiosInstance.get('/api/progress/learning-goals').catch(() => ({ data: null }))
       ]);
       
@@ -413,7 +418,7 @@ const Dashboard = () => {
           {/* Quick Actions */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <Link 
                 to="/courses" 
                 className="flex items-center justify-center w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-md hover:from-blue-700 hover:to-blue-800 transition duration-200 transform hover:scale-105 shadow-md"
@@ -424,13 +429,13 @@ const Dashboard = () => {
                 Browse Courses
               </Link>
               <Link 
-                to="/test-modules"
-                className="flex items-center justify-center w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 rounded-md hover:from-purple-600 hover:to-purple-700 transition duration-200 transform hover:scale-105 shadow-md"
+                to="/profile" 
+                className="flex items-center justify-center w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-md hover:from-green-700 hover:to-green-800 transition duration-200 transform hover:scale-105 shadow-md"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14-4l-4 4m0 0l4 4m-14-4l4-4m-4 0l4 4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Test Modules System
+                My Profile
               </Link>
             </div>
           </div>

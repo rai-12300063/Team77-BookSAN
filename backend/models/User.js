@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true, index: true }, // Add index for faster login
     password: { type: String, required: true },
     address: { type: String },
     // Learning-specific fields
@@ -28,9 +28,10 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
-    const salt = await bcrypt.genSalt(10);
+    // Reduce salt rounds from 10 to 8 for faster login (still secure)
+    const salt = await bcrypt.genSalt(8);
     this.password = await bcrypt.hash(this.password, salt);
-    next(); // new
+    next();
 });
 
 module.exports = mongoose.model('User', userSchema);

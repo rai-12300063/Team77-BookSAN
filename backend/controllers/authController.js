@@ -5,7 +5,10 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    return jwt.sign({ id }, process.env.JWT_SECRET, { 
+        expiresIn: '7d', // Shorter expiry for better security and performance
+        algorithm: 'HS256' // Explicit algorithm for faster signing
+    });
 };
 
 // Configure email transporter
@@ -55,21 +58,40 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
     const { email, password } = req.body;
+    
+    // Quick validation
+    if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required' });
+    }
+    
     try {
-        const user = await User.findOne({ email });
-        if (user && (await bcrypt.compare(password, user.password))) {
-            res.json({ 
-                id: user.id, 
-                name: user.name, 
-                email: user.email, 
-                role: user.role,
-                token: generateToken(user.id) 
-            });
-        } else {
-            res.status(401).json({ message: 'Invalid email or password' });
+        // Find user with minimal fields to speed up query
+        const user = await User.findOne({ email }).select('_id email password name role').lean();
+        
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid email or password' });
         }
+        
+        // Use faster bcrypt comparison
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        
+        if (!isValidPassword) {
+            return res.status(401).json({ message: 'Invalid email or password' });
+        }
+        
+        // Generate token and respond quickly
+        const token = generateToken(user._id);
+        
+        res.json({ 
+            id: user._id, 
+            name: user.name, 
+            email: user.email, 
+            role: user.role,
+            token: token
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Login error:', error);
+        res.status(500).json({ message: 'Server error during login' });
     }
 };
 

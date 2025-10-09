@@ -18,6 +18,12 @@ const ModuleDetailPage = () => {
     const [error, setError] = useState(null);
     const [selectedContent, setSelectedContent] = useState(null);
     const [contentProgress, setContentProgress] = useState({});
+    const [debugInfo, setDebugInfo] = useState({
+        hasToken: !!localStorage.getItem('token'),
+        lastApiCall: null,
+        lastApiResponse: null,
+        lastApiError: null
+    });
 
     useEffect(() => {
         fetchModuleData();
@@ -27,15 +33,57 @@ const ModuleDetailPage = () => {
     const fetchModuleData = async () => {
         try {
             setLoading(true);
+            setError(null);
+            
+            console.log('🔄 Fetching module data for:', { courseId, moduleId });
             
             // Fetch module details and progress in parallel
             const [moduleResponse, progressResponse] = await Promise.all([
-                axios.get(`/api/modules/${moduleId}`),
-                axios.get(`/api/module-progress/${moduleId}`).catch(() => ({ data: null }))
+                axios.get(`/api/modules/${moduleId}`).catch(err => {
+                    console.error('Module API error:', err.response?.data || err.message);
+                    throw err;
+                }),
+                axios.get(`/api/module-progress/${moduleId}`).catch(err => {
+                    console.warn('Progress API error (non-critical):', err.response?.data || err.message);
+                    return { data: null };
+                })
             ]);
 
-            const moduleData = moduleResponse.data;
-            const progressData = progressResponse.data;
+            console.log('📊 API Responses:', {
+                moduleResponse: moduleResponse?.data,
+                progressResponse: progressResponse?.data
+            });
+
+            // Handle different response structures
+            let moduleData = moduleResponse.data;
+            
+            // Check if response has nested module structure
+            if (moduleData && moduleData.module) {
+                moduleData = moduleData.module;
+            }
+
+            const progressData = progressResponse?.data;
+
+            console.log('📚 Processed data:', {
+                moduleData: {
+                    id: moduleData?._id,
+                    title: moduleData?.title,
+                    contentsCount: moduleData?.contents?.length || 0,
+                    contents: moduleData?.contents?.map(c => ({
+                        contentId: c.contentId,
+                        type: c.type,
+                        title: c.title
+                    })) || []
+                },
+                progressData: progressData ? { 
+                    id: progressData._id,
+                    completionPercentage: progressData.completionPercentage
+                } : null
+            });
+
+            if (!moduleData) {
+                throw new Error('No module data received from API');
+            }
 
             setModule(moduleData);
             setModuleProgress(progressData);
@@ -51,14 +99,25 @@ const ModuleDetailPage = () => {
 
             // Select first content item by default
             if (moduleData.contents && moduleData.contents.length > 0) {
+                console.log('✅ Setting first content item:', moduleData.contents[0]);
                 setSelectedContent(moduleData.contents[0]);
+            } else {
+                console.warn('⚠️ No contents found in module');
             }
-
-            console.log('📚 Module data loaded:', { moduleData, progressData });
             
         } catch (error) {
-            console.error('Error fetching module data:', error);
-            setError('Failed to load module content');
+            console.error('❌ Error fetching module data:', error);
+            
+            let errorMessage = 'Failed to load module content';
+            if (error.response?.status === 404) {
+                errorMessage = 'Module not found';
+            } else if (error.response?.status === 403) {
+                errorMessage = 'Access denied to this module';
+            } else if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            }
+            
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -68,11 +127,16 @@ const ModuleDetailPage = () => {
         setSelectedContent(content);
         
         // Mark content as started if not already
-        if (!contentProgress[content.contentId] || contentProgress[content.contentId].status === 'not-started') {
+        const currentProgress = contentProgress[content.contentId];
+        if (!currentProgress || currentProgress.status === 'not-started') {
             try {
-                await axios.post(`/api/module-progress/${moduleId}/content/${content.contentId}`, {
+                console.log('🔄 Starting content:', { contentId: content.contentId, moduleId });
+                
+                const response = await axios.post(`/api/module-progress/${moduleId}/content/${content.contentId}`, {
                     action: 'start'
                 });
+                
+                console.log('✅ Content start response:', response.data);
                 
                 // Update local progress
                 setContentProgress(prev => ({
@@ -80,20 +144,45 @@ const ModuleDetailPage = () => {
                     [content.contentId]: {
                         ...prev[content.contentId],
                         status: 'in-progress',
-                        startedAt: new Date().toISOString()
+                        startedAt: new Date().toISOString(),
+                        timeSpent: 0
                     }
                 }));
             } catch (error) {
-                console.error('Error starting content:', error);
+                console.error('❌ Error starting content:', error);
+                // Don't show an alert for start errors - this is less critical
             }
         }
     };
 
     const handleContentComplete = async (contentId) => {
         try {
-            await axios.post(`/api/module-progress/${moduleId}/content/${contentId}`, {
+            // Debug information
+            const debugInfo = {
+                contentId,
+                moduleId,
+                userToken: localStorage.getItem('token') ? 'Present' : 'Missing',
+                apiEndpoint: `/api/module-progress/${moduleId}/content/${contentId}`,
+                timestamp: new Date().toISOString()
+            };
+            
+            console.log('🔄 Marking content as complete - Debug Info:', debugInfo);
+            
+            const response = await axios.post(`/api/module-progress/${moduleId}/content/${contentId}`, {
                 action: 'complete'
             });
+            
+            console.log('✅ Content completion response:', response.data);
+            console.log('📊 Response headers:', response.headers);
+            console.log('🔢 Response status:', response.status);
+            
+            // Update debug info
+            setDebugInfo(prev => ({
+                ...prev,
+                lastApiCall: debugInfo.apiEndpoint,
+                lastApiResponse: response.data,
+                lastApiError: null
+            }));
             
             // Update local progress
             setContentProgress(prev => ({
@@ -101,16 +190,56 @@ const ModuleDetailPage = () => {
                 [contentId]: {
                     ...prev[contentId],
                     status: 'completed',
-                    completedAt: new Date().toISOString()
+                    completedAt: new Date().toISOString(),
+                    isCompleted: true,
+                    completionPercentage: 100
                 }
             }));
 
             // Refresh module progress
-            const progressResponse = await axios.get(`/api/module-progress/${moduleId}`);
-            setModuleProgress(progressResponse.data);
+            try {
+                const progressResponse = await axios.get(`/api/module-progress/${moduleId}`);
+                setModuleProgress(progressResponse.data?.moduleProgress || progressResponse.data);
+                console.log('📊 Updated module progress:', progressResponse.data);
+            } catch (progressError) {
+                console.warn('⚠️ Could not refresh module progress:', progressError.message);
+            }
+            
+            // Show success feedback
+            alert('Content marked as complete! ✅');
             
         } catch (error) {
-            console.error('Error completing content:', error);
+            console.error('❌ Error completing content:', error);
+            console.error('❌ Error details:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
+            
+            // Update debug info with error
+            setDebugInfo(prev => ({
+                ...prev,
+                lastApiCall: `/api/module-progress/${moduleId}/content/${contentId}`,
+                lastApiResponse: null,
+                lastApiError: {
+                    status: error.response?.status,
+                    message: error.response?.data?.message || error.message,
+                    timestamp: new Date().toISOString()
+                }
+            }));
+            
+            let errorMessage = 'Failed to mark content as complete';
+            if (error.response?.status === 404) {
+                errorMessage = 'Module or content not found';
+            } else if (error.response?.status === 403) {
+                errorMessage = 'Access denied';
+            } else if (error.response?.status === 401) {
+                errorMessage = 'Authentication failed - please log in again';
+            } else if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            }
+            
+            alert(`Error: ${errorMessage}`);
         }
     };
 
@@ -185,9 +314,17 @@ const ModuleDetailPage = () => {
     const renderContentDisplay = () => {
         if (!selectedContent) {
             return (
-                <div className="flex items-center justify-center h-64 text-gray-500">
-                    Select a content item to view
-
+                <div className="text-center py-12 text-gray-500">
+                    <div className="text-6xl mb-4">📖</div>
+                    <h3 className="text-xl font-medium mb-2">Select Content to Begin</h3>
+                    <p>Choose a content item from the sidebar to start learning</p>
+                    {module && module.contents && module.contents.length === 0 && (
+                        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <p className="text-yellow-800">
+                                This module doesn't have content yet. Please check back later or contact your instructor.
+                            </p>
+                        </div>
+                    )}
                 </div>
             );
         }
@@ -232,14 +369,28 @@ const ModuleDetailPage = () => {
 
                 {/* Content Body */}
                 <div className="prose max-w-none">
-                    {selectedContent.type === 'text' && contentData?.content && (
-                        <div 
-                            className="content-display"
-                            dangerouslySetInnerHTML={{ __html: contentData.content }}
-                        />
+                    {/* Text Content */}
+                    {selectedContent.type === 'text' && (
+                        <div className="space-y-4">
+                            {contentData?.content ? (
+                                <div 
+                                    className="content-display"
+                                    dangerouslySetInnerHTML={{ __html: contentData.content }}
+                                />
+                            ) : (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                                    <div className="text-4xl mb-4 text-center">📖</div>
+                                    <h3 className="text-lg font-medium mb-2">Text Content</h3>
+                                    <p className="text-gray-600">
+                                        {selectedContent.description || 'Reading material for this lesson will be available here.'}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     )}
                     
-                    {selectedContent.type === 'video' && contentData && (
+                    {/* Video Content */}
+                    {selectedContent.type === 'video' && (
                         <div className="space-y-4">
                             <div className="bg-gray-100 rounded-lg p-8 text-center">
                                 <div className="text-6xl mb-4">🎥</div>
@@ -337,6 +488,32 @@ const ModuleDetailPage = () => {
                         </div>
                     )}
 
+                    {/* Fallback for missing content data or unknown types */}
+                    {(!contentData || (selectedContent.type !== 'text' && selectedContent.type !== 'video' && 
+                      selectedContent.type !== 'interactive' && selectedContent.type !== 'assignment' && 
+                      selectedContent.type !== 'quiz')) && (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                            <div className="text-center">
+                                <div className="text-4xl mb-4">📄</div>
+                                <h3 className="text-lg font-medium mb-2">{selectedContent.title}</h3>
+                                <p className="text-gray-600 mb-4">
+                                    {selectedContent.description || 'Content for this item is being prepared.'}
+                                </p>
+                                <div className="text-sm text-gray-500">
+                                    <p>Content Type: {selectedContent.type}</p>
+                                    <p>Duration: {selectedContent.duration} minutes</p>
+                                </div>
+                                {!contentData && (
+                                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                                        <p className="text-sm text-yellow-800">
+                                            Content data is not available yet. Please check back later.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             </div>
         );
@@ -418,6 +595,29 @@ const ModuleDetailPage = () => {
                                 </div>
                             </div>
                         )}
+                        
+                        {/* Debug Panel - Only show if there's an error or in development */}
+                        {(debugInfo.lastApiError || process.env.NODE_ENV === 'development') && (
+                            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <h4 className="text-sm font-medium text-yellow-800 mb-2">🔧 Debug Info</h4>
+                                <div className="text-xs text-yellow-700 space-y-1">
+                                    <div>Auth Token: {debugInfo.hasToken ? '✅ Present' : '❌ Missing'}</div>
+                                    {debugInfo.lastApiCall && (
+                                        <div>Last API: {debugInfo.lastApiCall}</div>
+                                    )}
+                                    {debugInfo.lastApiError && (
+                                        <div className="text-red-600">
+                                            Error: {debugInfo.lastApiError.status} - {debugInfo.lastApiError.message}
+                                        </div>
+                                    )}
+                                    {debugInfo.lastApiResponse && (
+                                        <div className="text-green-600">
+                                            Success: {debugInfo.lastApiResponse.message}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -428,14 +628,15 @@ const ModuleDetailPage = () => {
                         <div className="bg-white rounded-lg shadow-md p-6">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Module Content</h3>
                             <div className="space-y-3">
-                                {module.contents && module.contents.length > 0 ? (
+                                            {module.contents && module.contents.length > 0 ? (
                                     module.contents
                                         .sort((a, b) => (a.order || 0) - (b.order || 0))
                                         .map(renderContentItem)
                                 ) : (
                                     <div className="text-center py-8 text-gray-500">
                                         <div className="text-4xl mb-2">📚</div>
-                                        <p>No content available</p>
+                                        <p>No content available for this module</p>
+                                        <p className="text-sm mt-2">Content may still be being generated</p>
                                     </div>
                                 )}
                             </div>

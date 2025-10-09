@@ -12,7 +12,8 @@ const {
     unenrollStudentFromCourse,
     getCourseEnrollments
 } = require('../controllers/courseController');
-const { protect, requireInstructor, requireAdmin } = require('../middleware/authMiddleware');
+const { protect, requireAnyRole, requirePermission, adminOnly } = require('../middleware/authMiddleware');
+const { validateObjectId } = require('../middleware/validateObjectId');
 const router = express.Router();
 
 // Public routes (no authentication required)
@@ -24,31 +25,31 @@ router.get('/', protect, getCourses);
 router.get('/enrolled/my', protect, getEnrolledCourses);
 
 // POST /api/courses - Create a new course (instructor/admin only)
-router.post('/', protect, requireInstructor, createCourse);
+router.post('/', protect, requireAnyRole(['instructor', 'admin']), createCourse);
 
 // GET /api/courses/:id - Get single course details
-router.get('/:id', protect, getCourse);
+router.get('/:id', protect, validateObjectId('id'), getCourse);
 
 // GET /api/courses/:id/enrollments - Get course enrollments (admin/instructor)
-router.get('/:id/enrollments', protect, requireInstructor, getCourseEnrollments);
+router.get('/:id/enrollments', protect, validateObjectId('id'), requireAnyRole(['instructor', 'admin']), getCourseEnrollments);
 
 // POST /api/courses/:id/enroll - Enroll in a course (self-enrollment for students)
-router.post('/:id/enroll', protect, enrollInCourse);
+router.post('/:id/enroll', protect, validateObjectId('id'), enrollInCourse);
 
 // POST /api/courses/:id/unenroll - Unenroll from a course
-router.post('/:id/unenroll', protect, unenrollFromCourse);
+router.post('/:id/unenroll', protect, validateObjectId('id'), unenrollFromCourse);
 
 // POST /api/courses/enroll-student - Admin/Instructor enroll student
-router.post('/enroll-student', protect, requireInstructor, enrollStudentInCourse);
+router.post('/enroll-student', protect, requireAnyRole(['instructor', 'admin']), enrollStudentInCourse);
 
 // POST /api/courses/unenroll-student - Admin/Instructor unenroll student
-router.post('/unenroll-student', protect, requireInstructor, unenrollStudentFromCourse);
+router.post('/unenroll-student', protect, requireAnyRole(['instructor', 'admin']), unenrollStudentFromCourse);
 
 // PUT /api/courses/:id - Update a course (instructor/admin only)
-router.put('/:id', protect, requireInstructor, updateCourse);
+router.put('/:id', protect, validateObjectId('id'), requireAnyRole(['instructor', 'admin']), updateCourse);
 
 // DELETE /api/courses/:id - Delete a course (admin only)
-router.delete('/:id', protect, requireAdmin, deleteCourse);
+router.delete('/:id', protect, validateObjectId('id'), adminOnly, deleteCourse);
 
 module.exports = router;
 
