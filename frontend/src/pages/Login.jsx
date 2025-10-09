@@ -26,20 +26,44 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Quick client-side validation
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+    
     setLoading(true);
     setError('');
     
     try {
-      console.log('🔄 Attempting login with:', formData.email);
-      const response = await axiosInstance.post('/api/auth/login', formData);
-      console.log('✅ Login successful:', response.data);
+      console.log('🔄 Logging in...');
       
-      // Handle token in login response
+      // Use Promise.race for timeout handling
+      const loginPromise = axiosInstance.post('/api/auth/login', formData);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Login timeout')), 8000)
+      );
+      
+      const response = await Promise.race([loginPromise, timeoutPromise]);
+      console.log('✅ Login successful');
+      
+      // Immediately update auth state and navigate
       login(response.data);
-      navigate('/dashboard');
+      
+      // Navigate without waiting for state update
+      navigate('/dashboard', { replace: true });
+      
     } catch (error) {
       console.error('❌ Login failed:', error);
-      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+      
+      let errorMessage = 'Login failed. Please try again.';
+      if (error.message === 'Login timeout') {
+        errorMessage = 'Login is taking too long. Please check your connection.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       setError(errorMessage);
     } finally {
       setLoading(false);

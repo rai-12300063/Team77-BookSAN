@@ -313,6 +313,66 @@ moduleProgressSchema.pre('save', function(next) {
     next();
 });
 
+// Post-save hook to update course progress when module progress changes
+moduleProgressSchema.post('save', async function() {
+    try {
+        const LearningProgress = require('./LearningProgress');
+        
+        // Find all module progresses for this user and course
+        const allModuleProgresses = await this.constructor.find({ 
+            userId: this.userId, 
+            courseId: this.courseId 
+        });
+        
+        // Find the learning progress record
+        const learningProgress = await LearningProgress.findOne({ 
+            userId: this.userId, 
+            courseId: this.courseId 
+        });
+
+        if (learningProgress && allModuleProgresses.length > 0) {
+            // Calculate course-level progress based on module completion
+            const completedModules = allModuleProgresses.filter(mp => mp.status === 'completed').length;
+            const totalModules = allModuleProgresses.length;
+            const newCompletionPercentage = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
+            
+            // Only update if there's a change to avoid infinite loops
+            if (learningProgress.completionPercentage !== newCompletionPercentage) {
+                learningProgress.completionPercentage = newCompletionPercentage;
+                
+                // Update module progress tracking
+                if (!learningProgress.moduleProgress) {
+                    learningProgress.moduleProgress = {};
+                }
+                learningProgress.moduleProgress.totalModules = totalModules;
+                learningProgress.moduleProgress.completedModules = completedModules;
+                
+                // Update status based on progress
+                if (newCompletionPercentage === 100) {
+                    learningProgress.status = 'completed';
+                } else if (newCompletionPercentage > 0) {
+                    learningProgress.status = 'in_progress';
+                }
+                
+                // Update timestamps
+                learningProgress.lastAccessedAt = new Date();
+                
+                await learningProgress.save();
+                
+                console.log('🔄 Course progress auto-updated:', {
+                    userId: this.userId,
+                    courseId: this.courseId,
+                    completedModules,
+                    totalModules,
+                    completionPercentage: newCompletionPercentage
+                });
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error auto-updating course progress:', error);
+    }
+});
+
 // Static method to get progress with detailed analytics
 moduleProgressSchema.statics.getDetailedProgress = function(userId, moduleId) {
     return this.findOne({ userId, moduleId })

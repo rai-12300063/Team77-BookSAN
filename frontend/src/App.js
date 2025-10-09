@@ -1,36 +1,46 @@
+import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import Profile from './pages/Profile';
-import Courses from './pages/Courses';
-import CourseDetail from './pages/CourseDetail';
-import ModulesPage from './pages/ModulesPage';
-import ModuleDetailPage from './pages/ModuleDetailPage';
-import CourseModuleManagement from './pages/CourseModuleManagement';
-import QuizPage from './pages/QuizPage';
-import AdminQuizManagement from './pages/AdminQuizManagement';
-import InstructorQuizManagement from './pages/InstructorQuizManagement';
-import AdminQuizEditor from './pages/AdminQuizEditor';
-import InstructorQuizEditor from './pages/InstructorQuizEditor';
-import TestModules from './pages/TestModules';
 
-import InstructorsPage from './pages/InstructorsPage';
-import StudentsPage from './pages/StudentsPage';
-import UserManagement from './pages/UserManagement';
-import CourseEnrollmentManagement from './pages/CourseEnrollmentManagement';
+// Lazy load components for better performance
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Courses = lazy(() => import('./pages/Courses'));
+const CourseDetail = lazy(() => import('./pages/CourseDetail'));
+const ModulesPage = lazy(() => import('./pages/ModulesPage'));
+const ModuleDetailPage = lazy(() => import('./pages/ModuleDetailPage'));
+const CourseModuleManagement = lazy(() => import('./pages/CourseModuleManagement'));
+const QuizPage = lazy(() => import('./pages/QuizPage'));
+const AdminQuizManagement = lazy(() => import('./pages/AdminQuizManagement'));
+const InstructorQuizManagement = lazy(() => import('./pages/InstructorQuizManagement'));
+const AdminQuizEditor = lazy(() => import('./pages/AdminQuizEditor'));
+const InstructorQuizEditor = lazy(() => import('./pages/InstructorQuizEditor'));
+const TestModules = lazy(() => import('./pages/TestModules'));
+const InstructorsPage = lazy(() => import('./pages/InstructorsPage'));
+const StudentsPage = lazy(() => import('./pages/StudentsPage'));
+const UserManagement = lazy(() => import('./pages/UserManagement'));
+const CourseEnrollmentManagement = lazy(() => import('./pages/CourseEnrollmentManagement'));
+
+// Loading component
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center min-h-screen">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-900"></div>
+  </div>
+);
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Navbar />
-        <Routes>
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -95,7 +105,8 @@ function App() {
               </ProtectedRoute>
             } 
           />
-        </Routes>
+          </Routes>
+        </Suspense>
       </Router>
     </AuthProvider>
   );

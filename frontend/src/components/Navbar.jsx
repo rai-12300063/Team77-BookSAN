@@ -23,26 +23,21 @@ const Navbar = () => {
             <Link to="/courses" className="mr-4 hover:text-yellow-300">Courses</Link>
             <Link to="/course-modules" className="mr-4 hover:text-yellow-300">Manage Modules</Link>
             {user.role === 'admin' && (
-              <Link to="/test-modules" className="mr-4 hover:text-yellow-300">Test Results</Link>
-            )}
-            {(user.role === 'admin' || user.role === 'instructor') && (
-              <Link
-                to={user.role === 'admin' ? "/admin/quiz" : "/instructor/quiz"}
-                className="mr-4 hover:text-blue-200"
-              >
-                Quiz Management
-              </Link>
+              <>
+                <Link to="/users" className="mr-4 hover:text-yellow-300">User Management</Link>
+                <Link to="/test-modules" className="mr-4 hover:text-yellow-300">Test Results</Link>
+              </>
             )}
             {(user.role === 'admin' || user.role === 'instructor') && (
               <>
-                <Link to="/course-enrollment" className="mr-4 hover:text-yellow-300">
-                  Enrollment
-                </Link>
                 <Link
                   to={user.role === 'admin' ? "/admin/quiz" : "/instructor/quiz"}
                   className="mr-4 hover:text-blue-200"
                 >
                   Quiz Management
+                </Link>
+                <Link to="/course-enrollment" className="mr-4 hover:text-yellow-300">
+                  Enrollment
                 </Link>
               </>
             )}

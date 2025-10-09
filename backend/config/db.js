@@ -6,8 +6,15 @@ mongoose.set('strictQuery', false);
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);  // Remove deprecated options
-    console.log("MongoDB connected successfully");
+    // Optimized connection settings for better performance
+    const options = {
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+    };
+    
+    await mongoose.connect(process.env.MONGO_URI, options);
+    console.log("MongoDB connected successfully with optimized settings");
   } catch (error) {
     console.error("MongoDB connection error:", error.message);
     process.exit(1);

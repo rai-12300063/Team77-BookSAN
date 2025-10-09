@@ -307,10 +307,12 @@ const CourseModuleManagement = () => {
                     }
                 },
                 {
-                    type: 'resources',
+                    type: 'resource',
                     title: `${moduleToUpdate.title} - Additional Resources`,
                     duration: 5,
                     contentData: {
+                        resourceType: 'link',
+                        resourceUrl: 'https://docs.example.com',
                         links: [
                             { title: 'Official Documentation', url: 'https://docs.example.com' },
                             { title: 'Tutorial Videos', url: 'https://tutorials.example.com' },
@@ -343,8 +345,15 @@ const CourseModuleManagement = () => {
 
             console.log('Updating module with generated content:', updateData);
             
-            await axiosInstance.put(`/api/modules/${moduleId}`, updateData);
-            alert('Module content generated successfully!');
+            const response = await axiosInstance.put(`/api/modules/${moduleId}`, updateData);
+            
+            // Show detailed success message
+            const contentCount = generatedContent.length;
+            const contentTypes = [...new Set(generatedContent.map(c => c.type))].join(', ');
+            
+            alert(`✅ Module content generated successfully!\n\n📊 Generated ${contentCount} content items:\n• Types: ${contentTypes}\n• Total estimated duration: ${generatedContent.reduce((sum, c) => sum + c.duration, 0)} minutes`);
+            
+            console.log('Content generation response:', response.data);
             await fetchModules(selectedCourse);
         } catch (error) {
             console.error('Error generating content:', error);

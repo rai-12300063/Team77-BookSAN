@@ -14,6 +14,7 @@ const {
     syncAllUsersInCourse
 } = require('../controllers/moduleController');
 const { protect: authMiddleware } = require('../middleware/authMiddleware');
+const { validateObjectId, validateObjectIds } = require('../middleware/validateObjectId');
 
 /**
  * Module Routes with Design Pattern Integration
@@ -44,17 +45,16 @@ router.get('/debug', (req, res) => {
 });
 
 // Get all modules for a course
-
-router.get('/course/:courseId', authMiddleware, getCourseModules);
+router.get('/course/:courseId', authMiddleware, validateObjectId('courseId'), getCourseModules);
 
 // Get specific module with detailed information
-router.get('/:moduleId', authMiddleware, getModule);
+router.get('/:moduleId', authMiddleware, validateObjectId('moduleId'), getModule);
 
 // Update module progress
-router.put('/:moduleId/progress', authMiddleware, updateModuleProgress);
+router.put('/:moduleId/progress', authMiddleware, validateObjectId('moduleId'), updateModuleProgress);
 
 // Calculate module grade using different strategies
-router.post('/:moduleId/grade', authMiddleware, calculateModuleGrade);
+router.post('/:moduleId/grade', authMiddleware, validateObjectId('moduleId'), calculateModuleGrade);
 
 // Get module analytics (instructors and admins only)
 router.get('/:moduleId/analytics', authMiddleware, async (req, res, next) => {
@@ -81,16 +81,63 @@ router.delete('/:moduleId', authMiddleware, async (req, res, next) => {
     next();
 }, deleteModule);
 
-// Update specific content progress within a module
-
+// Update specific content progress within a module (PUT method)
 router.put('/:moduleId/content/:contentId/progress', authMiddleware, async (req, res, next) => {
-
     try {
         // Add contentId to request body for processing
         req.body.contentId = req.params.contentId;
         updateModuleProgress(req, res, next);
     } catch (error) {
         res.status(500).json({ message: 'Failed to update content progress', error: error.message });
+    }
+});
+
+// Update content progress with actions (POST method for frontend compatibility)
+router.post('/:moduleId/content/:contentId', authMiddleware, validateObjectId('moduleId'), async (req, res) => {
+    try {
+        const { moduleId, contentId } = req.params;
+        const { action } = req.body;
+        const userId = req.user.id;
+
+        console.log('🔄 Content progress update:', { moduleId, contentId, action, userId });
+
+        // Map action to progress data
+        let progressData = {};
+        switch (action) {
+            case 'start':
+                progressData = {
+                    status: 'in-progress',
+                    startedAt: new Date(),
+                    timeSpent: 0
+                };
+                break;
+            case 'complete':
+                progressData = {
+                    status: 'completed',
+                    completedAt: new Date(),
+                    isCompleted: true,
+                    completionPercentage: 100
+                };
+                break;
+            default:
+                return res.status(400).json({ message: 'Invalid action. Use "start" or "complete"' });
+        }
+
+        // Call updateModuleProgress with the processed data
+        req.body = {
+            contentId,
+            progressData,
+            action
+        };
+
+        await updateModuleProgress(req, res);
+
+    } catch (error) {
+        console.error('❌ Error updating content progress:', error);
+        res.status(500).json({ 
+            message: 'Failed to update content progress', 
+            error: error.message 
+        });
     }
 });
 
