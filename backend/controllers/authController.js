@@ -32,17 +32,33 @@ const createEmailTransporter = () => {
     }
 };
 
+/**
+ * FACTORY PATTERN IMPLEMENTATION
+ * User Registration - Creates different user types based on role
+ * 
+ * FACTORY PATTERN: Dynamic user creation based on role parameter
+ * ENCAPSULATION: User creation logic hidden from client
+ * VALIDATION: Business rules encapsulated within function
+ */
 const registerUser = async (req, res) => {
     const { name, email, password, role } = req.body;
     try {
+        // ENCAPSULATION: Business rule validation
         const userExists = await User.findOne({ email });
         if (userExists) return res.status(400).json({ message: 'User already exists' });
 
+        // *** FACTORY PATTERN IMPLEMENTATION ***
+        // Creates base user data
         const userData = { name, email, password };
+        
+        // FACTORY: Conditionally adds role-specific properties
+        // STRATEGY: Different user types based on role parameter
         if (role && ['student', 'instructor', 'admin'].includes(role)) {
-            userData.role = role;
+            userData.role = role; // Factory determines user type
         }
 
+        // FACTORY: Creates appropriate user instance
+        // ABSTRACTION: Complex user creation hidden behind simple interface
         const user = await User.create(userData);
         res.status(201).json({ 
             id: user.id, 

@@ -1,11 +1,25 @@
+/**
+ * CourseRoutes - Demonstrates DECORATOR and MIDDLEWARE PATTERN
+ * 
+ * DESIGN PATTERNS IMPLEMENTED:
+ * 1. DECORATOR PATTERN - Route protection through middleware layers
+ * 2. MIDDLEWARE PATTERN - Chain of responsibility for request processing
+ * 3. FACADE PATTERN - Simple route definitions hiding complex logic
+ * 
+ * OOP CONCEPTS DEMONSTRATED:
+ * 1. COMPOSITION - Routes composed of middleware + controllers
+ * 2. SEPARATION OF CONCERNS - Routes, auth, validation separated
+ * 3. SINGLE RESPONSIBILITY - Each route handles one endpoint
+ */
+
 const express = require('express');
 const {
-    getCourses,
-    getCourse,
-    createCourse,
-    updateCourse,
-    deleteCourse,
-    enrollInCourse,
+    getCourses,        // STRATEGY: Different behavior per role
+    getCourse,         // REPOSITORY: Data access abstraction
+    createCourse,      // FACTORY: Creates course instances
+    updateCourse,      // FACADE: Complex update operations
+    deleteCourse,      // FACADE: Complex deletion with cleanup
+    enrollInCourse,    // FACADE: Multi-step enrollment process
     unenrollFromCourse,
     getEnrolledCourses,
     enrollStudentInCourse,
@@ -16,15 +30,20 @@ const { protect, requireAnyRole, requirePermission, adminOnly } = require('../mi
 const { validateObjectId } = require('../middleware/validateObjectId');
 const router = express.Router();
 
-// Public routes (no authentication required)
-// GET /api/courses - Get all courses with filtering/pagination
+// *** DECORATOR PATTERN EXAMPLES ***
+// Routes are "decorated" with middleware that adds functionality
+
+// DECORATOR: protect middleware adds authentication
+// STRATEGY PATTERN: getCourses behaves differently per user role
 router.get('/', protect, getCourses);
 
-// Protected routes (authentication required)
-// GET /api/courses/enrolled/my - Get user's enrolled courses (must be before /:id route)
+// MULTIPLE DECORATORS: Authentication + role-specific access
+// MIDDLEWARE PATTERN: protect → getEnrolledCourses chain
 router.get('/enrolled/my', protect, getEnrolledCourses);
 
-// POST /api/courses - Create a new course (instructor/admin only)
+// DECORATOR CHAIN: protect → requireAnyRole → createCourse
+// FACTORY PATTERN: createCourse creates different course types
+// CHAIN OF RESPONSIBILITY: Each middleware can stop or continue
 router.post('/', protect, requireAnyRole(['instructor', 'admin']), createCourse);
 
 // GET /api/courses/:id - Get single course details

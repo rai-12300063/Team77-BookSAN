@@ -1,10 +1,4 @@
 ﻿# 📚 BookSAN Learning Progress Tracker
-
-![Production Ready](https://img.shields.io/badge/Status-Production%20Ready-green)
-![MERN Stack](https://img.shields.io/badge/Stack-MERN-blue)
-![MongoDB Atlas](https://img.shields.io/badge/Database-MongoDB%20Atlas-green)
-![Version](https://img.shields.io/badge/Version-1.0.0-brightgreen)
-
 A comprehensive, production-ready learning management system built with the MERN stack, featuring real-time progress tracking, interactive modules, and comprehensive analytics for students, instructors, and administrators.
 
 ## ✨ Key Features
@@ -40,7 +34,7 @@ cd BookSAN-OLPT
 # 2. Install ALL dependencies (including dev tools)
 npm run install-dev
 
-# 3. Start BOTH frontend and backend servers
+# 3. Start BOTH frontend and backend servers concurrently
 npm run dev
 ```
 
@@ -56,20 +50,6 @@ npm run server
 # Terminal 2 - Start Frontend  
 npm run client
 ```
-
-### **Production Deployment (Backend Only)**
-```bash
-# 1. Install production dependencies
-npm run install-all
-
-# 2. Build frontend for production
-npm run build
-
-# 3. Start production server (backend only)
-npm start
-```
-
-**⚠️ Note:** `npm start` only runs the backend server. For localhost development with the React frontend, use `npm run dev`.
 
 ## 🔑 Demo Credentials
 
@@ -189,14 +169,24 @@ NODE_ENV=production
 PORT=5001
 ```
 
+#### **PM2 Ecosystem Configuration**
+The project includes `ecosystem.config.js` for production process management:
+- **Auto-restart** on crashes with exponential backoff
+- **Memory monitoring** with 1GB restart threshold  
+- **Log management** with structured logging to files
+- **Environment-specific** configurations for dev/production
+- **Process monitoring** with PM2 dashboard integration
+
 ### **Performance & Security Features**
 
 #### **✅ Production Optimizations**
-- 🔒 **Security:** JWT authentication, input validation, parameter checking
-- ⚡ **Performance:** Connection pooling, query optimization, compression
-- 📊 **Monitoring:** Error tracking, performance metrics, health checks
-- 🛡️ **Validation:** ObjectId validation prevents database casting errors
-- 🔄 **Auto-sync:** Real-time progress updates with observer pattern
+- 🔒 **Security:** JWT authentication, input validation, ObjectId parameter checking
+- ⚡ **Performance:** Connection pooling, query optimization, response compression
+- 📊 **Monitoring:** PM2 process management, error tracking, performance metrics
+- 🛡️ **Validation:** Comprehensive middleware prevents database casting errors
+- 🔄 **Auto-sync:** Real-time progress updates with observer pattern implementation
+- 🧪 **Testing:** Full API test coverage with automated CI/CD pipeline
+- 🏗️ **Architecture:** Design patterns implementation (Factory, Observer, Strategy, etc.)
 
 #### **✅ Database Features**
 - ☁️ **MongoDB Atlas:** Cloud database with automatic scaling
@@ -208,28 +198,30 @@ PORT=5001
 
 ### **Development Commands**
 ```bash
-# Install all dependencies
+# Install all dependencies (production)
 npm run install-all
+
+# Install all dependencies (including dev tools)
+npm run install-dev
 
 # Start development servers (both frontend & backend)
 npm run dev
 
+# Start backend only
+npm run server
+
+# Start frontend only
+npm run client
+
 # Build production frontend
 npm run build
 
-# Production deployment
+# Complete deployment process
 npm run deploy
+
+# Complete fresh install (if all else fails)
+npm run install-dev  # Reinstalls all dependencies
 ```
-
-### **Common Issues & Solutions**
-
-| Issue | Solution |
-|-------|----------|
-| 🔴 "Cast to ObjectId failed" | ✅ Fixed with parameter validation middleware |
-| 🔴 Database connection timeout | ✅ Check MongoDB Atlas IP whitelist and credentials |
-| 🔴 JWT authentication failed | ✅ Verify JWT_SECRET in .env file |
-| 🔴 CORS errors | ✅ Frontend configured for correct backend URL |
-| 🔴 Module progress not recording | ✅ Fixed with enhanced error handling |
 
 ## 📊 API Documentation
 
@@ -291,11 +283,13 @@ GET    /api/quiz/:quizId/results         # Get quiz results
 - 🌐 **Browser Support:** Modern browsers (Chrome, Firefox, Safari, Edge)
 
 ### **🔧 Technical Specifications**
-- **Node.js:** v18+ required
-- **MongoDB:** Atlas cloud database
-- **React:** v18+ with functional components
-- **Authentication:** JWT with 24h expiration
-- **File Upload:** Support for course materials and media
+- **Node.js:** v18+ required (specified in package.json engines)
+- **MongoDB:** Atlas cloud database with connection pooling
+- **React:** v18+ with functional components and hooks
+- **Authentication:** JWT with role-based access control
+- **Process Management:** PM2 ecosystem for production deployment
+- **Testing:** Comprehensive API and component test suites
+- **Security:** ObjectId validation, parameter sanitization, CORS protection
 
 ## 🎓 Educational Features
 
@@ -315,19 +309,6 @@ GET    /api/quiz/:quizId/results         # Get quiz results
 
 ## 📞 Support & Documentation
 
-### **📖 Additional Resources**
-- 🚀 [Deployment Guide](./DEPLOYMENT_GUIDE.md)
-- 📊 [Production Summary](./PRODUCTION_SUMMARY.md)
-- 🔧 [Technical Documentation](./docs/)
-- 🐛 [Issue Tracking](https://github.com/rai-12300063/Team77-BookSAN/issues)
-
-### **🤝 Contributing**
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ## 📝 License & Credits
 
 ### **📄 License**
@@ -339,10 +320,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Institution:** Queensland University of Technology
 
 ### **🏆 Project Status**
-- ✅ **Status:** Production Ready
-- 🎯 **Version:** 1.0.0
-- 📅 **Last Updated:** October 2025
-- 🚀 **Deployment:** Ready for immediate production use
+- ✅ **Status:** Production Ready & Demonstration Ready
+- 🎯 **Version:** 1.0.0 (Stable Release)
+- 📅 **Last Updated:** October 10, 2025
+- 🧪 **Testing:** Comprehensive test coverage with CI/CD pipeline
 
 ---
 

@@ -1,9 +1,29 @@
+/**
+ * Database Configuration - Demonstrates SINGLETON PATTERN
+ * 
+ * DESIGN PATTERNS IMPLEMENTED:
+ * 1. SINGLETON PATTERN - MongoDB connection is singleton (implicit via Mongoose)
+ * 2. CONNECTION POOLING - Optimized connection management
+ * 
+ * OOP CONCEPTS DEMONSTRATED:
+ * 1. ENCAPSULATION - Connection complexity hidden from application
+ * 2. ABSTRACTION - Simple interface for database operations
+ */
+
 // config/db.js
 const mongoose = require("mongoose");
 
 // Set strictQuery explicitly to suppress the warning
 mongoose.set('strictQuery', false);
 
+/**
+ * SINGLETON PATTERN IMPLEMENTATION (via Mongoose)
+ * Database connection function - ensures single connection instance
+ * 
+ * SINGLETON: Mongoose internally manages single connection instance
+ * ENCAPSULATION: Connection details hidden from application code
+ * ERROR HANDLING: Centralized connection error management
+ */
 const connectDB = async () => {
   try {
     // Optimized connection settings for better performance

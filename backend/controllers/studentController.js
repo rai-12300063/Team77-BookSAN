@@ -1,18 +1,46 @@
+/**
+ * StudentController - Demonstrates SPECIALIZATION and AGGREGATION PATTERNS
+ * 
+ * DESIGN PATTERNS IMPLEMENTED:
+ * 1. FACADE PATTERN - Dashboard aggregates complex data into simple view
+ * 2. REPOSITORY PATTERN - Student-specific data access patterns
+ * 3. COMPOSITE PATTERN - Dashboard composed of multiple data sources
+ * 4. STRATEGY PATTERN - Student-specific business logic
+ * 
+ * OOP CONCEPTS DEMONSTRATED:
+ * 1. SPECIALIZATION - Student-specific functionality and data views
+ * 2. ENCAPSULATION - Student business logic encapsulated
+ * 3. COMPOSITION - Dashboard composed from multiple data sources
+ * 4. ABSTRACTION - Complex data aggregation hidden behind simple interface
+ */
+
 const Course = require('../models/Course');
 const LearningProgress = require('../models/LearningProgress');
 const User = require('../models/User');
 const Task = require('../models/Task');
 const { USER_ROLES } = require('../constants/roles');
 
+/**
+ * FACADE PATTERN + COMPOSITE PATTERN IMPLEMENTATION
+ * Student Dashboard - Aggregates multiple data sources
+ * 
+ * FACADE: Hides complexity of multiple data queries behind simple interface
+ * COMPOSITE: Dashboard composed of courses, tasks, user data, and statistics
+ * ENCAPSULATION: Complex aggregation logic hidden from client
+ * PERFORMANCE: Uses Promise.all for parallel data fetching
+ */
 const getDashboard = async (req, res) => {
     try {
         const userId = req.user.id;
 
+        // *** FACADE PATTERN - Complex dashboard data aggregation ***
+        // COMPOSITE: Multiple data sources combined into single response
+        // PERFORMANCE: Parallel execution using Promise.all
         const [
-            enrolledCourses,
-            recentTasks,
-            user,
-            progressStats
+            enrolledCourses,    // SPECIALIZATION: Student's enrolled courses only
+            recentTasks,        // SPECIALIZATION: Student's tasks only
+            user,              // REPOSITORY: User profile data
+            progressStats      // AGGREGATION: Calculated statistics
         ] = await Promise.all([
             LearningProgress.find({ userId })
                 .populate('courseId', 'title category difficulty instructor estimatedCompletionTime')

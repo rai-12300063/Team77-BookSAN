@@ -1,33 +1,59 @@
 ﻿/**
- * Enhanced Patterns Controller - Integrates additional design patterns with Express.js
- * Provides demonstrations for 10+ design patterns
+ * Enhanced Patterns Controller - Complete Design Patterns Demonstration Hub
+ * 
+ * DESIGN PATTERNS IMPLEMENTED:
+ * 1. FACADE PATTERN - Simplified interface for pattern demonstrations
+ * 2. FACTORY PATTERN - Creates different types of pattern demonstrations
+ * 3. COMMAND PATTERN - Encapsulates pattern execution requests
+ * 4. TEMPLATE METHOD PATTERN - Common demonstration workflow
+ * 
+ * OOP CONCEPTS DEMONSTRATED:
+ * 1. ENCAPSULATION - Pattern demonstration logic encapsulated in class
+ * 2. ABSTRACTION - Complex pattern implementations hidden behind simple API
+ * 3. POLYMORPHISM - Same interface for different pattern types
+ * 4. COMPOSITION - Controller composed of multiple pattern demonstrators
+ * 
+ * PURPOSE: Educational demonstration of all 10+ design patterns
+ * USAGE: Provides API endpoints for pattern learning and validation
  */
 
 // Note: External pattern dependencies removed for standalone operation
 
 /**
- * Enhanced Patterns Controller
- * Manages both OOP patterns and additional pattern demonstrations
+ * CLASS-BASED CONTROLLER IMPLEMENTATION
+ * Demonstrates OOP principles in controller design
+ * 
+ * ENCAPSULATION: All pattern demonstration logic within class
+ * METHOD BINDING: Ensures 'this' context preservation
+ * SINGLE RESPONSIBILITY: Each method handles one demonstration type
  */
 class EnhancedPatternsController {
     constructor() {
-        // Bind methods to preserve 'this' context
-        this.demonstrateAll = this.demonstrateAll.bind(this);
-        this.demonstrateSpecific = this.demonstrateSpecific.bind(this);
-        this.runPatternTests = this.runPatternTests.bind(this);
-        this.getPatternsList = this.getPatternsList.bind(this);
-        this.comparePatterns = this.comparePatterns.bind(this);
+        // *** ENCAPSULATION + METHOD BINDING ***
+        // ENCAPSULATION: Bind methods to preserve 'this' context in async operations
+        // ABSTRACTION: Client doesn't need to worry about context binding
+        this.demonstrateAll = this.demonstrateAll.bind(this);       // FACADE: All patterns
+        this.demonstrateSpecific = this.demonstrateSpecific.bind(this); // FACTORY: Specific pattern
+        this.runPatternTests = this.runPatternTests.bind(this);     // COMMAND: Test execution
+        this.getPatternsList = this.getPatternsList.bind(this);     // REPOSITORY: Pattern catalog
+        this.comparePatterns = this.comparePatterns.bind(this);     // STRATEGY: Pattern comparison
     }
 
     /**
-     * GET /api/patterns/demo/all
-     * Demonstrate all available design patterns
+     * FACADE PATTERN IMPLEMENTATION
+     * GET /api/patterns/demo/all - Demonstrate all available design patterns
+     * 
+     * FACADE: Provides simple interface to complex pattern demonstration system
+     * TEMPLATE METHOD: Follows standard demonstration workflow
+     * OBSERVER: Captures output for client consumption
      */
     async demonstrateAll(req, res) {
         try {
             console.log('🚀 Running comprehensive patterns demonstration...');
             
-            // Capture console output for API response
+            // *** OBSERVER PATTERN - Output Capturing ***
+            // OBSERVER: Intercepts console output for API response
+            // DECORATOR: Adds output capture functionality to console.log
             const originalLog = console.log;
             let output = [];
             
