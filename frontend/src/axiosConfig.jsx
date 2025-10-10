@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  //baseURL: 'http://localhost:5001', // Local backend server with remote MongoDB Atlas
-  baseURL: 'http://3.27.61.172:5001', // Remote server (commented out)
+  baseURL: 'http://localhost:5001', // Local backend server with remote MongoDB Atlas
+  //baseURL: 'http://3.27.78.38:5001', // Remote server (commented out)
   timeout: 15000, // 15 second timeout for database operations
   headers: { 'Content-Type': 'application/json' },
 });

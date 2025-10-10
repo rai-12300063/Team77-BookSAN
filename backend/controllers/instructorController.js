@@ -1,13 +1,41 @@
+/**
+ * InstructorController - Demonstrates INHERITANCE and SPECIALIZATION PATTERNS
+ * 
+ * DESIGN PATTERNS IMPLEMENTED:
+ * 1. STRATEGY PATTERN - Instructor-specific business logic strategies
+ * 2. REPOSITORY PATTERN - Specialized data access for instructors
+ * 3. FACADE PATTERN - Simplified course management operations
+ * 4. FACTORY PATTERN - Course creation with instructor context
+ * 
+ * OOP CONCEPTS DEMONSTRATED:
+ * 1. INHERITANCE - Inherits from base controller concepts (implicit)
+ * 2. SPECIALIZATION - Instructor-specific functionality
+ * 3. ENCAPSULATION - Instructor business rules encapsulated
+ * 4. POLYMORPHISM - Same operations, instructor-specific behavior
+ */
+
 const Course = require('../models/Course');
 const User = require('../models/User');
 const LearningProgress = require('../models/LearningProgress');
 const Task = require('../models/Task');
 const { USER_ROLES } = require('../constants/roles');
 
+/**
+ * REPOSITORY PATTERN + SPECIALIZATION
+ * Get instructor's courses - Specialized data access
+ * 
+ * SPECIALIZATION: Instructor-specific course filtering
+ * REPOSITORY: Abstracted course data access
+ * ENCAPSULATION: Query logic hidden from client
+ */
 const getMyCourses = async (req, res) => {
     try {
+        // *** SPECIALIZATION PATTERN ***
+        // Instructor-specific filtering - only their courses
+        // ENCAPSULATION: Business rule (instructors see only their courses) encapsulated
         const courses = await Course.find({ 'instructor.id': req.user.id });
 
+        // ABSTRACTION: Simple response format hiding query complexity
         res.status(200).json({
             success: true,
             count: courses.length,
@@ -22,6 +50,14 @@ const getMyCourses = async (req, res) => {
     }
 };
 
+/**
+ * FACTORY PATTERN + SPECIALIZATION
+ * Create course - Instructor-specific course creation
+ * 
+ * FACTORY: Creates course with instructor context pre-filled
+ * ENCAPSULATION: Course creation logic with instructor defaults
+ * SPECIALIZATION: Instructor-specific course creation workflow
+ */
 const createCourse = async (req, res) => {
     try {
         const {

@@ -3,84 +3,100 @@ name: BOOKSAN CI/CD
 on:
   push:
     branches:
-      - main  # Trigger CI on pushes to the main branch
-
+      - main
+      - BOOKSAN-150-demonstration-ready  # Current demonstration-ready branch
+      - BOOKSAN-150-development-final    # Development branch
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  test:
-    name: Run Tests
-    runs-on: self-hosted
-
+  ci:
+    name: Build & Test
+    runs-on: ubuntu-latest   # GitHub-hosted
     strategy:
       matrix:
-        node-version: [22] # Test on multiple Node.js versions
+        node-version: [18, 20]
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    # Set up Node.js
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    - name: Verify Environment Setup
-      env:
-        MONGO_URI: ${{ secrets.MONGO_URI }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        PORT: ${{ secrets.PORT }}
-      run: | 
-        echo "Environment variables are set"
-        echo "MONGO_URI length: ${#MONGO_URI}"
-        echo "JWT_SECRET length: ${#JWT_SECRET}"  
-        echo "PORT: $PORT"
-      
-    - name: Stop PM2 Services (if running)
-      run: pm2 stop all || true  # Don't fail if no processes running
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
 
-    # Install dependencies for backend
-    - name: Install Backend Dependencies
-      working-directory: ./backend
-      run: | 
-       npm install --global yarn
-       yarn --version
-       yarn install
-      
-    # Install dependencies for frontend
-    - name: Install Frontend Dependencies
-      working-directory: ./frontend
-      run: |
-        df -h
-        sudo rm -rf ./build
-        yarn install
-        yarn run build
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: |
+          rm -rf ./build
+          npm ci
 
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: |
+          CI=true npm test -- --coverage --watchAll=false
 
-    # Run backend tests
-    - name: Run Backend Tests
-      env:
-        MONGO_URI: ${{ secrets.MONGO_URI }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        PORT: ${{ secrets.PORT }}
-      working-directory: ./backend
-      run: npm test
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: npm run build
 
-    # Install Dependencies Using npm ci (Backend) - Remove this duplicate step
-    # - name: Install Backend Dependencies with npm ci
-    #   working-directory: ./backend
-    #   run: npm ci
+      - name: Run Backend Tests
+        working-directory: ./backend
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          PORT: ${{ secrets.PORT }}
+          NODE_ENV: test
+        run: |
+          npm run test:all || npm test
 
-    # Create .env File and Add Secrets for Production in AWS (A part of CD)
-    - name: Create Production Environment File
-      working-directory: ./backend
-      run: | 
-        touch .env
-        echo "${{ secrets.PROD }}" > .env
+  # Only run deployment on main branch and if you have self-hosted runner
+  cd:
+    name: Deploy to Server
+    runs-on: [self-hosted, deploy-runner]   # only runs on your labeled runner
+    needs: ci   # only run if CI succeeds
+    if: github.ref == 'refs/heads/main'     # only deploy main branch
 
-    # Start and Restart Services in AWS (A part of CD)
-    - name: Start PM2 Services
-      run: pm2 start all
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Restart PM2 Services
-      run: pm2 restart all
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          cd backend && npm ci
+          cd ../frontend && npm ci
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Create Production Environment File
+        working-directory: ./backend
+        run: |
+          touch .env
+          echo "NODE_ENV=production" > .env
+          echo "PORT=${{ secrets.PORT || '5001' }}" >> .env
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+
+      - name: Create Logs Directory
+        run: mkdir -p logs
+
+      - name: Restart PM2 Services
+        run: |
+          pm2 stop all || true
+          pm2 start ecosystem.config.js --env production
+          pm2 save
+          pm2 status

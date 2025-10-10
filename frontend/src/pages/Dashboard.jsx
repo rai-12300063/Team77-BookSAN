@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 import { Link } from 'react-router-dom';
+import { useAnalyticsListener } from '../utils/analyticsHelper';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -10,10 +11,6 @@ const Dashboard = () => {
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [learningGoals, setLearningGoals] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
 
   const fetchDashboardData = async () => {
     try {
@@ -105,6 +102,24 @@ const Dashboard = () => {
     }
   };
 
+  // Set up effects after function definitions
+  useEffect(() => {
+    fetchDashboardData();
+    
+    // Set up automatic refresh every 2 minutes
+    const refreshInterval = setInterval(() => {
+      if (!loading) { // Only refresh if not already loading
+        fetchDashboardData();
+      }
+    }, 120000); // 2 minutes
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(refreshInterval);
+  }, [loading]);
+
+  // Listen for analytics updates from other components
+  useAnalyticsListener(fetchDashboardData);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -115,11 +130,23 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          Welcome back, {user?.name}!
-        </h1>
-        <p className="text-gray-600">BookSAN Learning Progress Tracker - Track your learning progress and achieve your educational goals</p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Welcome back, {user?.name}!
+          </h1>
+          <p className="text-gray-600">BookSAN Learning Progress Tracker - Track your learning progress and achieve your educational goals</p>
+        </div>
+        <button
+          onClick={fetchDashboardData}
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+        >
+          <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
+        </button>
       </div>
       
       {/* Quick Stats */}

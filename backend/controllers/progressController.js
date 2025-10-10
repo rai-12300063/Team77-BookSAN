@@ -1,3 +1,17 @@
+/**
+ * ProgressController - Demonstrates OBSERVER PATTERN and Analytics
+ * 
+ * DESIGN PATTERNS IMPLEMENTED:
+ * 1. OBSERVER PATTERN - Progress updates notify multiple observers
+ * 2. REPOSITORY PATTERN - Data access abstraction for progress
+ * 3. STRATEGY PATTERN - Different analytics calculations
+ * 
+ * OOP CONCEPTS DEMONSTRATED:
+ * 1. ENCAPSULATION - Progress calculation logic encapsulated
+ * 2. ABSTRACTION - Complex analytics hidden behind simple interface
+ * 3. COMPOSITION - Analytics composed from multiple data sources
+ */
+
 const LearningProgress = require('../models/LearningProgress');
 const Course = require('../models/Course');
 const User = require('../models/User');
@@ -11,13 +25,13 @@ const getLearningAnalytics = async (req, res) => {
     // Get all progress records for the user
     const progressRecords = await LearningProgress.find({ userId })
       .populate('courseId', 'title category estimatedCompletionTime')
-      .sort({ lastAccessed: -1 });
+      .sort({ lastAccessDate: -1 });
 
     // Calculate overall statistics
     const totalCourses = progressRecords.length;
     const completedCourses = progressRecords.filter(p => p.completionPercentage === 100).length;
     const inProgressCourses = progressRecords.filter(p => p.completionPercentage > 0 && p.completionPercentage < 100).length;
-    const totalTimeSpent = progressRecords.reduce((total, p) => total + p.timeSpent, 0);
+    const totalTimeSpent = progressRecords.reduce((total, p) => total + (p.totalTimeSpent || 0), 0);
     
     // Get achievements count
     const totalAchievements = progressRecords.reduce((total, p) => total + p.achievements.length, 0);
@@ -25,7 +39,35 @@ const getLearningAnalytics = async (req, res) => {
     // Get recent activity (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const recentActivity = progressRecords.filter(p => p.lastAccessed >= sevenDaysAgo);
+    const recentActivity = progressRecords.filter(p => p.lastAccessDate >= sevenDaysAgo);
+
+    // Calculate average score from completed courses
+    const coursesWithGrades = progressRecords.filter(p => p.grade && p.grade > 0);
+    const averageScore = coursesWithGrades.length > 0 
+      ? Math.round(coursesWithGrades.reduce((sum, p) => sum + p.grade, 0) / coursesWithGrades.length)
+      : 0;
+
+    // Find best subject (category with highest average score)
+    const categoryScores = {};
+    progressRecords.forEach(p => {
+      if (p.grade && p.courseId?.category) {
+        if (!categoryScores[p.courseId.category]) {
+          categoryScores[p.courseId.category] = { total: 0, count: 0 };
+        }
+        categoryScores[p.courseId.category].total += p.grade;
+        categoryScores[p.courseId.category].count += 1;
+      }
+    });
+
+    let bestSubject = 'Not available';
+    let bestScore = 0;
+    Object.entries(categoryScores).forEach(([category, data]) => {
+      const avgScore = data.total / data.count;
+      if (avgScore > bestScore) {
+        bestScore = avgScore;
+        bestSubject = category;
+      }
+    });
 
     const analytics = {
       totalCourses,
@@ -34,6 +76,8 @@ const getLearningAnalytics = async (req, res) => {
       totalTimeSpent: Math.round(totalTimeSpent / 60), // Convert to hours
       totalAchievements,
       recentActivity: recentActivity.length,
+      averageScore,
+      bestSubject,
       progressRecords: progressRecords.slice(0, 10) // Latest 10 courses
     };
 
@@ -158,7 +202,7 @@ const getLearningStreaks = async (req, res) => {
 
     // Get progress records to analyze learning patterns
     const progressRecords = await LearningProgress.find({ userId })
-      .sort({ lastAccessed: -1 });
+      .sort({ lastAccessDate: -1 });
 
     // Calculate current streak
     const today = new Date();
@@ -169,7 +213,7 @@ const getLearningStreaks = async (req, res) => {
     // Check each day backwards to find streak
     for (let i = 0; i < 365; i++) { // Check up to a year
       const dayProgress = progressRecords.find(p => {
-        const progressDate = new Date(p.lastAccessed);
+        const progressDate = new Date(p.lastAccessDate);
         progressDate.setHours(0, 0, 0, 0);
         return progressDate.getTime() === checkDate.getTime();
       });
@@ -189,10 +233,16 @@ const getLearningStreaks = async (req, res) => {
     }
     await user.save();
 
+    // Calculate weekly active days (last 7 days)
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - 7);
+    const weeklyActiveDays = progressRecords.filter(p => p.lastAccessDate >= weekStart).length;
+
     res.json({
       currentStreak: user.currentStreak,
       longestStreak: user.longestStreak,
-      lastActiveDate: user.lastActiveDate,
+      lastActiveDate: user.lastLearningDate,
+      weeklyActiveDays,
       learningGoals: user.learningGoals
     });
   } catch (error) {

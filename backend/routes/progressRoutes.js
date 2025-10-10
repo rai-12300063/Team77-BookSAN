@@ -37,37 +37,70 @@ router.get('/streaks', getLearningStreaks);
 // @route   GET /api/progress/learning-goals
 // @desc    Get learning goals progress
 // @access  Private
-router.get('/learning-goals', (req, res) => {
-  // Calculate learning goals based on user progress
-  const today = new Date();
-  const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const weekStart = new Date(dayStart.getTime() - (dayStart.getDay() * 24 * 60 * 60 * 1000));
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  
-  // Mock data for now - in production, this would calculate from actual user progress
-  const dailyCompleted = Math.floor(Math.random() * 25) + 5; // 5-30 min
-  const weeklyCompleted = Math.floor(Math.random() * 180) + 60; // 60-240 min
-  const monthlyCompleted = Math.floor(Math.random() * 600) + 200; // 200-800 min
-  
-  const learningGoals = {
-    daily: {
-      target: 30,
-      completed: dailyCompleted,
-      percentage: Math.round((dailyCompleted / 30) * 100)
-    },
-    weekly: {
-      target: 300,
-      completed: weeklyCompleted,
-      percentage: Math.round((weeklyCompleted / 300) * 100)
-    },
-    monthly: {
-      target: 1200,
-      completed: monthlyCompleted,
-      percentage: Math.round((monthlyCompleted / 1200) * 100)
-    }
-  };
-  
-  res.json(learningGoals);
+router.get('/learning-goals', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const LearningProgress = require('../models/LearningProgress');
+    
+    // Calculate time periods
+    const today = new Date();
+    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const weekStart = new Date(dayStart);
+    weekStart.setDate(dayStart.getDate() - dayStart.getDay());
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    // Get user's learning progress for different time periods
+    const [dailyProgress, weeklyProgress, monthlyProgress] = await Promise.all([
+      LearningProgress.find({ 
+        userId, 
+        lastAccessDate: { $gte: dayStart } 
+      }),
+      LearningProgress.find({ 
+        userId, 
+        lastAccessDate: { $gte: weekStart } 
+      }),
+      LearningProgress.find({ 
+        userId, 
+        lastAccessDate: { $gte: monthStart } 
+      })
+    ]);
+    
+    // Calculate actual time spent
+    const dailyCompleted = dailyProgress.reduce((total, p) => {
+      // Calculate time spent today only
+      const lastAccess = new Date(p.lastAccessDate);
+      if (lastAccess >= dayStart) {
+        return total + (p.totalTimeSpent || 0);
+      }
+      return total;
+    }, 0);
+    
+    const weeklyCompleted = weeklyProgress.reduce((total, p) => total + (p.totalTimeSpent || 0), 0);
+    const monthlyCompleted = monthlyProgress.reduce((total, p) => total + (p.totalTimeSpent || 0), 0);
+    
+    const learningGoals = {
+      daily: {
+        target: 30, // 30 minutes
+        completed: Math.round(dailyCompleted),
+        percentage: Math.min(100, Math.round((dailyCompleted / 30) * 100))
+      },
+      weekly: {
+        target: 300, // 5 hours
+        completed: Math.round(weeklyCompleted),
+        percentage: Math.min(100, Math.round((weeklyCompleted / 300) * 100))
+      },
+      monthly: {
+        target: 1200, // 20 hours
+        completed: Math.round(monthlyCompleted),
+        percentage: Math.min(100, Math.round((monthlyCompleted / 1200) * 100))
+      }
+    };
+    
+    res.json(learningGoals);
+  } catch (error) {
+    console.error('Error fetching learning goals:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 // @route   PUT /api/progress/goals

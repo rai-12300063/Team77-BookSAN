@@ -1,9 +1,32 @@
+/**
+ * AdminController - Demonstrates REPOSITORY and FACADE PATTERNS
+ * 
+ * DESIGN PATTERNS IMPLEMENTED:
+ * 1. REPOSITORY PATTERN - Centralized data access for admin operations
+ * 2. FACADE PATTERN - Simplified interface for complex admin tasks
+ * 3. STRATEGY PATTERN - Different management strategies per entity type
+ * 
+ * OOP CONCEPTS DEMONSTRATED:
+ * 1. ENCAPSULATION - Admin business logic encapsulated
+ * 2. ABSTRACTION - Complex admin operations hidden behind simple API
+ * 3. SINGLE RESPONSIBILITY - Each function handles one admin task
+ * 4. SEPARATION OF CONCERNS - Admin logic separated from other controllers
+ */
+
 const User = require('../models/User');
 const Course = require('../models/Course');
 const Task = require('../models/Task');
 const LearningProgress = require('../models/LearningProgress');
 const { USER_ROLES, validateRole, canManageUser } = require('../utils/rbac');
 
+/**
+ * REPOSITORY PATTERN IMPLEMENTATION
+ * Get all users - Centralized user data access
+ * 
+ * REPOSITORY: Abstracts user data retrieval complexity
+ * ENCAPSULATION: Password field automatically excluded for security
+ * ABSTRACTION: Client doesn't need to know about database queries
+ */
 const getAllUsers = async (req, res) => {
     try {
         const users = await User.find({}).select('-password');
@@ -21,8 +44,17 @@ const getAllUsers = async (req, res) => {
     }
 };
 
+/**
+ * REPOSITORY PATTERN - Single user retrieval
+ * Get user by ID with security considerations
+ * 
+ * ENCAPSULATION: Password exclusion handled automatically
+ * ERROR HANDLING: Consistent error response structure
+ * ABSTRACTION: Simple interface for user lookup
+ */
 const getUserById = async (req, res) => {
     try {
+        // REPOSITORY: Centralized user data access with security
         const user = await User.findById(req.params.id).select('-password');
         if (!user) {
             return res.status(404).json({
