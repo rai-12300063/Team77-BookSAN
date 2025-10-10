@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import './CourseEnrollmentManagement.css';
@@ -8,7 +8,7 @@ const CourseEnrollmentManagement = () => {
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [enrollments, setEnrollments] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
+
   const [instructors, setInstructors] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ const CourseEnrollmentManagement = () => {
   useEffect(() => {
     fetchCourses();
     fetchUsers();
-  }, []);
+  }, [fetchCourses]);
 
   useEffect(() => {
     if (selectedCourse) {
@@ -32,7 +32,7 @@ const CourseEnrollmentManagement = () => {
     }
   }, [selectedCourse]);
 
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API_URL}/courses`, {
@@ -57,7 +57,7 @@ const CourseEnrollmentManagement = () => {
       setError('Failed to fetch courses');
       setLoading(false);
     }
-  };
+  }, [isInstructor, isAdmin, user.id, user._id]);
 
   const fetchUsers = async () => {
     try {
@@ -68,7 +68,6 @@ const CourseEnrollmentManagement = () => {
 
       if (response.data.success) {
         const users = response.data.data;
-        setAllUsers(users);
         setInstructors(users.filter(u => u.role === 'instructor' || u.role === 'admin'));
         setStudents(users.filter(u => u.role === 'student'));
       }

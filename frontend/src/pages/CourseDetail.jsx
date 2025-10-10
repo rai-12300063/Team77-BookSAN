@@ -5,8 +5,6 @@ import axiosInstance from '../axiosConfig';
 import QuizCard from '../components/QuizCard';
 import ModuleStatusSummary from '../components/modules/ModuleStatusSummary';
 import ModuleCompletionStatus from '../components/modules/ModuleCompletionStatus';
-import Quiz from '../components/Quiz'; // new
-
 const CourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -20,8 +18,6 @@ const CourseDetail = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [quizzesLoading, setQuizzesLoading] = useState(false);
   const [quizzes, setQuizzes] = useState([]);
-
-  const [showQuiz, setShowQuiz] = useState(false);
 
   useEffect(() => {
     const fetchCourseData = async () => {

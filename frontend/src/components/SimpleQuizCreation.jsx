@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 
@@ -25,9 +25,9 @@ const SimpleQuizCreation = ({ userRole = 'admin', onClose, onSuccess, preselecte
 
   useEffect(() => {
     fetchCourses();
-  }, []);
+  }, [fetchCourses]);
 
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       let endpoint = '/api/courses';
       if (userRole === 'instructor') {
@@ -47,7 +47,7 @@ const SimpleQuizCreation = ({ userRole = 'admin', onClose, onSuccess, preselecte
       setError('Failed to load courses. Please try again.');
       setCourses([]);
     }
-  };
+  }, [userRole]);
 
   const handleQuestionChange = (index, field, value) => {
     const newQuestions = [...questions];
