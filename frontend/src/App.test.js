@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
-
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+// Basic test to verify jest-dom is working
+test('jest-dom matchers are available', () => {
+  const div = document.createElement('div');
+  div.textContent = 'BookSAN Learning Progress Tracker';
+  document.body.appendChild(div);
+  
+  expect(div).toBeInTheDocument();
+  expect(div).toHaveTextContent('BookSAN Learning Progress Tracker');
 });

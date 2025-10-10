@@ -77,9 +77,15 @@ jest.mock('../pages/CourseDetail', () => {
   };
 });
 
-jest.mock('../pages/Tasks', () => {
-  return function Tasks() {
-    return <div data-testid="tasks-page">Tasks Page</div>;
+jest.mock('../pages/Progress', () => {
+  return function Progress() {
+    return <div data-testid="progress-page">Progress Page</div>;
+  };
+});
+
+jest.mock('../pages/Profile', () => {
+  return function Profile() {
+    return <div data-testid="profile-page">Profile Page</div>;
   };
 });
 
@@ -193,14 +199,14 @@ describe('Route Protection and Access Control Tests', () => {
       expect(screen.getByTestId('courses-page')).toBeInTheDocument();
     });
 
-    it('should allow students to access tasks page', () => {
+    it('should allow students to access profile page', () => {
       render(
-        <TestWrapper initialRoute="/tasks" role="student">
+        <TestWrapper initialRoute="/profile" role="student">
           <App />
         </TestWrapper>
       );
 
-      expect(screen.getByTestId('tasks-page')).toBeInTheDocument();
+      expect(screen.getByTestId('profile-page')).toBeInTheDocument();
     });
 
     it('should allow students to access progress page', () => {
@@ -288,14 +294,14 @@ describe('Route Protection and Access Control Tests', () => {
       });
     });
 
-    it('should deny instructors access to student-only routes', () => {
+    it('should allow instructors access to profile route', () => {
       render(
-        <TestWrapper initialRoute="/tasks" role="instructor">
+        <TestWrapper initialRoute="/profile" role="instructor">
           <App />
         </TestWrapper>
       );
 
-      expect(screen.getByText('Access Denied')).toBeInTheDocument();
+      expect(screen.getByTestId('profile-page')).toBeInTheDocument();
     });
 
     it('should deny instructors access to admin routes', () => {
