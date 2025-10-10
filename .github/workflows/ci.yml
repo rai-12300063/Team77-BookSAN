@@ -83,8 +83,36 @@ jobs:
           touch .env
           echo "${{ secrets.PROD }}" > .env
 
-      - name: Restart PM2 Services
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build Frontend for Production
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Deploy with PM2
         run: |
-          pm2 stop ecosystem.config.js || true
-          pm2 start ecosystem.config.js --env production
-          pm2 save
+          # Make deployment script executable
+          chmod +x deploy.sh
+          
+          # Run the deployment script with fallback
+          if ./deploy.sh; then
+            echo "✅ Deployment completed successfully using deployment script"
+          else
+            echo "⚠️ Deployment script failed, trying manual PM2 setup..."
+            
+            # Fallback manual deployment
+            pm2 kill || true
+            sleep 2
+            mkdir -p logs
+            pm2 start ecosystem.config.js --env production || {
+              echo "❌ PM2 start failed, checking logs..."
+              ls -la
+              cat logs/err.log 2>/dev/null || echo "No error log found"
+              exit 1
+            }
+            pm2 save
+            pm2 status
+            echo "✅ Manual deployment completed"
+          fi
