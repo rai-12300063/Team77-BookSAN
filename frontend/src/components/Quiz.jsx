@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axiosInstance from '../axiosConfig';
 
 const Quiz = ({
@@ -218,7 +218,7 @@ const Quiz = ({
     }
   };
 
-  const handleAutoSubmit = async () => {
+  const handleAutoSubmit = useCallback(async () => {
     if (!attemptId) return;
 
     try {
@@ -251,7 +251,7 @@ const Quiz = ({
         });
       }
     }
-  };
+  }, [attemptId, answers, quizData?.timeLimit, onQuizComplete]);
 
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);

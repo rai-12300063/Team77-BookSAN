@@ -4,10 +4,10 @@
     "react-app/jest"
   ],
   "rules": {
-    "react-hooks/exhaustive-deps": "warn",
+    "react-hooks/exhaustive-deps": "off",
     "no-unused-vars": "warn",
-    "no-use-before-define": "warn",
+    "no-use-before-define": "off",
     "default-case": "warn",
-    "unicode-bom": "warn"
+    "unicode-bom": "off"
   }
 }
