@@ -14,6 +14,9 @@ import Dashboard from '../pages/Dashboard';
 import ProtectedRoute from '../components/ProtectedRoute';
 import PermissionGate, { CanReadUsers, CanWriteUsers, CanDeleteUsers } from '../components/PermissionGate';
 
+// Global mock context that will be set in tests
+let mockAuthContext = null;
+
 // Mock the auth context
 const createMockAuthContext = (role, isAuthenticated = true) => ({
   user: isAuthenticated ? { id: '1', name: `Test ${role}`, email: `test@${role}.com`, role } : null,
@@ -64,8 +67,6 @@ jest.mock('../hooks/usePermissions', () => ({
     isStudent: mockAuthContext?.user?.role === 'student'
   })
 }));
-
-let mockAuthContext;
 
 // Test wrapper component
 const TestWrapper = ({ children, role = 'student', isAuthenticated = true }) => {
