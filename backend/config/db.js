@@ -26,17 +26,42 @@ mongoose.set('strictQuery', false);
  */
 const connectDB = async () => {
   try {
-    // Optimized connection settings for better performance
+    // Optimized connection settings for faster performance
     const options = {
-      maxPoolSize: 10, // Maintain up to 10 socket connections
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      maxPoolSize: 15, // Increase connection pool for better concurrency
+      minPoolSize: 2, // Keep minimum connections open
+      serverSelectionTimeoutMS: 3000, // Reduce timeout for faster failure detection
+      socketTimeoutMS: 30000, // Reduce socket timeout for faster cleanup
+      connectTimeoutMS: 3000, // Faster connection timeout
+      heartbeatFrequencyMS: 10000, // More frequent heartbeats
+      maxIdleTimeMS: 30000, // Close idle connections faster
+      // Performance optimizations
+      bufferMaxEntries: 0, // Disable mongoose buffering for immediate errors
+      bufferCommands: false, // Disable command buffering
+      // Additional MongoDB driver options
+      retryWrites: true,
+      w: 'majority',
+      readPreference: 'secondaryPreferred', // Use secondary for reads when possible
+      compressors: ['zlib'], // Enable compression for network efficiency
     };
     
+    const connectionStart = Date.now();
     await mongoose.connect(process.env.MONGO_URI, options);
-    console.log("MongoDB connected successfully with optimized settings");
+    const connectionTime = Date.now() - connectionStart;
+    
+    console.log(`✅ MongoDB connected successfully in ${connectionTime}ms with optimized settings`);
+    
+    // Set up connection event listeners for monitoring
+    mongoose.connection.on('error', (error) => {
+      console.error('❌ MongoDB connection error:', error);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.warn('⚠️ MongoDB disconnected');
+    });
+    
   } catch (error) {
-    console.error("MongoDB connection error:", error.message);
+    console.error("❌ MongoDB connection error:", error.message);
     process.exit(1);
   }
 };

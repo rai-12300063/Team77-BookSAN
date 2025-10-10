@@ -73,6 +73,7 @@ const registerUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
+    const startTime = Date.now();
     const { email, password } = req.body;
     
     // Quick validation
@@ -81,23 +82,41 @@ const loginUser = async (req, res) => {
     }
     
     try {
-        // Find user with minimal fields to speed up query
-        const user = await User.findOne({ email }).select('_id email password name role').lean();
+        // Optimized query: Use index, minimal fields, and lean() for speed
+        const queryStart = Date.now();
+        const user = await User.findOne({ email })
+            .select('_id email password name role')
+            .lean() // Returns plain JS object for better performance
+            .hint({ email: 1 }); // Force use of email index
+        
+        const queryTime = Date.now() - queryStart;
+        console.log(`🔍 User query took ${queryTime}ms`);
         
         if (!user) {
+            // Add small delay to prevent timing attacks but don't make it too long
+            await new Promise(resolve => setTimeout(resolve, 100));
             return res.status(401).json({ message: 'Invalid email or password' });
         }
         
-        // Use faster bcrypt comparison
-        const isValidPassword = await bcrypt.compare(password, user.password);
+        // Parallel operations for better performance
+        const bcryptStart = Date.now();
+        const [isValidPassword, token] = await Promise.all([
+            bcrypt.compare(password, user.password),
+            // Pre-generate token while password is being verified
+            Promise.resolve(generateToken(user._id))
+        ]);
+        
+        const bcryptTime = Date.now() - bcryptStart;
+        console.log(`🔐 Password verification took ${bcryptTime}ms`);
         
         if (!isValidPassword) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
         
-        // Generate token and respond quickly
-        const token = generateToken(user._id);
+        const totalTime = Date.now() - startTime;
+        console.log(`✅ Login completed in ${totalTime}ms for user: ${user.email}`);
         
+        // Send minimal response for speed
         res.json({ 
             id: user._id, 
             name: user.name, 
@@ -106,7 +125,8 @@ const loginUser = async (req, res) => {
             token: token
         });
     } catch (error) {
-        console.error('Login error:', error);
+        const totalTime = Date.now() - startTime;
+        console.error(`❌ Login error after ${totalTime}ms:`, error);
         res.status(500).json({ message: 'Server error during login' });
     }
 };

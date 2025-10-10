@@ -6,7 +6,7 @@ const cors = require('cors');
 const compression = require('compression');
 const path = require('path');
 const connectDB = require('./config/db');
-const performanceMiddleware = require('./middleware/performance');
+const performanceMonitor = require('./middleware/performanceMonitor');
 const instructorsRoutes = require('./routes/instructorsRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 
@@ -17,7 +17,7 @@ const app = express();
 
 // Performance optimizations
 app.use(compression()); // Enable gzip compression
-app.use(performanceMiddleware); // Monitor slow requests
+app.use(performanceMonitor); // Monitor request performance
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Set request size limit
 app.use('/api/auth', require('./routes/authRoutes'));
