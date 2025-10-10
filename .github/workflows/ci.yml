@@ -4,16 +4,11 @@ on:
   push:
     branches:
       - main
-      - BOOKSAN-150-demonstration-ready  # Current demonstration-ready branch
-      - BOOKSAN-150-development-final    # Development branch
-  pull_request:
-    branches:
-      - main
 
 jobs:
   ci:
-    name: Build & Test
-    runs-on: ubuntu-latest   # GitHub-hosted
+    name: BookSAN CI - Build & Test
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [18, 20]
@@ -27,24 +22,10 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      # Backend
       - name: Install Backend Dependencies
         working-directory: ./backend
         run: npm ci
-
-      - name: Install Frontend Dependencies
-        working-directory: ./frontend
-        run: |
-          rm -rf ./build
-          npm ci
-
-      - name: Run Frontend Tests
-        working-directory: ./frontend
-        run: |
-          CI=true npm test -- --coverage --watchAll=false
-
-      - name: Build Frontend
-        working-directory: ./frontend
-        run: npm run build
 
       - name: Run Backend Tests
         working-directory: ./backend
@@ -52,16 +33,25 @@ jobs:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           PORT: ${{ secrets.PORT }}
-          NODE_ENV: test
-        run: |
-          npm run test:all || npm test
+        run: npm test
 
-  # Only run deployment on main branch and if you have self-hosted runner
+      # Frontend
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: CI=true npm test -- --coverage --watchAll=false
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: npm run build
+
   cd:
-    name: Deploy to Server
-    runs-on: [self-hosted, deploy-runner]   # only runs on your labeled runner
-    needs: ci   # only run if CI succeeds
-    if: github.ref == 'refs/heads/main'     # only deploy main branch
+    name: BookSAN CD - Deploy to Server
+    runs-on: [self-hosted, deploy-runner]   # only your server runner
+    needs: ci
 
     steps:
       - name: Checkout Code
@@ -71,32 +61,19 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: 'npm'
 
-      - name: Install Dependencies
-        run: |
-          cd backend && npm ci
-          cd ../frontend && npm ci
-
-      - name: Build Frontend
-        working-directory: ./frontend
-        run: npm run build
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
 
       - name: Create Production Environment File
         working-directory: ./backend
         run: |
           touch .env
-          echo "NODE_ENV=production" > .env
-          echo "PORT=${{ secrets.PORT || '5001' }}" >> .env
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-
-      - name: Create Logs Directory
-        run: mkdir -p logs
+          echo "${{ secrets.PROD }}" > .env
 
       - name: Restart PM2 Services
         run: |
-          pm2 stop all || true
+          pm2 stop ecosystem.config.js || true
           pm2 start ecosystem.config.js --env production
           pm2 save
-          pm2 status
