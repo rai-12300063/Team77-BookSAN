@@ -219,8 +219,24 @@ npm run build
 # Complete deployment process
 npm run deploy
 
+# Fix PostCSS/Frontend build errors (corrupted frontend dependencies)
+cd frontend && rm -rf node_modules package-lock.json && npm install
+
+# Fix backend "Cannot find module" errors (corrupted backend dependencies)
+cd backend && rm -rf node_modules package-lock.json && npm install
+
 # Complete fresh install (if all else fails)
 npm run install-dev  # Reinstalls all dependencies
+```
+
+### **🚨 Common Frontend/PostCSS Issues**
+```bash
+# PostCSS module errors (like 'postcss-attribute-case-insensitive' not found)
+cd frontend && rm -rf node_modules package-lock.json && npm install
+
+# Port conflicts
+lsof -ti:3000 | xargs kill -9  # Kill frontend processes
+lsof -ti:5001 | xargs kill -9  # Kill backend processes
 ```
 
 ## 📊 API Documentation
