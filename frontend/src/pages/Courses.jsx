@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axiosInstance from '../axiosConfig';
 import { Link } from 'react-router-dom';
 import ModulesCompletedSidebar from '../components/modules/ModulesCompletedSidebar';
@@ -41,7 +41,7 @@ const Courses = () => {
     if (isAdmin || isInstructor) {
       fetchQuizzes();
     }
-  }, [isInstructor, isAdmin]);
+  }, [isInstructor, isAdmin, fetchQuizzes]);
 
   const fetchCourses = async () => {
     try {
@@ -99,7 +99,7 @@ const Courses = () => {
     }
   };
 
-  const fetchQuizzes = async () => {
+  const fetchQuizzes = useCallback(async () => {
     try {
       const endpoint = isAdmin ? '/api/quiz/admin/all' : '/api/quiz/instructor/my-quizzes';
       const response = await axiosInstance.get(endpoint);
@@ -108,7 +108,7 @@ const Courses = () => {
       console.error('❌ Error fetching quizzes:', error);
       setQuizzes([]);
     }
-  };
+  }, [isAdmin]);
 
   const canCreateQuizForCourse = (courseId) => {
     if (isAdmin()) return true;

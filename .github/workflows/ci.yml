@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+      - BOOKSAN-150-development-final
+  pull_request:
+    branches:
+      - main
 
 jobs:
   ci:
@@ -21,6 +25,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
 
       # Backend
       - name: Install Backend Dependencies
@@ -29,6 +37,7 @@ jobs:
 
       - name: Run Backend Tests
         working-directory: ./backend
+        timeout-minutes: 10
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -42,10 +51,12 @@ jobs:
 
       - name: Run Frontend Tests
         working-directory: ./frontend
+        timeout-minutes: 10
         run: CI=true npm test -- --coverage --watchAll=false
 
       - name: Build Frontend
         working-directory: ./frontend
+        timeout-minutes: 15
         run: npm run build
 
   cd:

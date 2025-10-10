@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './UserManagement.css';
 
@@ -32,7 +32,7 @@ const UserManagement = () => {
 
   useEffect(() => {
     filterUsers();
-  }, [users, roleFilter, searchQuery]);
+  }, [users, roleFilter, searchQuery, filterUsers]);
 
   const fetchUsers = async () => {
     try {
@@ -52,7 +52,7 @@ const UserManagement = () => {
     }
   };
 
-  const filterUsers = () => {
+  const filterUsers = useCallback(() => {
     let filtered = users;
 
     // Filter by role
@@ -69,7 +69,7 @@ const UserManagement = () => {
     }
 
     setFilteredUsers(filtered);
-  };
+  }, [users, roleFilter, searchQuery]);
 
   const handleInputChange = (e) => {
     setFormData({
