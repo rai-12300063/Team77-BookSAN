@@ -30,6 +30,7 @@ A comprehensive, production-ready learning management system built with the MERN
 # 1. Clone the repository
 git clone https://github.com/rai-12300063/Team77-BookSAN.git
 cd BookSAN-OLPT
+change .env.example -> ./backend/.env
 
 # 2. Install ALL dependencies (including dev tools)
 npm run install-dev
@@ -42,16 +43,17 @@ npm run dev
 - 🌐 **Frontend:** http://localhost:3000 (React development server)
 - 🔌 **Backend API:** http://localhost:5001 (Express server)
 
-### **Alternative: Start Servers Separately**
-```bash
-# Terminal 1 - Start Backend
-npm run server
+### **📱 How to Access the Application**
+1. **Run the application:** `npm start`
+2. **Wait for compilation:** React takes 30-60 seconds to compile
+3. **Open browser:** http://localhost:3000 (should open automatically)
+4. **Backend API:** Available at http://localhost:5001
 
-# Terminal 2 - Start Frontend  
-npm run client
-```
+**✅ Success indicators:**
+- Backend: "✅ BookSAN Learning Progress Tracker Server running on port 5001"
+- Frontend: Browser opens to http://localhost:3000 with login page
 
-## 🔑 Demo Credentials
+## �🔑 Demo Credentials
 
 | Role       | Email                  | Password       | Access Level |
 |------------|------------------------|----------------|--------------|
@@ -193,35 +195,6 @@ The project includes `ecosystem.config.js` for production process management:
 - 🔐 **Encryption:** All connections encrypted in transit
 - 💾 **Backups:** Automated daily backups with point-in-time recovery
 - 📈 **Monitoring:** Built-in performance monitoring and alerting
-
-## 🔧 Development & Troubleshooting
-
-### **Development Commands**
-```bash
-# Install all dependencies (production)
-npm run install-all
-
-# Install all dependencies (including dev tools)
-npm run install-dev
-
-# Start development servers (both frontend & backend)
-npm run dev
-
-# Start backend only
-npm run server
-
-# Start frontend only
-npm run client
-
-# Build production frontend
-npm run build
-
-# Complete deployment process
-npm run deploy
-
-# Complete fresh install (if all else fails)
-npm run install-dev  # Reinstalls all dependencies
-```
 
 ## 📊 API Documentation
 
