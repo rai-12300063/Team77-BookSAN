@@ -43,7 +43,7 @@ const Quiz = ({
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [quizStatus, timeRemaining]);
+  }, [quizStatus, timeRemaining, handleAutoSubmit]);
 
 
 
@@ -138,6 +138,10 @@ const Quiz = ({
 
         case 'text':
           isValid = answer !== undefined && answer.trim().length > 0;
+          break;
+
+        default:
+          isValid = answer !== undefined && answer !== '';
           break;
       }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 
@@ -15,9 +15,9 @@ const AdminQuizEditor = () => {
     if (quizId) {
       fetchQuiz();
     }
-  }, [quizId]);
+  }, [quizId, fetchQuiz]);
 
-  const fetchQuiz = async () => {
+  const fetchQuiz = useCallback(async () => {
     try {
       // Use admin endpoint to bypass module completion checks
       const response = await axiosInstance.get(`/api/quiz/admin/${quizId}`);
@@ -110,7 +110,7 @@ const AdminQuizEditor = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [quizId]);
 
   const saveQuiz = async () => {
     setSaving(true);

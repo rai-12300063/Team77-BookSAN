@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Analytics Update Utility
  * Centralized functions for updating learning analytics when activities are completed
  */
