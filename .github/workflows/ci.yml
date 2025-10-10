@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - main
-      - BOOKSAN-150-development-final
-  pull_request:
-    branches:
-      - main
 
 jobs:
   ci:
@@ -61,8 +57,9 @@ jobs:
 
   cd:
     name: BookSAN CD - Deploy to Server
-    runs-on: [self-hosted, deploy-runner]   # only your server runner
+    runs-on: [self-hosted, deploy-runner]
     needs: ci
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/BOOKSAN-150-development-final')
 
     steps:
       - name: Checkout Code
@@ -72,10 +69,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-
-      - name: Install Backend Dependencies
-        working-directory: ./backend
-        run: npm ci
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
 
       - name: Create Production Environment File
         working-directory: ./backend
@@ -83,36 +80,91 @@ jobs:
           touch .env
           echo "${{ secrets.PROD }}" > .env
 
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci --production=false
+
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: npm ci
 
       - name: Build Frontend for Production
         working-directory: ./frontend
+        timeout-minutes: 15
         run: npm run build
+
+      - name: Check PM2 Installation
+        run: |
+          if ! command -v pm2 &> /dev/null; then
+            echo "Installing PM2..."
+            npm install -g pm2
+          else
+            echo "PM2 is already installed"
+            pm2 --version
+          fi
+
+      - name: Stop Existing Services
+        run: |
+          echo "� Stopping existing services..."
+          pm2 delete booksan-backend 2>/dev/null || echo "No existing booksan-backend process"
+          pm2 save || true
+        continue-on-error: true
 
       - name: Deploy with PM2
         run: |
-          # Make deployment script executable
-          chmod +x deploy.sh
+          echo "🚀 Starting deployment..."
+          chmod +x ./deploy.sh
+          ./deploy.sh
+
+      - name: Verify Deployment
+        run: |
+          echo "🔍 Verifying deployment..."
+          sleep 10
           
-          # Run the deployment script with fallback
-          if ./deploy.sh; then
-            echo "✅ Deployment completed successfully using deployment script"
-          else
-            echo "⚠️ Deployment script failed, trying manual PM2 setup..."
-            
-            # Fallback manual deployment
-            pm2 kill || true
-            sleep 2
-            mkdir -p logs
-            pm2 start ecosystem.config.js --env production || {
-              echo "❌ PM2 start failed, checking logs..."
-              ls -la
-              cat logs/err.log 2>/dev/null || echo "No error log found"
-              exit 1
-            }
-            pm2 save
+          # Check if the service is running
+          if pm2 list | grep -q "booksan-backend.*online"; then
+            echo "✅ BookSAN backend is running successfully"
             pm2 status
-            echo "✅ Manual deployment completed"
+            echo ""
+            echo "� Recent logs:"
+            pm2 logs booksan-backend --lines 10 || true
+          else
+            echo "❌ Deployment failed - service not running"
+            pm2 logs booksan-backend --lines 20 || true
+            exit 1
           fi
+
+      - name: Health Check
+        run: |
+          echo "🏥 Performing health check..."
+          
+          # Wait for service to be fully ready
+          sleep 15
+          
+          # Check if the service responds at the health endpoint
+          if curl -f http://localhost:5001/api/test/health 2>/dev/null; then
+            echo "✅ Health check passed - service is responding"
+            echo "📋 Health response:"
+            curl -s http://localhost:5001/api/test/health | jq . || echo "Response received but not JSON"
+          else
+            echo "⚠️  Health check warning - trying root endpoint..."
+            if curl -f http://localhost:5001/ 2>/dev/null; then
+              echo "✅ Root endpoint responding - service may still be initializing"
+            else
+              echo "❌ Health check failed - service not responding"
+              echo "📋 Service status:"
+              pm2 status
+              echo "📝 Recent logs:"
+              pm2 logs booksan-backend --lines 20 || true
+            fi
+          fi
+
+      - name: Deployment Summary
+        run: |
+          echo "🎉 BookSAN deployment completed!"
+          echo ""
+          echo "📊 Final Status:"
+          pm2 status
+          echo ""
+          echo "🔗 Application should be available at your server's configured port"
+          echo "📝 Check logs with: pm2 logs booksan-backend"

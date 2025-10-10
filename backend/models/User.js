@@ -24,12 +24,24 @@ const bcrypt = require('bcrypt');
  */
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true, index: true }, // Add index for faster login
+    email: { 
+        type: String, 
+        required: true, 
+        unique: true, 
+        index: true, // Primary index for login queries
+        lowercase: true, // Normalize email for consistent querying
+        trim: true // Remove whitespace
+    },
     password: { type: String, required: true },
     address: { type: String },
     // *** POLYMORPHISM IMPLEMENTATION ***
     // Same User model, different behaviors based on role
-    role: { type: String, enum: ['student', 'instructor', 'admin'], default: 'student' },
+    role: { 
+        type: String, 
+        enum: ['student', 'instructor', 'admin'], 
+        default: 'student',
+        index: true // Add index for role-based queries
+    },
     
     // ENCAPSULATION: Learning-specific data grouped together
     learningGoals: [{ type: String }],
@@ -63,13 +75,24 @@ userSchema.pre('save', async function (next) {
     // GUARD CLAUSE: Only hash if password was modified
     if (!this.isModified('password')) return next();
     
+    const hashStart = Date.now();
+    
     // ENCAPSULATION: Password hashing details hidden from controllers
-    // SECURITY: Reduce salt rounds from 10 to 8 for faster login (still secure)
-    const salt = await bcrypt.genSalt(8);
+    // SECURITY: Use 6 rounds for development, 8-10 for production (faster hashing)
+    const saltRounds = process.env.NODE_ENV === 'production' ? 8 : 6;
+    const salt = await bcrypt.genSalt(saltRounds);
     this.password = await bcrypt.hash(this.password, salt);
+    
+    const hashTime = Date.now() - hashStart;
+    console.log(`🔐 Password hashing took ${hashTime}ms with ${saltRounds} rounds`);
     
     // TEMPLATE METHOD: Continue with save process
     next();
 });
+
+// Add compound indexes for common query patterns
+userSchema.index({ email: 1, role: 1 }); // Login + role queries
+userSchema.index({ role: 1, joinDate: -1 }); // Role-based listings
+userSchema.index({ lastLearningDate: -1 }); // Activity tracking
 
 module.exports = mongoose.model('User', userSchema);

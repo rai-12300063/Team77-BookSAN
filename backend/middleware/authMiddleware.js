@@ -26,6 +26,7 @@ const { hasPermission, USER_ROLES } = require('../utils/rbac');
  * CHAIN OF RESPONSIBILITY: Passes control to next middleware
  */
 const protect = async (req, res, next) => {
+    const authStart = Date.now();
     let token;
 
     // *** MIDDLEWARE PATTERN - Request Processing Steps ***
@@ -34,16 +35,29 @@ const protect = async (req, res, next) => {
             // STEP 1: Extract token (ENCAPSULATION)
             token = req.headers.authorization.split(' ')[1];
             
-            // STEP 2: Verify token (ABSTRACTION)
+            // STEP 2: Verify token (ABSTRACTION) - Fast JWT verification
+            const jwtStart = Date.now();
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            console.log(`🔑 JWT verification took ${Date.now() - jwtStart}ms`);
             
-            // STEP 3: Attach user to request (DECORATOR PATTERN)
-            // Decorates request with user information
-            req.user = await User.findById(decoded.id).select('-password');
+            // STEP 3: Optimized user lookup (DECORATOR PATTERN)
+            const userStart = Date.now();
+            req.user = await User.findById(decoded.id)
+                .select('-password -resetPasswordToken -resetPasswordExpires') // Exclude sensitive fields
+                .lean(); // Use lean for better performance
+            
+            console.log(`👤 User lookup took ${Date.now() - userStart}ms`);
+            
+            if (!req.user) {
+                return res.status(401).json({ message: 'User not found' });
+            }
+            
+            console.log(`✅ Auth middleware completed in ${Date.now() - authStart}ms`);
             
             // STEP 4: Continue chain (CHAIN OF RESPONSIBILITY)
             next();
         } catch (error) {
+            console.error(`❌ Auth failed after ${Date.now() - authStart}ms:`, error.message);
             // ENCAPSULATION: Error handling contained within middleware
             res.status(401).json({ message: 'Not authorized, token failed' });
         }
